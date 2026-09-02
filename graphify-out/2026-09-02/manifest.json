@@ -1,0 +1,128 @@
+{
+  ".prettierrc.json": {
+    "mtime": 1788351753.0914586,
+    "seen": 1788355720.3746212,
+    "ast_hash": "2db60fac434f4dbfa6a738dd91631408",
+    "semantic_hash": "2db60fac434f4dbfa6a738dd91631408"
+  },
+  "eslint.config.js": {
+    "mtime": 1788351783.3641684,
+    "seen": 1788355720.3746235,
+    "ast_hash": "20b6cc3e2d5c63ffb57a89de730c29c4",
+    "semantic_hash": "20b6cc3e2d5c63ffb57a89de730c29c4"
+  },
+  "extensions/siteblock/background.js": {
+    "mtime": 1788355628.010792,
+    "seen": 1788355720.3746245,
+    "ast_hash": "cd589d34a911ab4f0951a089e7d34ec7",
+    "semantic_hash": "cd589d34a911ab4f0951a089e7d34ec7"
+  },
+  "extensions/siteblock/manifest.json": {
+    "mtime": 1788355365.1835687,
+    "seen": 1788355720.3746252,
+    "ast_hash": "7e83f3548ded1b87d042b22d7e0ce26c",
+    "semantic_hash": "7e83f3548ded1b87d042b22d7e0ce26c"
+  },
+  "package.json": {
+    "mtime": 1788351752.8284333,
+    "seen": 1788355720.3746262,
+    "ast_hash": "ff97f552c9516a1b6a6c5284666837cc",
+    "semantic_hash": "ff97f552c9516a1b6a6c5284666837cc"
+  },
+  "scripts/install-linux.sh": {
+    "mtime": 1788355596.9467564,
+    "seen": 1788355720.3746269,
+    "ast_hash": "70a413c96cc714813d414029326edd0b",
+    "semantic_hash": "70a413c96cc714813d414029326edd0b"
+  },
+  "scripts/siteblock-admin": {
+    "mtime": 1788355596.675756,
+    "seen": 1788355720.3746278,
+    "ast_hash": "0b7cfca64e244f2f5d795d9adb39113f",
+    "semantic_hash": "0b7cfca64e244f2f5d795d9adb39113f"
+  },
+  "scripts/siteblock-browser-bridge": {
+    "mtime": 1788355596.8157563,
+    "seen": 1788355720.3746285,
+    "ast_hash": "734d57214962e3e1234a91dadd23a391",
+    "semantic_hash": "734d57214962e3e1234a91dadd23a391"
+  },
+  "scripts/siteblock-browser-bridge-chromium": {
+    "mtime": 1788355382.361722,
+    "seen": 1788355720.3746293,
+    "ast_hash": "3045610c8580aff84465d9cd99f957a3",
+    "semantic_hash": "3045610c8580aff84465d9cd99f957a3"
+  },
+  "scripts/siteblock-browser-bridge-firefox": {
+    "mtime": 1788355382.4957232,
+    "seen": 1788355720.3746302,
+    "ast_hash": "714438a3dd2c6c8eeb09effe55eb4d2f",
+    "semantic_hash": "714438a3dd2c6c8eeb09effe55eb4d2f"
+  },
+  "src-tauri/build.rs": {
+    "mtime": 1788348632.4249327,
+    "seen": 1788355720.374631,
+    "ast_hash": "1be34a5c61c2c35365de3dab14298f0b",
+    "semantic_hash": "1be34a5c61c2c35365de3dab14298f0b"
+  },
+  "src-tauri/capabilities/default.json": {
+    "mtime": 1788351762.147314,
+    "seen": 1788355720.374632,
+    "ast_hash": "f5c5fd60094e1a966dab84e50dde9982",
+    "semantic_hash": "f5c5fd60094e1a966dab84e50dde9982"
+  },
+  "src-tauri/src/lib.rs": {
+    "mtime": 1788355597.0857565,
+    "seen": 1788355720.3746326,
+    "ast_hash": "035ec9d4b9e35a2237f829cf03fe3f61",
+    "semantic_hash": "035ec9d4b9e35a2237f829cf03fe3f61"
+  },
+  "src-tauri/src/main.rs": {
+    "mtime": 1788349369.3616154,
+    "seen": 1788355720.3746336,
+    "ast_hash": "1b8cc92292a22720d3932124aafd2c78",
+    "semantic_hash": "1b8cc92292a22720d3932124aafd2c78"
+  },
+  "src-tauri/tauri.conf.json": {
+    "mtime": 1788348965.7289565,
+    "seen": 1788355720.3746345,
+    "ast_hash": "64e59fcf2ba4feaf473703128d83b3f1",
+    "semantic_hash": "64e59fcf2ba4feaf473703128d83b3f1"
+  },
+  "src/App.tsx": {
+    "mtime": 1788355628.1547923,
+    "seen": 1788355720.374635,
+    "ast_hash": "b4a6407552166e3c516951c3eb10a305",
+    "semantic_hash": "b4a6407552166e3c516951c3eb10a305"
+  },
+  "src/main.tsx": {
+    "mtime": 1788348632.4279327,
+    "seen": 1788355720.3746357,
+    "ast_hash": "29425bc87312dae845525731673266c4",
+    "semantic_hash": "29425bc87312dae845525731673266c4"
+  },
+  "src/vite-env.d.ts": {
+    "mtime": 1788348632.4279327,
+    "seen": 1788355720.3746367,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": "0352474ba2918efe13895edbc3780d94"
+  },
+  "tsconfig.json": {
+    "mtime": 1788348632.4279327,
+    "seen": 1788355720.3746374,
+    "ast_hash": "468c4a26d22e95a911cbe5ff0ed9ca27",
+    "semantic_hash": "468c4a26d22e95a911cbe5ff0ed9ca27"
+  },
+  "tsconfig.node.json": {
+    "mtime": 1788348632.4279327,
+    "seen": 1788355720.3746378,
+    "ast_hash": "767b2e9abe6452170cdc399ca052cfbc",
+    "semantic_hash": "767b2e9abe6452170cdc399ca052cfbc"
+  },
+  "vite.config.ts": {
+    "mtime": 1788348632.4279327,
+    "seen": 1788355720.3746386,
+    "ast_hash": "e33d834af39f3d92b63e7deea58d6e7d",
+    "semantic_hash": "e33d834af39f3d92b63e7deea58d6e7d"
+  }
+}
