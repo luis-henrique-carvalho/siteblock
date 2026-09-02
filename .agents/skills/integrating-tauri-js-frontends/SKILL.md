@@ -68,22 +68,22 @@ Vite is the recommended choice for SPA frameworks due to its fast development ex
 #### vite.config.ts
 
 ```typescript
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 export default defineConfig({
   clearScreen: false,
   server: {
     port: 5173,
     strictPort: true,
-    host: process.env.TAURI_DEV_HOST || 'localhost',
+    host: process.env.TAURI_DEV_HOST || "localhost",
     watch: {
-      ignored: ['**/src-tauri/**'],
+      ignored: ["**/src-tauri/**"],
     },
   },
-  envPrefix: ['VITE_', 'TAURI_ENV_*'],
+  envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {
-    target: process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
-    minify: process.env.TAURI_ENV_DEBUG ? false : 'esbuild',
+    target: process.env.TAURI_ENV_PLATFORM === "windows" ? "chrome105" : "safari13",
+    minify: process.env.TAURI_ENV_DEBUG ? false : "esbuild",
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
   },
 });
@@ -117,12 +117,12 @@ Next.js requires static export mode since Tauri cannot run Node.js servers.
 #### next.config.mjs
 
 ```javascript
-const isProd = process.env.NODE_ENV === 'production';
-const internalHost = process.env.TAURI_DEV_HOST || 'localhost';
+const isProd = process.env.NODE_ENV === "production";
+const internalHost = process.env.TAURI_DEV_HOST || "localhost";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: "export",
   images: {
     unoptimized: true,
   },
@@ -178,15 +178,15 @@ export default defineNuxtConfig({
   ssr: false,
   telemetry: false,
   devServer: {
-    host: '0.0.0.0', // Required for iOS device compatibility
+    host: "0.0.0.0", // Required for iOS device compatibility
   },
   vite: {
     clearScreen: false,
-    envPrefix: ['VITE_', 'TAURI_'],
+    envPrefix: ["VITE_", "TAURI_"],
     server: {
       strictPort: true,
       watch: {
-        ignored: ['**/src-tauri/**'],
+        ignored: ["**/src-tauri/**"],
       },
     },
   },
@@ -240,15 +240,15 @@ npm install --save-dev @sveltejs/adapter-static
 #### svelte.config.js
 
 ```javascript
-import adapter from '@sveltejs/adapter-static';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from "@sveltejs/adapter-static";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: adapter({
-      fallback: 'index.html',
+      fallback: "index.html",
     }),
   },
 };
@@ -266,8 +266,8 @@ export const prerender = true;
 #### vite.config.ts
 
 ```typescript
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [sveltekit()],
@@ -275,12 +275,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    host: process.env.TAURI_DEV_HOST || 'localhost',
+    host: process.env.TAURI_DEV_HOST || "localhost",
     watch: {
-      ignored: ['**/src-tauri/**'],
+      ignored: ["**/src-tauri/**"],
     },
   },
-  envPrefix: ['VITE_', 'TAURI_ENV_*'],
+  envPrefix: ["VITE_", "TAURI_ENV_*"],
 });
 ```
 
@@ -362,13 +362,13 @@ npm run tauri init
 
 ## Quick Reference Table
 
-| Framework  | Output Dir | Dev Port | Build Command     | Key Config                    |
-|------------|------------|----------|-------------------|-------------------------------|
-| Vite       | `dist`     | 5173     | `vite build`      | Standard Vite config          |
-| Next.js    | `out`      | 3000     | `next build`      | `output: 'export'`            |
-| Nuxt       | `dist`     | 3000     | `nuxt generate`   | `ssr: false`                  |
-| SvelteKit  | `build`    | 5173     | `vite build`      | `adapter-static`              |
-| Qwik       | `dist`     | 5173     | `qwik build`      | Static adapter                |
+| Framework | Output Dir | Dev Port | Build Command   | Key Config           |
+| --------- | ---------- | -------- | --------------- | -------------------- |
+| Vite      | `dist`     | 5173     | `vite build`    | Standard Vite config |
+| Next.js   | `out`      | 3000     | `next build`    | `output: 'export'`   |
+| Nuxt      | `dist`     | 3000     | `nuxt generate` | `ssr: false`         |
+| SvelteKit | `build`    | 5173     | `vite build`    | `adapter-static`     |
+| Qwik      | `dist`     | 5173     | `qwik build`    | Static adapter       |
 
 ---
 
@@ -385,6 +385,7 @@ npm run tauri init
 **Cause**: Code executing during SSG build time instead of runtime.
 
 **Solution**:
+
 - Disable prerendering for pages using Tauri APIs
 - Use dynamic imports with `ssr: false`
 - Check for `window.__TAURI__` before API calls
@@ -406,6 +407,7 @@ npm run tauri init
 **Cause**: Framework attempting server-side rendering.
 
 **Solution**: Ensure SSR is disabled:
+
 - Next.js: `output: 'export'`
 - Nuxt: `ssr: false`
 - SvelteKit: `export const ssr = false` in layout
@@ -417,16 +419,16 @@ npm run tauri init
 
 ### Tauri-Provided Variables
 
-| Variable              | Description                                      |
-|-----------------------|--------------------------------------------------|
-| `TAURI_DEV_HOST`      | Host IP for mobile development                   |
-| `TAURI_ENV_PLATFORM`  | Target platform (windows, macos, linux, ios, android) |
-| `TAURI_ENV_DEBUG`     | Set during debug builds                          |
+| Variable             | Description                                           |
+| -------------------- | ----------------------------------------------------- |
+| `TAURI_DEV_HOST`     | Host IP for mobile development                        |
+| `TAURI_ENV_PLATFORM` | Target platform (windows, macos, linux, ios, android) |
+| `TAURI_ENV_DEBUG`    | Set during debug builds                               |
 
 ### Recommended envPrefix
 
 ```typescript
-envPrefix: ['VITE_', 'TAURI_ENV_*']
+envPrefix: ["VITE_", "TAURI_ENV_*"];
 ```
 
 ---
@@ -457,6 +459,7 @@ server: {
 ```
 
 Run with the appropriate mobile command:
+
 ```bash
 npm run tauri ios dev
 npm run tauri android dev

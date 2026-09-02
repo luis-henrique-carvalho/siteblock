@@ -9,13 +9,13 @@ This skill provides comprehensive guidance for code signing Tauri applications a
 
 ## Platform Overview
 
-| Platform | Requirement | Certificate Type |
-|----------|-------------|------------------|
-| Android | Required for Play Store | Java Keystore (JKS) |
-| iOS | Required for distribution | Apple Developer Certificate |
-| Linux | Optional (enhances trust) | GPG Key |
-| macOS | Required for distribution | Developer ID / Apple Distribution |
-| Windows | Required (SmartScreen) | OV or EV Certificate |
+| Platform | Requirement               | Certificate Type                  |
+| -------- | ------------------------- | --------------------------------- |
+| Android  | Required for Play Store   | Java Keystore (JKS)               |
+| iOS      | Required for distribution | Apple Developer Certificate       |
+| Linux    | Optional (enhances trust) | GPG Key                           |
+| macOS    | Required for distribution | Developer ID / Apple Distribution |
+| Windows  | Required (SmartScreen)    | OV or EV Certificate              |
 
 ---
 
@@ -24,11 +24,13 @@ This skill provides comprehensive guidance for code signing Tauri applications a
 ### Generate Keystore
 
 **macOS/Linux:**
+
 ```bash
 keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
 
 **Windows:**
+
 ```powershell
 keytool -genkey -v -keystore $env:USERPROFILE\upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
@@ -82,11 +84,11 @@ android {
 
 ### CI/CD Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `ANDROID_KEY_ALIAS` | Key alias (e.g., `upload`) |
-| `ANDROID_KEY_PASSWORD` | Keystore password |
-| `ANDROID_KEY_BASE64` | Base64-encoded keystore file |
+| Variable               | Description                  |
+| ---------------------- | ---------------------------- |
+| `ANDROID_KEY_ALIAS`    | Key alias (e.g., `upload`)   |
+| `ANDROID_KEY_PASSWORD` | Keystore password            |
+| `ANDROID_KEY_BASE64`   | Base64-encoded keystore file |
 
 **GitHub Actions Example:**
 
@@ -117,27 +119,27 @@ For local development, authenticate through Xcode Settings > Accounts.
 
 For CI/CD, create an App Store Connect API key and set:
 
-| Variable | Description |
-|----------|-------------|
-| `APPLE_API_ISSUER` | Issuer ID from App Store Connect |
-| `APPLE_API_KEY` | Key ID from App Store Connect |
+| Variable             | Description                        |
+| -------------------- | ---------------------------------- |
+| `APPLE_API_ISSUER`   | Issuer ID from App Store Connect   |
+| `APPLE_API_KEY`      | Key ID from App Store Connect      |
 | `APPLE_API_KEY_PATH` | Path to the `.p8` private key file |
 
 ### Manual Signing
 
-| Variable | Description |
-|----------|-------------|
-| `IOS_CERTIFICATE` | Base64-encoded `.p12` certificate |
+| Variable                   | Description                              |
+| -------------------------- | ---------------------------------------- |
+| `IOS_CERTIFICATE`          | Base64-encoded `.p12` certificate        |
 | `IOS_CERTIFICATE_PASSWORD` | Password used when exporting certificate |
-| `IOS_MOBILE_PROVISION` | Base64-encoded provisioning profile |
+| `IOS_MOBILE_PROVISION`     | Base64-encoded provisioning profile      |
 
 ### Certificate Types by Distribution Method
 
-| Distribution | Certificate Type |
-|--------------|------------------|
-| Debugging | Apple Development or iOS App Development |
-| App Store | Apple Distribution or iOS Distribution |
-| Ad Hoc | Apple Distribution or iOS Distribution |
+| Distribution | Certificate Type                         |
+| ------------ | ---------------------------------------- |
+| Debugging    | Apple Development or iOS App Development |
+| App Store    | Apple Distribution or iOS Distribution   |
+| Ad Hoc       | Apple Distribution or iOS Distribution   |
 
 ### Export Certificate
 
@@ -168,12 +170,12 @@ Back up the key securely.
 
 ### Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `SIGN` | Set to `1` to enable signing |
-| `SIGN_KEY` | GPG Key ID (optional, uses default if not set) |
-| `APPIMAGETOOL_SIGN_PASSPHRASE` | Key password (required for CI/CD) |
-| `APPIMAGETOOL_FORCE_SIGN` | Set to `1` to fail build on signing error |
+| Variable                       | Description                                    |
+| ------------------------------ | ---------------------------------------------- |
+| `SIGN`                         | Set to `1` to enable signing                   |
+| `SIGN_KEY`                     | GPG Key ID (optional, uses default if not set) |
+| `APPIMAGETOOL_SIGN_PASSPHRASE` | Key password (required for CI/CD)              |
+| `APPIMAGETOOL_FORCE_SIGN`      | Set to `1` to fail build on signing error      |
 
 ### Build with Signing
 
@@ -210,9 +212,9 @@ chmod +x validate-x86_64.AppImage
 
 ### Certificate Types
 
-| Certificate | Use Case |
-|-------------|----------|
-| Apple Distribution | App Store submissions |
+| Certificate              | Use Case                       |
+| ------------------------ | ------------------------------ |
+| Apple Distribution       | App Store submissions          |
 | Developer ID Application | Distribution outside App Store |
 
 ### Create Certificate
@@ -239,27 +241,27 @@ chmod +x validate-x86_64.AppImage
 
 **Certificate Variables:**
 
-| Variable | Description |
-|----------|-------------|
-| `APPLE_CERTIFICATE` | Base64-encoded `.p12` certificate |
+| Variable                     | Description                       |
+| ---------------------------- | --------------------------------- |
+| `APPLE_CERTIFICATE`          | Base64-encoded `.p12` certificate |
 | `APPLE_CERTIFICATE_PASSWORD` | Password for exported certificate |
-| `APPLE_SIGNING_IDENTITY` | Certificate name in keychain |
+| `APPLE_SIGNING_IDENTITY`     | Certificate name in keychain      |
 
 **Notarization - Option 1: App Store Connect API (Recommended):**
 
-| Variable | Description |
-|----------|-------------|
-| `APPLE_API_ISSUER` | Issuer ID |
-| `APPLE_API_KEY` | Key ID |
+| Variable             | Description               |
+| -------------------- | ------------------------- |
+| `APPLE_API_ISSUER`   | Issuer ID                 |
+| `APPLE_API_KEY`      | Key ID                    |
 | `APPLE_API_KEY_PATH` | Path to `.p8` private key |
 
 **Notarization - Option 2: Apple ID:**
 
-| Variable | Description |
-|----------|-------------|
-| `APPLE_ID` | Apple ID email |
+| Variable         | Description           |
+| ---------------- | --------------------- |
+| `APPLE_ID`       | Apple ID email        |
 | `APPLE_PASSWORD` | App-specific password |
-| `APPLE_TEAM_ID` | Team identifier |
+| `APPLE_TEAM_ID`  | Team identifier       |
 
 ### Export Certificate for CI/CD
 
@@ -304,10 +306,10 @@ For unsigned distribution or testing without Apple credentials:
 
 ### Certificate Types
 
-| Type | SmartScreen | Availability |
-|------|-------------|--------------|
-| OV (Organization Validated) | Builds reputation over time | Before June 1, 2023 |
-| EV (Extended Validation) | Immediate trust | Required after June 1, 2023 |
+| Type                        | SmartScreen                 | Availability                |
+| --------------------------- | --------------------------- | --------------------------- |
+| OV (Organization Validated) | Builds reputation over time | Before June 1, 2023         |
+| EV (Extended Validation)    | Immediate trust             | Required after June 1, 2023 |
 
 **Note:** Certificates obtained after June 1, 2023 require EV certificates for immediate SmartScreen trust.
 
@@ -348,10 +350,10 @@ openssl pkcs12 -export -in cert.cer -inkey private-key.key -out certificate.pfx
 
 ### Environment Variables for CI/CD
 
-| Variable | Description |
-|----------|-------------|
-| `WINDOWS_CERTIFICATE` | Base64-encoded `.pfx` file |
-| `WINDOWS_CERTIFICATE_PASSWORD` | PFX export password |
+| Variable                       | Description                |
+| ------------------------------ | -------------------------- |
+| `WINDOWS_CERTIFICATE`          | Base64-encoded `.pfx` file |
+| `WINDOWS_CERTIFICATE_PASSWORD` | PFX export password        |
 
 ### GitHub Actions Example
 
@@ -370,11 +372,11 @@ openssl pkcs12 -export -in cert.cer -inkey private-key.key -out certificate.pfx
 
 For cloud-based signing with Azure Key Vault:
 
-| Variable | Description |
-|----------|-------------|
-| `AZURE_CLIENT_ID` | Azure AD application client ID |
-| `AZURE_CLIENT_SECRET` | Azure AD application secret |
-| `AZURE_TENANT_ID` | Azure AD tenant ID |
+| Variable              | Description                    |
+| --------------------- | ------------------------------ |
+| `AZURE_CLIENT_ID`     | Azure AD application client ID |
+| `AZURE_CLIENT_SECRET` | Azure AD application secret    |
+| `AZURE_TENANT_ID`     | Azure AD tenant ID             |
 
 Configure in `tauri.conf.json`:
 
@@ -423,41 +425,49 @@ The `%1` placeholder is replaced with the executable path.
 ## Quick Reference: All Environment Variables
 
 ### Android
+
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 - `ANDROID_KEY_BASE64`
 
 ### iOS (Manual)
+
 - `IOS_CERTIFICATE`
 - `IOS_CERTIFICATE_PASSWORD`
 - `IOS_MOBILE_PROVISION`
 
 ### iOS/macOS (API Key)
+
 - `APPLE_API_ISSUER`
 - `APPLE_API_KEY`
 - `APPLE_API_KEY_PATH`
 
 ### macOS (Certificate)
+
 - `APPLE_CERTIFICATE`
 - `APPLE_CERTIFICATE_PASSWORD`
 - `APPLE_SIGNING_IDENTITY`
 
 ### macOS (Apple ID Notarization)
+
 - `APPLE_ID`
 - `APPLE_PASSWORD`
 - `APPLE_TEAM_ID`
 
 ### Linux
+
 - `SIGN`
 - `SIGN_KEY`
 - `APPIMAGETOOL_SIGN_PASSPHRASE`
 - `APPIMAGETOOL_FORCE_SIGN`
 
 ### Windows
+
 - `WINDOWS_CERTIFICATE`
 - `WINDOWS_CERTIFICATE_PASSWORD`
 
 ### Azure (Windows)
+
 - `AZURE_CLIENT_ID`
 - `AZURE_CLIENT_SECRET`
 - `AZURE_TENANT_ID`

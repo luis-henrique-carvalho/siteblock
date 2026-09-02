@@ -115,12 +115,12 @@ tauri ios build --open
 
 Add capabilities based on app requirements:
 
-| Capability | When Required |
-|------------|---------------|
-| Push Notifications | If using APNs |
-| Background Modes | For background tasks |
-| App Groups | For sharing data between extensions |
-| Associated Domains | For universal links |
+| Capability         | When Required                       |
+| ------------------ | ----------------------------------- |
+| Push Notifications | If using APNs                       |
+| Background Modes   | For background tasks                |
+| App Groups         | For sharing data between extensions |
+| Associated Domains | For universal links                 |
 
 ### Info.plist Configuration
 
@@ -184,6 +184,7 @@ tauri ios build --export-method app-store-connect
 ```
 
 The IPA is generated at:
+
 ```
 src-tauri/gen/apple/build/arm64/[AppName].ipa
 ```
@@ -304,14 +305,14 @@ After upload processing (typically 15-30 minutes):
 
 Required assets:
 
-| Asset | Specification |
-|-------|---------------|
-| Screenshots | 6.7" (1290x2796), 6.5" (1284x2778), 5.5" (1242x2208) |
-| App Icon | 1024x1024 PNG (no alpha) |
-| Description | Up to 4000 characters |
-| Keywords | Up to 100 characters |
-| Support URL | Required |
-| Privacy Policy URL | Required |
+| Asset              | Specification                                        |
+| ------------------ | ---------------------------------------------------- |
+| Screenshots        | 6.7" (1290x2796), 6.5" (1284x2778), 5.5" (1242x2208) |
+| App Icon           | 1024x1024 PNG (no alpha)                             |
+| Description        | Up to 4000 characters                                |
+| Keywords           | Up to 100 characters                                 |
+| Support URL        | Required                                             |
+| Privacy Policy URL | Required                                             |
 
 ### App Privacy
 
@@ -336,6 +337,7 @@ Review typically takes 24-48 hours.
 ### Code Signing Errors
 
 **"No signing certificate found"**
+
 ```bash
 # List available certificates
 security find-identity -v -p codesigning
@@ -345,30 +347,35 @@ security find-certificate -c "Apple Distribution" -p
 ```
 
 **"Provisioning profile doesn't match"**
+
 - Ensure bundle ID matches exactly in all locations
 - Regenerate provisioning profile if certificates changed
 
 ### Build Failures
 
 **"Unsupported architecture"**
+
 ```bash
 # Ensure building for correct target
 tauri ios build --target aarch64-apple-ios --export-method app-store-connect
 ```
 
 **"Missing entitlements"**
+
 - Check capabilities in Xcode match App ID capabilities
 - Regenerate provisioning profile after capability changes
 
 ### Upload Errors
 
 **"Invalid binary"**
+
 - Ensure minimum iOS version is set correctly
 - Verify all required icons are present
 - Check Info.plist has required keys
 
 **"Missing compliance"**
 Add to Info.plist if not using encryption:
+
 ```xml
 <key>ITSAppUsesNonExemptEncryption</key>
 <false/>
@@ -384,7 +391,7 @@ name: iOS Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   build-ios:
@@ -395,7 +402,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install Rust
         uses: dtolnay/rust-action@stable

@@ -55,10 +55,10 @@ Configure Android-specific settings in your `tauri.conf.json`:
 
 ### Configuration Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `minSdkVersion` | 24 | Minimum Android SDK version (Android 7.0) |
-| `versionCode` | Auto-calculated | Integer version code for Play Store |
+| Option          | Default         | Description                               |
+| --------------- | --------------- | ----------------------------------------- |
+| `minSdkVersion` | 24              | Minimum Android SDK version (Android 7.0) |
+| `versionCode`   | Auto-calculated | Integer version code for Play Store       |
 
 ### Version Code Calculation
 
@@ -97,6 +97,7 @@ Default minimum is Android 7.0 (SDK 24). For higher requirements:
 ```
 
 **Common SDK versions**:
+
 - SDK 24: Android 7.0 (Nougat)
 - SDK 26: Android 8.0 (Oreo)
 - SDK 28: Android 9.0 (Pie)
@@ -127,6 +128,7 @@ cargo tauri android build --aab
 ```
 
 **Output location**:
+
 ```
 gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab
 ```
@@ -162,6 +164,7 @@ npm run tauri android build -- --target aarch64 --target armv7
 ```
 
 **Available targets**:
+
 - `aarch64` - ARM 64-bit (most modern devices)
 - `armv7` - ARM 32-bit (older devices)
 - `i686` - Intel 32-bit (emulators)
@@ -347,13 +350,13 @@ npm run tauri android build -- --aab --target aarch64
 
 ### File Locations
 
-| File | Location |
-|------|----------|
-| AAB output | `gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab` |
-| APK output | `gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk` |
-| Gradle config | `gen/android/app/build.gradle.kts` |
-| Keystore properties | `gen/android/keystore.properties` |
-| Android manifest | `gen/android/app/src/main/AndroidManifest.xml` |
+| File                | Location                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| AAB output          | `gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab`        |
+| APK output          | `gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk` |
+| Gradle config       | `gen/android/app/build.gradle.kts`                                                       |
+| Keystore properties | `gen/android/keystore.properties`                                                        |
+| Android manifest    | `gen/android/app/src/main/AndroidManifest.xml`                                           |
 
 ### Resources
 

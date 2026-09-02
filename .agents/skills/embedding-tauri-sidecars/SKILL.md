@@ -12,6 +12,7 @@ This skill covers embedding and executing external binaries (sidecars) in Tauri 
 Sidecars are external binaries embedded within Tauri applications to extend functionality or eliminate the need for users to install dependencies. They can be executables written in any programming language.
 
 **Common Use Cases:**
+
 - Python CLI applications packaged with PyInstaller
 - Go or Rust compiled binaries for specific tasks
 - Node.js applications bundled as executables
@@ -22,12 +23,14 @@ Sidecars are external binaries embedded within Tauri applications to extend func
 Sidecars require the shell plugin:
 
 **Cargo.toml:**
+
 ```toml
 [dependencies]
 tauri-plugin-shell = "2"
 ```
 
 **Register in main.rs:**
+
 ```rust
 fn main() {
     tauri::Builder::default()
@@ -38,6 +41,7 @@ fn main() {
 ```
 
 **Frontend package:**
+
 ```bash
 npm install @tauri-apps/plugin-shell
 ```
@@ -51,10 +55,7 @@ Configure sidecars in `tauri.conf.json` under `bundle.externalBin`. Paths are re
 ```json
 {
   "bundle": {
-    "externalBin": [
-      "binaries/my-sidecar",
-      "../external/processor"
-    ]
+    "externalBin": ["binaries/my-sidecar", "../external/processor"]
   }
 }
 ```
@@ -65,15 +66,16 @@ Configure sidecars in `tauri.conf.json` under `bundle.externalBin`. Paths are re
 
 Each sidecar requires platform-specific variants with target triple suffixes:
 
-| Platform | Architecture | Required Filename |
-|----------|--------------|-------------------|
-| Linux | x86_64 | `my-sidecar-x86_64-unknown-linux-gnu` |
-| Linux | ARM64 | `my-sidecar-aarch64-unknown-linux-gnu` |
-| macOS | Intel | `my-sidecar-x86_64-apple-darwin` |
-| macOS | Apple Silicon | `my-sidecar-aarch64-apple-darwin` |
-| Windows | x86_64 | `my-sidecar-x86_64-pc-windows-msvc.exe` |
+| Platform | Architecture  | Required Filename                       |
+| -------- | ------------- | --------------------------------------- |
+| Linux    | x86_64        | `my-sidecar-x86_64-unknown-linux-gnu`   |
+| Linux    | ARM64         | `my-sidecar-aarch64-unknown-linux-gnu`  |
+| macOS    | Intel         | `my-sidecar-x86_64-apple-darwin`        |
+| macOS    | Apple Silicon | `my-sidecar-aarch64-apple-darwin`       |
+| Windows  | x86_64        | `my-sidecar-x86_64-pc-windows-msvc.exe` |
 
 **Determine your target triple:**
+
 ```bash
 rustc --print host-tuple    # Rust 1.84.0+
 rustc -Vv | grep host       # Older versions
@@ -226,10 +228,10 @@ Grant shell execution permissions in `src-tauri/capabilities/default.json`:
 ### Basic Execution
 
 ```typescript
-import { Command } from '@tauri-apps/plugin-shell';
+import { Command } from "@tauri-apps/plugin-shell";
 
 async function runSidecar(): Promise<string> {
-  const command = Command.sidecar('binaries/my-sidecar');
+  const command = Command.sidecar("binaries/my-sidecar");
   const output = await command.execute();
   if (output.code === 0) return output.stdout;
   throw new Error(output.stderr);
@@ -240,9 +242,7 @@ async function runSidecar(): Promise<string> {
 
 ```typescript
 async function processFile(filePath: string): Promise<string> {
-  const command = Command.sidecar('binaries/processor', [
-    '--input', filePath, '--format', 'json'
-  ]);
+  const command = Command.sidecar("binaries/processor", ["--input", filePath, "--format", "json"]);
   const output = await command.execute();
   return output.stdout;
 }
@@ -251,15 +251,15 @@ async function processFile(filePath: string): Promise<string> {
 ### Handling Streaming Output
 
 ```typescript
-import { Command, Child } from '@tauri-apps/plugin-shell';
+import { Command, Child } from "@tauri-apps/plugin-shell";
 
 async function runWithStreaming(): Promise<Child> {
-  const command = Command.sidecar('binaries/long-task');
+  const command = Command.sidecar("binaries/long-task");
 
-  command.on('close', (data) => console.log(`Finished: ${data.code}`));
-  command.on('error', (error) => console.error(error));
-  command.stdout.on('data', (line) => console.log(line));
-  command.stderr.on('data', (line) => console.error(line));
+  command.on("close", (data) => console.log(`Finished: ${data.code}`));
+  command.on("error", (error) => console.error(error));
+  command.stdout.on("data", (line) => console.log(line));
+  command.stderr.on("data", (line) => console.error(line));
 
   return await command.spawn();
 }
@@ -271,8 +271,8 @@ async function runWithStreaming(): Promise<Child> {
 let serverProcess: Child | null = null;
 
 async function startServer(): Promise<number> {
-  const command = Command.sidecar('binaries/api-server', ['--port', '8080']);
-  command.stdout.on('data', console.log);
+  const command = Command.sidecar("binaries/api-server", ["--port", "8080"]);
+  command.stdout.on("data", console.log);
   serverProcess = await command.spawn();
   return serverProcess.pid;
 }
@@ -292,19 +292,18 @@ Configure argument validation in capabilities:
 ```json
 {
   "identifier": "shell:allow-execute",
-  "allow": [{
-    "name": "binaries/my-sidecar",
-    "sidecar": true,
-    "args": [
-      "-o",
-      "--verbose",
-      { "validator": "\\S+" }
-    ]
-  }]
+  "allow": [
+    {
+      "name": "binaries/my-sidecar",
+      "sidecar": true,
+      "args": ["-o", "--verbose", { "validator": "\\S+" }]
+    }
+  ]
 }
 ```
 
 **Argument types:**
+
 - **Static string**: Exact match required (`-o`, `--verbose`)
 - **Validator object**: Regex pattern for dynamic values
 - **`true`**: Allow any argument (use with caution)
@@ -314,6 +313,7 @@ Configure argument validation in capabilities:
 ### Building Platform-Specific Binaries
 
 **Rust sidecars:**
+
 ```bash
 cargo build --release --target x86_64-unknown-linux-gnu
 cp target/x86_64-unknown-linux-gnu/release/my-tool \
@@ -321,6 +321,7 @@ cp target/x86_64-unknown-linux-gnu/release/my-tool \
 ```
 
 **Python with PyInstaller:**
+
 ```bash
 pyinstaller --onefile my_script.py
 mv dist/my_script dist/my_script-x86_64-unknown-linux-gnu
@@ -329,15 +330,18 @@ mv dist/my_script dist/my_script-x86_64-unknown-linux-gnu
 ### Platform Notes
 
 **Windows:**
+
 - Executables must have `.exe` extension
 - Handle line endings in text file processing
 
 **macOS:**
+
 - Use `lipo` for universal binaries (Intel + Apple Silicon)
 - Code signing may be required for distribution
 - Gatekeeper may block unsigned sidecars
 
 **Linux:**
+
 - Mark binaries as executable (`chmod +x`)
 - Consider glibc version compatibility
 - Static linking reduces dependency issues
@@ -345,6 +349,7 @@ mv dist/my_script dist/my_script-x86_64-unknown-linux-gnu
 ## Complete Example
 
 **tauri.conf.json:**
+
 ```json
 {
   "productName": "My App",
@@ -357,6 +362,7 @@ mv dist/my_script dist/my_script-x86_64-unknown-linux-gnu
 ```
 
 **capabilities/default.json:**
+
 ```json
 {
   "$schema": "../gen/schemas/desktop-schema.json",
@@ -366,20 +372,25 @@ mv dist/my_script dist/my_script-x86_64-unknown-linux-gnu
     "core:default",
     {
       "identifier": "shell:allow-execute",
-      "allow": [{
-        "name": "binaries/data-processor",
-        "sidecar": true,
-        "args": [
-          "--input", { "validator": "^[a-zA-Z0-9_\\-./]+$" },
-          "--output", { "validator": "^[a-zA-Z0-9_\\-./]+$" }
-        ]
-      }]
+      "allow": [
+        {
+          "name": "binaries/data-processor",
+          "sidecar": true,
+          "args": [
+            "--input",
+            { "validator": "^[a-zA-Z0-9_\\-./]+$" },
+            "--output",
+            { "validator": "^[a-zA-Z0-9_\\-./]+$" }
+          ]
+        }
+      ]
     }
   ]
 }
 ```
 
 **src/main.rs:**
+
 ```rust
 use tauri_plugin_shell::ShellExt;
 
@@ -406,19 +417,20 @@ fn main() {
 ```
 
 **Frontend (App.tsx):**
+
 ```tsx
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 function App() {
   const handleProcess = async () => {
     try {
-      const result = await invoke('process_data', {
-        input: '/path/to/input.txt',
-        output: '/path/to/output.txt'
+      const result = await invoke("process_data", {
+        input: "/path/to/input.txt",
+        output: "/path/to/output.txt",
       });
-      console.log('Result:', result);
+      console.log("Result:", result);
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   };
 

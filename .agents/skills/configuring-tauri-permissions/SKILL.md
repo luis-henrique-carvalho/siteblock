@@ -13,12 +13,12 @@ Permissions in Tauri are explicit privileges that grant or deny access to specif
 
 ### Core Components
 
-| Component | Purpose |
-|-----------|---------|
-| Permission | Defines access to specific commands |
-| Scope | Restricts commands to specific paths/resources |
-| Capability | Links permissions to windows/webviews |
-| Identifier | Unique name referencing a permission |
+| Component  | Purpose                                        |
+| ---------- | ---------------------------------------------- |
+| Permission | Defines access to specific commands            |
+| Scope      | Restricts commands to specific paths/resources |
+| Capability | Links permissions to windows/webviews          |
+| Identifier | Unique name referencing a permission           |
 
 ### Security Model
 
@@ -33,12 +33,12 @@ Permissions in Tauri are explicit privileges that grant or deny access to specif
 
 Format: `<plugin-name>:<permission-type>`
 
-| Pattern | Example | Description |
-|---------|---------|-------------|
-| `<name>:default` | `fs:default` | Default permission set |
-| `<name>:allow-<command>` | `fs:allow-read-file` | Allow specific command |
-| `<name>:deny-<command>` | `fs:deny-write-file` | Deny specific command |
-| `<name>:allow-<scope>` | `fs:allow-app-read` | Allow with predefined scope |
+| Pattern                  | Example              | Description                 |
+| ------------------------ | -------------------- | --------------------------- |
+| `<name>:default`         | `fs:default`         | Default permission set      |
+| `<name>:allow-<command>` | `fs:allow-read-file` | Allow specific command      |
+| `<name>:deny-<command>`  | `fs:deny-write-file` | Deny specific command       |
+| `<name>:allow-<scope>`   | `fs:allow-app-read`  | Allow with predefined scope |
 
 ### Identifier Rules
 
@@ -162,40 +162,35 @@ Use `"*"` to target all windows:
 ```json
 {
   "identifier": "fs:allow-read-file",
-  "allow": [
-    { "path": "$HOME/Documents/*" },
-    { "path": "$APPDATA/**" }
-  ],
-  "deny": [
-    { "path": "$HOME/Documents/secrets/*" }
-  ]
+  "allow": [{ "path": "$HOME/Documents/*" }, { "path": "$APPDATA/**" }],
+  "deny": [{ "path": "$HOME/Documents/secrets/*" }]
 }
 ```
 
 ### Scope Variables
 
-| Variable | Description |
-|----------|-------------|
-| `$APP` | Application install directory |
-| `$APPCONFIG` | App config directory |
-| `$APPDATA` | App data directory |
-| `$APPLOCALDATA` | App local data directory |
-| `$APPCACHE` | App cache directory |
-| `$APPLOG` | App log directory |
-| `$HOME` | User home directory |
-| `$DESKTOP` | Desktop directory |
-| `$DOCUMENT` | Documents directory |
-| `$DOWNLOAD` | Downloads directory |
-| `$RESOURCE` | App resource directory |
-| `$TEMP` | Temporary directory |
+| Variable        | Description                   |
+| --------------- | ----------------------------- |
+| `$APP`          | Application install directory |
+| `$APPCONFIG`    | App config directory          |
+| `$APPDATA`      | App data directory            |
+| `$APPLOCALDATA` | App local data directory      |
+| `$APPCACHE`     | App cache directory           |
+| `$APPLOG`       | App log directory             |
+| `$HOME`         | User home directory           |
+| `$DESKTOP`      | Desktop directory             |
+| `$DOCUMENT`     | Documents directory           |
+| `$DOWNLOAD`     | Downloads directory           |
+| `$RESOURCE`     | App resource directory        |
+| `$TEMP`         | Temporary directory           |
 
 ### Glob Patterns
 
-| Pattern | Matches |
-|---------|---------|
-| `*` | Any file in directory |
-| `**` | Recursive (all subdirectories) |
-| `*.txt` | Files with .txt extension |
+| Pattern | Matches                        |
+| ------- | ------------------------------ |
+| `*`     | Any file in directory          |
+| `**`    | Recursive (all subdirectories) |
+| `*.txt` | Files with .txt extension      |
 
 ### Deny Precedence
 
@@ -219,12 +214,7 @@ Deny rules always override allow rules:
 
 ```json
 {
-  "permissions": [
-    "fs:default",
-    "shell:default",
-    "http:default",
-    "dialog:default"
-  ]
+  "permissions": ["fs:default", "shell:default", "http:default", "dialog:default"]
 }
 ```
 
@@ -268,9 +258,7 @@ Deny rules always override allow rules:
     "shell:allow-open",
     {
       "identifier": "shell:allow-execute",
-      "allow": [
-        { "name": "git", "cmd": "git", "args": true }
-      ]
+      "allow": [{ "name": "git", "cmd": "git", "args": true }]
     }
   ]
 }
@@ -278,14 +266,14 @@ Deny rules always override allow rules:
 
 ### Directory-Specific Filesystem Permissions
 
-| Permission | Access |
-|------------|--------|
-| `fs:allow-appdata-read` | Read $APPDATA (non-recursive) |
-| `fs:allow-appdata-read-recursive` | Read $APPDATA (recursive) |
-| `fs:allow-appdata-write` | Write $APPDATA (non-recursive) |
-| `fs:allow-appdata-write-recursive` | Write $APPDATA (recursive) |
-| `fs:allow-home-read-recursive` | Read $HOME (recursive) |
-| `fs:allow-temp-write` | Write to temp directory |
+| Permission                         | Access                         |
+| ---------------------------------- | ------------------------------ |
+| `fs:allow-appdata-read`            | Read $APPDATA (non-recursive)  |
+| `fs:allow-appdata-read-recursive`  | Read $APPDATA (recursive)      |
+| `fs:allow-appdata-write`           | Write $APPDATA (non-recursive) |
+| `fs:allow-appdata-write-recursive` | Write $APPDATA (recursive)     |
+| `fs:allow-home-read-recursive`     | Read $HOME (recursive)         |
+| `fs:allow-temp-write`              | Write to temp directory        |
 
 ## Custom Permission Definition
 
@@ -335,6 +323,7 @@ fn main() {
 ```
 
 This generates:
+
 - `allow-get-user` / `deny-get-user`
 - `allow-save-user` / `deny-save-user`
 - `allow-delete-user` / `deny-delete-user`
@@ -363,9 +352,7 @@ Allow remote URLs to access Tauri APIs (use with caution):
   "remote": {
     "urls": ["https://*.myapp.com"]
   },
-  "permissions": [
-    "core:default"
-  ]
+  "permissions": ["core:default"]
 }
 ```
 
@@ -408,11 +395,13 @@ Or inline capabilities directly:
 ### Common Errors
 
 **"Not allowed on this command"**
+
 - Verify command permission is in capability
 - Check scope includes the target path
 - Ensure capability targets correct window
 
 **Permission not found**
+
 - Check identifier spelling (lowercase only)
 - Verify plugin is installed
 - Run `cargo build` to regenerate permissions

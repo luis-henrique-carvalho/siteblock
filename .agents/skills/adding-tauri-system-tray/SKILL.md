@@ -389,25 +389,28 @@ pub fn run() {
 
 ## Platform Notes
 
-| Platform | Support |
-|----------|---------|
-| Windows | Full support for all tray events |
-| macOS | Full support for all tray events |
-| Linux | `Enter`, `Move`, `Leave` events not supported |
+| Platform | Support                                       |
+| -------- | --------------------------------------------- |
+| Windows  | Full support for all tray events              |
+| macOS    | Full support for all tray events              |
+| Linux    | `Enter`, `Move`, `Leave` events not supported |
 
 ## Troubleshooting
 
 **Tray icon not appearing:**
+
 - Ensure `tray-icon` feature is enabled in `Cargo.toml`
 - Verify the icon is valid and accessible
 - Check that `build()` is called and result is stored
 
 **Menu not showing:**
+
 - Confirm menu is attached with `.menu(&menu)`
 - Check `menu_on_left_click` setting
 - Verify menu items are created correctly
 
 **Events not firing:**
+
 - Ensure event handlers are attached before `build()`
 - Check pattern matching in event handlers
 - Verify tray ID matches when using `tray_by_id()`

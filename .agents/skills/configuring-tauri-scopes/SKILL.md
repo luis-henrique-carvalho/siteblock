@@ -25,6 +25,7 @@ The scope is passed to the command during execution. The command implementation 
 ## Scope Configuration Location
 
 Scopes are configured in capability files located at:
+
 - `src-tauri/capabilities/default.json` (primary)
 - `src-tauri/capabilities/*.json` (additional capability files)
 
@@ -86,27 +87,27 @@ Restrict individual filesystem operations rather than global access:
 
 Tauri provides runtime-injected variables for common system directories:
 
-| Variable | Description |
-|----------|-------------|
-| `$APPCONFIG` | Application config directory |
-| `$APPDATA` | Application data directory |
+| Variable        | Description                      |
+| --------------- | -------------------------------- |
+| `$APPCONFIG`    | Application config directory     |
+| `$APPDATA`      | Application data directory       |
 | `$APPLOCALDATA` | Application local data directory |
-| `$APPCACHE` | Application cache directory |
-| `$APPLOG` | Application log directory |
-| `$AUDIO` | User audio directory |
-| `$CACHE` | System cache directory |
-| `$CONFIG` | System config directory |
-| `$DATA` | System data directory |
-| `$DESKTOP` | User desktop directory |
-| `$DOCUMENT` | User documents directory |
-| `$DOWNLOAD` | User downloads directory |
-| `$EXE` | Application executable directory |
-| `$HOME` | User home directory |
-| `$PICTURE` | User pictures directory |
-| `$PUBLIC` | Public directory |
-| `$RESOURCE` | Application resource directory |
-| `$TEMP` | Temporary directory |
-| `$VIDEO` | User video directory |
+| `$APPCACHE`     | Application cache directory      |
+| `$APPLOG`       | Application log directory        |
+| `$AUDIO`        | User audio directory             |
+| `$CACHE`        | System cache directory           |
+| `$CONFIG`       | System config directory          |
+| `$DATA`         | System data directory            |
+| `$DESKTOP`      | User desktop directory           |
+| `$DOCUMENT`     | User documents directory         |
+| `$DOWNLOAD`     | User downloads directory         |
+| `$EXE`          | Application executable directory |
+| `$HOME`         | User home directory              |
+| `$PICTURE`      | User pictures directory          |
+| `$PUBLIC`       | Public directory                 |
+| `$RESOURCE`     | Application resource directory   |
+| `$TEMP`         | Temporary directory              |
+| `$VIDEO`        | User video directory             |
 
 ## Scope Patterns
 
@@ -124,10 +125,7 @@ Scopes support glob patterns for flexible path matching.
         { "path": "$DOCUMENT/**/*.txt" },
         { "path": "$HOME/project/src/**" }
       ],
-      "deny": [
-        { "path": "$HOME/.ssh/**" },
-        { "path": "$HOME/.gnupg/**" }
-      ]
+      "deny": [{ "path": "$HOME/.ssh/**" }, { "path": "$HOME/.gnupg/**" }]
     }
   ]
 }
@@ -135,16 +133,17 @@ Scopes support glob patterns for flexible path matching.
 
 ### Pattern Syntax
 
-| Pattern | Meaning |
-|---------|---------|
-| `*` | Matches any characters except path separator |
-| `**` | Matches any characters including path separator (recursive) |
-| `?` | Matches a single character |
-| `[abc]` | Matches any character in brackets |
+| Pattern | Meaning                                                     |
+| ------- | ----------------------------------------------------------- |
+| `*`     | Matches any characters except path separator                |
+| `**`    | Matches any characters including path separator (recursive) |
+| `?`     | Matches a single character                                  |
+| `[abc]` | Matches any character in brackets                           |
 
 ### Path Traversal Prevention
 
 Tauri prevents path traversal attacks. These paths are NOT allowed:
+
 - `/usr/path/to/../file`
 - `../path/to/file`
 
@@ -173,10 +172,7 @@ The HTTP plugin uses URL patterns to control network access.
   "permissions": [
     {
       "identifier": "http:default",
-      "allow": [
-        { "url": "https://api.example.com/*" },
-        { "url": "https://*.cdn.example.com/**" }
-      ]
+      "allow": [{ "url": "https://api.example.com/*" }, { "url": "https://*.cdn.example.com/**" }]
     }
   ]
 }
@@ -290,6 +286,7 @@ fn allow_file(
 ### Security Warning
 
 Dynamic scope expansion should be used carefully:
+
 - Validate paths before expanding scope
 - Prefer static configuration when possible
 - Never expand scope based on unvalidated user input
@@ -327,10 +324,7 @@ Control which remote URLs can access your application's commands.
     },
     {
       "identifier": "fs:allow-read-text-file",
-      "allow": [
-        { "path": "$DOCUMENT/**/*.md" },
-        { "path": "$DOCUMENT/**/*.txt" }
-      ]
+      "allow": [{ "path": "$DOCUMENT/**/*.md" }, { "path": "$DOCUMENT/**/*.txt" }]
     },
     {
       "identifier": "fs:allow-write-text-file",
@@ -381,10 +375,7 @@ Control which remote URLs can access your application's commands.
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "$DOCUMENT/**" }],
-      "deny": [
-        { "path": "$DOCUMENT/.hidden/**" },
-        { "path": "$DOCUMENT/**/*.key" }
-      ]
+      "deny": [{ "path": "$DOCUMENT/.hidden/**" }, { "path": "$DOCUMENT/**/*.key" }]
     }
   ]
 }
@@ -397,13 +388,8 @@ Control which remote URLs can access your application's commands.
   "permissions": [
     {
       "identifier": "http:default",
-      "allow": [
-        { "url": "https://api.myapp.com/v1/*" },
-        { "url": "https://cdn.myapp.com/**" }
-      ],
-      "deny": [
-        { "url": "https://api.myapp.com/v1/admin/*" }
-      ]
+      "allow": [{ "url": "https://api.myapp.com/v1/*" }, { "url": "https://cdn.myapp.com/**" }],
+      "deny": [{ "url": "https://api.myapp.com/v1/admin/*" }]
     }
   ]
 }

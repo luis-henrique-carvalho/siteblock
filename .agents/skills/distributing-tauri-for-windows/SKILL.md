@@ -11,10 +11,10 @@ This skill covers Windows distribution for Tauri v2 applications, including MSI/
 
 Tauri supports two Windows installer formats:
 
-| Format | Extension | Build Platform | Notes |
-|--------|-----------|----------------|-------|
-| WiX MSI | `.msi` | Windows only | Traditional Windows installer |
-| NSIS | `-setup.exe` | Cross-platform | Can build on Linux/macOS |
+| Format  | Extension    | Build Platform | Notes                         |
+| ------- | ------------ | -------------- | ----------------------------- |
+| WiX MSI | `.msi`       | Windows only   | Traditional Windows installer |
+| NSIS    | `-setup.exe` | Cross-platform | Can build on Linux/macOS      |
 
 ## Building Installers
 
@@ -48,6 +48,7 @@ npm run tauri build -- --target aarch64-pc-windows-msvc
 NSIS installers can be built on non-Windows systems:
 
 **Prerequisites (Linux):**
+
 ```bash
 # Install NSIS and build tools (Debian/Ubuntu)
 sudo apt install nsis lld llvm clang
@@ -60,6 +61,7 @@ cargo install --locked cargo-xwin
 ```
 
 **Prerequisites (macOS):**
+
 ```bash
 # Install via Homebrew
 brew install nsis llvm
@@ -75,6 +77,7 @@ cargo install --locked cargo-xwin
 ```
 
 **Build command:**
+
 ```bash
 npm run tauri build -- --runner cargo-xwin --target x86_64-pc-windows-msvc
 ```
@@ -83,13 +86,13 @@ npm run tauri build -- --runner cargo-xwin --target x86_64-pc-windows-msvc
 
 Configure how WebView2 runtime is installed on end-user machines:
 
-| Mode | Internet Required | Size Impact | Best For |
-|------|-------------------|-------------|----------|
-| `downloadBootstrapper` | Yes | 0 MB | Default, smallest installer |
-| `embedBootstrapper` | Yes | ~1.8 MB | Better Windows 7 support |
-| `offlineInstaller` | No | ~127 MB | Offline/air-gapped environments |
-| `fixedVersion` | No | ~180 MB | Controlled enterprise deployment |
-| `skip` | No | 0 MB | Not recommended |
+| Mode                   | Internet Required | Size Impact | Best For                         |
+| ---------------------- | ----------------- | ----------- | -------------------------------- |
+| `downloadBootstrapper` | Yes               | 0 MB        | Default, smallest installer      |
+| `embedBootstrapper`    | Yes               | ~1.8 MB     | Better Windows 7 support         |
+| `offlineInstaller`     | No                | ~127 MB     | Offline/air-gapped environments  |
+| `fixedVersion`         | No                | ~180 MB     | Controlled enterprise deployment |
+| `skip`                 | No                | 0 MB        | Not recommended                  |
 
 ### Configuration
 
@@ -98,7 +101,7 @@ Configure how WebView2 runtime is installed on end-user machines:
   "bundle": {
     "windows": {
       "webviewInstallMode": {
-        "type": "embedBootstrapper"  // or: downloadBootstrapper, offlineInstaller, fixedVersion
+        "type": "embedBootstrapper" // or: downloadBootstrapper, offlineInstaller, fixedVersion
       }
     }
   }
@@ -130,6 +133,7 @@ Replace the default template:
 Add custom functionality via XML fragments:
 
 **1. Create fragment file** (`src-tauri/windows/fragments/registry.wxs`):
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -146,6 +150,7 @@ Add custom functionality via XML fragments:
 ```
 
 **2. Reference in configuration:**
+
 ```json
 {
   "bundle": {
@@ -166,8 +171,8 @@ Add custom functionality via XML fragments:
   "bundle": {
     "windows": {
       "wix": {
-        "language": ["en-US", "fr-FR", "de-DE"],  // Single: "fr-FR"
-        "localePath": "./windows/locales"  // Optional: custom locale files
+        "language": ["en-US", "fr-FR", "de-DE"], // Single: "fr-FR"
+        "localePath": "./windows/locales" // Optional: custom locale files
       }
     }
   }
@@ -178,11 +183,11 @@ Add custom functionality via XML fragments:
 
 ### Install Modes
 
-| Mode | Admin Required | Install Location | Use Case |
-|------|----------------|------------------|----------|
-| `perUser` | No | `%LOCALAPPDATA%` | Default, no elevation |
-| `perMachine` | Yes | `%PROGRAMFILES%` | System-wide install |
-| `both` | Yes | User choice | Flexible deployment |
+| Mode         | Admin Required | Install Location | Use Case              |
+| ------------ | -------------- | ---------------- | --------------------- |
+| `perUser`    | No             | `%LOCALAPPDATA%` | Default, no elevation |
+| `perMachine` | Yes            | `%PROGRAMFILES%` | System-wide install   |
+| `both`       | Yes            | User choice      | Flexible deployment   |
 
 ```json
 {
@@ -201,6 +206,7 @@ Add custom functionality via XML fragments:
 Extend installation with custom NSIS scripts:
 
 **1. Create hooks file** (`src-tauri/windows/hooks.nsh`):
+
 ```nsis
 !macro NSIS_HOOK_PREINSTALL
   ; Run before file installation
@@ -229,6 +235,7 @@ Extend installation with custom NSIS scripts:
 ```
 
 **2. Reference in configuration:**
+
 ```json
 {
   "bundle": {
@@ -322,6 +329,7 @@ Require a specific WebView2 version:
 ```
 
 Enable Windows 7 notification support in `Cargo.toml`:
+
 ```toml
 [dependencies]
 tauri = { version = "2", features = ["windows7-compat"] }
@@ -332,12 +340,14 @@ tauri = { version = "2", features = ["windows7-compat"] }
 Set environment variable before building:
 
 **PowerShell:**
+
 ```powershell
 $env:TAURI_BUNDLER_WIX_FIPS_COMPLIANT = "true"
 npm run tauri build
 ```
 
 **Command Prompt:**
+
 ```cmd
 set TAURI_BUNDLER_WIX_FIPS_COMPLIANT=true
 npm run tauri build
@@ -354,6 +364,7 @@ npm run tauri build
 ### Store-Specific Configuration
 
 Create `tauri.microsoftstore.conf.json`:
+
 ```json
 {
   "bundle": {
@@ -430,6 +441,7 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="your-password"
 ### Timestamp Servers
 
 Common timestamp servers:
+
 - DigiCert: `http://timestamp.digicert.com`
 - Sectigo: `http://timestamp.sectigo.com`
 - GlobalSign: `http://timestamp.globalsign.com/tsa/r6advanced1`

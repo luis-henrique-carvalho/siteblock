@@ -11,14 +11,14 @@ description: Guides users through packaging Tauri v2 applications for Linux dist
 
 ## Format Overview
 
-| Format | Use Case | Auto-Update | Installation |
-|--------|----------|-------------|--------------|
-| AppImage | Universal, portable | Manual | Run directly |
-| Debian | Debian/Ubuntu | Via repos | `dpkg -i` |
-| RPM | Fedora/RHEL/openSUSE | Via repos | `rpm -i` |
-| Flatpak | Sandboxed, Flathub | Built-in | `flatpak install` |
-| Snap | Ubuntu Store | Built-in | `snap install` |
-| AUR | Arch Linux | Via helpers | `makepkg -si` |
+| Format   | Use Case             | Auto-Update | Installation      |
+| -------- | -------------------- | ----------- | ----------------- |
+| AppImage | Universal, portable  | Manual      | Run directly      |
+| Debian   | Debian/Ubuntu        | Via repos   | `dpkg -i`         |
+| RPM      | Fedora/RHEL/openSUSE | Via repos   | `rpm -i`          |
+| Flatpak  | Sandboxed, Flathub   | Built-in    | `flatpak install` |
+| Snap     | Ubuntu Store         | Built-in    | `snap install`    |
+| AUR      | Arch Linux           | Via helpers | `makepkg -si`     |
 
 ---
 
@@ -39,10 +39,10 @@ Self-contained executable bundles requiring no installation.
 }
 ```
 
-| Option | Description |
-|--------|-------------|
+| Option                 | Description                                                                |
+| ---------------------- | -------------------------------------------------------------------------- |
 | `bundleMediaFramework` | Include GStreamer (increases size, licensing concerns with `ugly` plugins) |
-| `files` | Additional files (paths must start with `/usr/`) |
+| `files`                | Additional files (paths must start with `/usr/`)                           |
 
 ```bash
 npm run tauri build -- --bundles appimage
@@ -84,6 +84,7 @@ sudo apt install gcc-aarch64-linux-gnu
 ```
 
 `.cargo/config.toml`:
+
 ```toml
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
@@ -154,7 +155,7 @@ flatpak install flathub org.gnome.Platform//46 org.gnome.Sdk//46
 ```yaml
 id: com.example.myapp
 runtime: org.gnome.Platform
-runtime-version: '46'
+runtime-version: "46"
 sdk: org.gnome.Sdk
 command: myapp
 
@@ -245,7 +246,7 @@ Register app at https://snapcraft.io
 ```yaml
 name: myapp
 base: core22
-version: '1.0.0'
+version: "1.0.0"
 summary: Short description (max 79 chars)
 description: Longer description.
 grade: stable
@@ -266,7 +267,8 @@ parts:
   myapp:
     plugin: nil
     source: .
-    build-packages: [nodejs, npm, curl, libwebkit2gtk-4.1-dev, libssl-dev, libayatana-appindicator3-dev]
+    build-packages:
+      [nodejs, npm, curl, libwebkit2gtk-4.1-dev, libssl-dev, libayatana-appindicator3-dev]
     stage-packages: [libwebkit2gtk-4.1-0, libayatana-appindicator3-1]
     override-build: |
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y

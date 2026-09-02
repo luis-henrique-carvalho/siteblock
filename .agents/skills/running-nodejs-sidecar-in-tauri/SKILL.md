@@ -77,13 +77,13 @@ const command = process.argv[2];
 const args = process.argv.slice(3);
 
 switch (command) {
-  case 'hello':
-    console.log(`Hello ${args[0] || 'World'}!`);
+  case "hello":
+    console.log(`Hello ${args[0] || "World"}!`);
     break;
-  case 'add':
+  case "add":
     const [a, b] = args.map(Number);
     if (isNaN(a) || isNaN(b)) {
-      console.error('Error: Both arguments must be numbers');
+      console.error("Error: Both arguments must be numbers");
       process.exit(1);
     }
     console.log(JSON.stringify({ result: a + b }));
@@ -99,26 +99,26 @@ switch (command) {
 Create `sidecar/rename.js`:
 
 ```javascript
-import { execSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
+import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
 
-const ext = process.platform === 'win32' ? '.exe' : '';
+const ext = process.platform === "win32" ? ".exe" : "";
 
 let targetTriple;
 try {
-  targetTriple = execSync('rustc --print host-tuple').toString().trim();
+  targetTriple = execSync("rustc --print host-tuple").toString().trim();
 } catch {
-  const rustInfo = execSync('rustc -vV').toString();
+  const rustInfo = execSync("rustc -vV").toString();
   const match = rustInfo.match(/host: (.+)/);
   targetTriple = match ? match[1] : null;
   if (!targetTriple) {
-    console.error('Could not determine Rust target triple');
+    console.error("Could not determine Rust target triple");
     process.exit(1);
   }
 }
 
-const destDir = path.join('..', 'src-tauri', 'binaries');
+const destDir = path.join("..", "src-tauri", "binaries");
 if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
 
 fs.renameSync(`my-sidecar${ext}`, path.join(destDir, `my-sidecar-${targetTriple}${ext}`));
@@ -166,11 +166,13 @@ Update `src-tauri/capabilities/default.json`:
     "core:default",
     {
       "identifier": "shell:allow-execute",
-      "allow": [{
-        "args": true,
-        "name": "binaries/my-sidecar",
-        "sidecar": true
-      }]
+      "allow": [
+        {
+          "args": true,
+          "name": "binaries/my-sidecar",
+          "sidecar": true
+        }
+      ]
     }
   ]
 }
@@ -196,17 +198,17 @@ Update `src-tauri/capabilities/default.json`:
 ### Frontend to Sidecar (TypeScript)
 
 ```typescript
-import { Command } from '@tauri-apps/plugin-shell';
+import { Command } from "@tauri-apps/plugin-shell";
 
 async function sayHello(name: string): Promise<string> {
-  const command = Command.sidecar('binaries/my-sidecar', ['hello', name]);
+  const command = Command.sidecar("binaries/my-sidecar", ["hello", name]);
   const output = await command.execute();
   if (output.code !== 0) throw new Error(output.stderr);
   return output.stdout.trim();
 }
 
 async function addNumbers(a: number, b: number): Promise<number> {
-  const command = Command.sidecar('binaries/my-sidecar', ['add', String(a), String(b)]);
+  const command = Command.sidecar("binaries/my-sidecar", ["add", String(a), String(b)]);
   const output = await command.execute();
   if (output.code !== 0) throw new Error(output.stderr);
   return JSON.parse(output.stdout).result;
@@ -253,14 +255,14 @@ pub fn run() {
 ### Streaming Output
 
 ```typescript
-import { Command } from '@tauri-apps/plugin-shell';
+import { Command } from "@tauri-apps/plugin-shell";
 
 async function runWithStreaming(args: string[]): Promise<void> {
-  const command = Command.sidecar('binaries/my-sidecar', args);
-  command.on('close', (data) => console.log(`Finished: ${data.code}`));
-  command.on('error', (error) => console.error(`Error: ${error}`));
-  command.stdout.on('data', (line) => console.log(`stdout: ${line}`));
-  command.stderr.on('data', (line) => console.error(`stderr: ${line}`));
+  const command = Command.sidecar("binaries/my-sidecar", args);
+  command.on("close", (data) => console.log(`Finished: ${data.code}`));
+  command.on("error", (error) => console.error(`Error: ${error}`));
+  command.stdout.on("data", (line) => console.log(`stdout: ${line}`));
+  command.stderr.on("data", (line) => console.error(`stderr: ${line}`));
   await command.spawn();
 }
 ```
@@ -272,24 +274,24 @@ For persistent processes, use HTTP:
 `sidecar/index.js`:
 
 ```javascript
-import http from 'http';
+import http from "http";
 
 const PORT = process.env.SIDECAR_PORT || 3333;
 
 const server = http.createServer((req, res) => {
-  let body = '';
-  req.on('data', (chunk) => (body += chunk));
-  req.on('end', () => {
-    res.setHeader('Content-Type', 'application/json');
+  let body = "";
+  req.on("data", (chunk) => (body += chunk));
+  req.on("end", () => {
+    res.setHeader("Content-Type", "application/json");
     try {
       const data = body ? JSON.parse(body) : {};
-      if (req.url === '/hello') {
-        res.end(JSON.stringify({ message: `Hello ${data.name || 'World'}!` }));
-      } else if (req.url === '/health') {
-        res.end(JSON.stringify({ status: 'ok' }));
+      if (req.url === "/hello") {
+        res.end(JSON.stringify({ message: `Hello ${data.name || "World"}!` }));
+      } else if (req.url === "/health") {
+        res.end(JSON.stringify({ status: "ok" }));
       } else {
         res.statusCode = 404;
-        res.end(JSON.stringify({ error: 'Not found' }));
+        res.end(JSON.stringify({ error: "Not found" }));
       }
     } catch (err) {
       res.statusCode = 400;
@@ -298,22 +300,22 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, '127.0.0.1', () => console.log(`Listening on ${PORT}`));
-process.on('SIGTERM', () => server.close(() => process.exit(0)));
+server.listen(PORT, "127.0.0.1", () => console.log(`Listening on ${PORT}`));
+process.on("SIGTERM", () => server.close(() => process.exit(0)));
 ```
 
 Frontend communication:
 
 ```typescript
-import { Command } from '@tauri-apps/plugin-shell';
-import { fetch } from '@tauri-apps/plugin-http';
+import { Command } from "@tauri-apps/plugin-shell";
+import { fetch } from "@tauri-apps/plugin-http";
 
 let sidecarProcess: any = null;
 const PORT = 3333;
 
 async function startSidecar(): Promise<void> {
   if (sidecarProcess) return;
-  const command = Command.sidecar('binaries/my-sidecar', [], {
+  const command = Command.sidecar("binaries/my-sidecar", [], {
     env: { SIDECAR_PORT: String(PORT) },
   });
   sidecarProcess = await command.spawn();
@@ -325,13 +327,13 @@ async function startSidecar(): Promise<void> {
       await new Promise((r) => setTimeout(r, 100));
     }
   }
-  throw new Error('Sidecar failed to start');
+  throw new Error("Sidecar failed to start");
 }
 
 async function callSidecar(endpoint: string, data?: object): Promise<any> {
   const res = await fetch(`http://127.0.0.1:${PORT}${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: data ? JSON.stringify(data) : undefined,
   });
   return res.json();
@@ -361,12 +363,12 @@ Update root `package.json`:
 
 Cross-platform targets:
 
-| Platform | pkg Target | Rust Triple |
-|----------|------------|-------------|
-| Windows x64 | `node18-win-x64` | `x86_64-pc-windows-msvc` |
-| macOS x64 | `node18-macos-x64` | `x86_64-apple-darwin` |
-| macOS ARM | `node18-macos-arm64` | `aarch64-apple-darwin` |
-| Linux x64 | `node18-linux-x64` | `x86_64-unknown-linux-gnu` |
+| Platform    | pkg Target           | Rust Triple                |
+| ----------- | -------------------- | -------------------------- |
+| Windows x64 | `node18-win-x64`     | `x86_64-pc-windows-msvc`   |
+| macOS x64   | `node18-macos-x64`   | `x86_64-apple-darwin`      |
+| macOS ARM   | `node18-macos-arm64` | `aarch64-apple-darwin`     |
+| Linux x64   | `node18-linux-x64`   | `x86_64-unknown-linux-gnu` |
 
 ## Security
 
@@ -378,17 +380,20 @@ Cross-platform targets:
 ## Troubleshooting
 
 **Binary not found:** Check target triple matches:
+
 ```bash
 ls -la src-tauri/binaries/
 rustc --print host-tuple
 ```
 
 **Permission denied (Unix):**
+
 ```bash
 chmod +x src-tauri/binaries/my-sidecar-*
 ```
 
 **Silent crashes:** Check stderr:
+
 ```typescript
 const output = await command.execute();
 if (output.code !== 0) console.error(output.stderr);

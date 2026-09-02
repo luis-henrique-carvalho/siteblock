@@ -78,13 +78,13 @@ cn release upload ORG_SLUG/APP_SLUG RELEASE_ID \
   --signature path/to/signature
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--framework` | Auto-detect bundles (`tauri` or `packager`) |
-| `--channel` | Release channel (must match draft channel) |
-| `--update-platform` | Platform identifier for updates |
-| `--file` | Path to binary asset |
-| `--signature` | Path to signature file (required with `--update-platform`) |
+| Flag                | Description                                                |
+| ------------------- | ---------------------------------------------------------- |
+| `--framework`       | Auto-detect bundles (`tauri` or `packager`)                |
+| `--channel`         | Release channel (must match draft channel)                 |
+| `--update-platform` | Platform identifier for updates                            |
+| `--file`            | Path to binary asset                                       |
+| `--signature`       | Path to signature file (required with `--update-platform`) |
 
 ## GitHub Actions Workflow
 
@@ -198,10 +198,12 @@ cargo tauri signer generate -w ~/.tauri/myapp.key
 ```
 
 This creates:
+
 - `~/.tauri/myapp.key` - Private key (keep secret)
 - `~/.tauri/myapp.key.pub` - Public key (add to config)
 
 Add to GitHub repository secrets:
+
 - `TAURI_SIGNING_PRIVATE_KEY`: Contents of `myapp.key`
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`: Your password
 
@@ -309,8 +311,8 @@ export async function checkForAppUpdates(): Promise<void> {
         title: "Update Available",
         kind: "info",
         okLabel: "Update Now",
-        cancelLabel: "Later"
-      }
+        cancelLabel: "Later",
+      },
     );
 
     if (proceed) {
@@ -357,6 +359,7 @@ cn release upload ORG/APP RELEASE_ID --framework tauri --channel beta
 ### Option 2: Separate Applications
 
 Create separate applications in CrabNebula Cloud:
+
 - `your-org/your-app` (stable)
 - `your-org/your-app-beta` (beta)
 
@@ -364,12 +367,12 @@ Configure different update endpoints per channel in your app builds.
 
 ## Environment Variables Summary
 
-| Variable | Location | Description |
-|----------|----------|-------------|
-| `CN_API_KEY` | GitHub Secrets | CrabNebula Cloud API key |
-| `TAURI_SIGNING_PRIVATE_KEY` | GitHub Secrets | Contents of private signing key |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | GitHub Secrets | Password for signing key |
-| `CN_APPLICATION` | Workflow env | Organization/application slug |
+| Variable                             | Location       | Description                     |
+| ------------------------------------ | -------------- | ------------------------------- |
+| `CN_API_KEY`                         | GitHub Secrets | CrabNebula Cloud API key        |
+| `TAURI_SIGNING_PRIVATE_KEY`          | GitHub Secrets | Contents of private signing key |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | GitHub Secrets | Password for signing key        |
+| `CN_APPLICATION`                     | Workflow env   | Organization/application slug   |
 
 ## Troubleshooting
 

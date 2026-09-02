@@ -10,6 +10,7 @@ This skill covers how to call Rust backend functions from your Tauri v2 frontend
 ## Overview
 
 Tauri provides two IPC mechanisms:
+
 - **Commands** (recommended): Type-safe function calls with serialized arguments/return values
 - **Events**: Dynamic, one-way communication (not covered here)
 
@@ -44,9 +45,9 @@ pub fn run() {
 ### Invoking from JavaScript/TypeScript
 
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
-const greeting = await invoke('greet', { name: 'World' });
+const greeting = await invoke("greet", { name: "World" });
 console.log(greeting); // "Hello, World!"
 ```
 
@@ -54,7 +55,7 @@ Or with the global Tauri object (when `app.withGlobalTauri` is enabled):
 
 ```javascript
 const { invoke } = window.__TAURI__.core;
-const greeting = await invoke('greet', { name: 'World' });
+const greeting = await invoke("greet", { name: "World" });
 ```
 
 ## Passing Arguments
@@ -71,7 +72,7 @@ fn create_user(user_name: String, user_age: u32) -> String {
 ```
 
 ```typescript
-await invoke('create_user', { userName: 'Alice', userAge: 30 });
+await invoke("create_user", { userName: "Alice", userAge: 30 });
 ```
 
 Use `rename_all` to change the naming convention:
@@ -104,8 +105,8 @@ fn register_user(user: UserData) -> String {
 ```
 
 ```typescript
-await invoke('register_user', {
-    user: { name: 'Alice', email: 'alice@example.com', age: 30 }
+await invoke("register_user", {
+  user: { name: "Alice", email: "alice@example.com", age: 30 },
 });
 ```
 
@@ -124,8 +125,8 @@ fn get_message() -> String { "Hello from Rust!".into() }
 ```
 
 ```typescript
-const count: number = await invoke('get_count');
-const message: string = await invoke('get_message');
+const count: number = await invoke("get_count");
+const message: string = await invoke("get_message");
 ```
 
 ### Returning Complex Types
@@ -152,11 +153,11 @@ fn get_config() -> AppConfig {
 
 ```typescript
 interface AppConfig {
-    theme: string;
-    language: string;
-    notificationsEnabled: boolean;
+  theme: string;
+  language: string;
+  notificationsEnabled: boolean;
 }
-const config: AppConfig = await invoke('get_config');
+const config: AppConfig = await invoke("get_config");
 ```
 
 ### Returning Binary Data
@@ -174,7 +175,7 @@ fn read_file(path: String) -> Response {
 ```
 
 ```typescript
-const data: ArrayBuffer = await invoke('read_file', { path: '/path/to/file' });
+const data: ArrayBuffer = await invoke("read_file", { path: "/path/to/file" });
 ```
 
 ## Error Handling
@@ -196,9 +197,9 @@ fn divide(a: f64, b: f64) -> Result<f64, String> {
 
 ```typescript
 try {
-    const result = await invoke('divide', { a: 10, b: 0 });
+  const result = await invoke("divide", { a: 10, b: 0 });
 } catch (error) {
-    console.error('Error:', error); // "Cannot divide by zero"
+  console.error("Error:", error); // "Cannot divide by zero"
 }
 ```
 
@@ -256,13 +257,16 @@ fn validate_input(input: String) -> Result<String, ErrorResponse> {
 ```
 
 ```typescript
-interface ErrorResponse { code: string; message: string; }
+interface ErrorResponse {
+  code: string;
+  message: string;
+}
 
 try {
-    const result = await invoke('validate_input', { input: '' });
+  const result = await invoke("validate_input", { input: "" });
 } catch (error) {
-    const err = error as ErrorResponse;
-    console.error(`Error ${err.code}: ${err.message}`);
+  const err = error as ErrorResponse;
+  console.error(`Error ${err.code}: ${err.message}`);
 }
 ```
 
@@ -309,7 +313,7 @@ async fn with_borrowed(value: &str) -> Result<String, ()> {
 Async commands work identically to sync since `invoke` returns a Promise:
 
 ```typescript
-const result = await invoke('fetch_data', { url: 'https://api.example.com/data' });
+const result = await invoke("fetch_data", { url: "https://api.example.com/data" });
 ```
 
 ## Accessing Tauri Internals
@@ -373,7 +377,7 @@ fn upload(request: Request) -> Result<String, String> {
 
 ```typescript
 const data = new Uint8Array([1, 2, 3, 4, 5]);
-await invoke('upload', data, { headers: { Authorization: 'Bearer token123' } });
+await invoke("upload", data, { headers: { Authorization: "Bearer token123" } });
 ```
 
 ### Channels for Streaming
@@ -396,11 +400,11 @@ async fn stream_file(path: String, channel: Channel<Vec<u8>>) -> Result<(), Stri
 ```
 
 ```typescript
-import { Channel } from '@tauri-apps/api/core';
+import { Channel } from "@tauri-apps/api/core";
 
 const channel = new Channel<Uint8Array>();
-channel.onmessage = (chunk) => console.log('Received:', chunk.length, 'bytes');
-await invoke('stream_file', { path: '/path/to/file', channel });
+channel.onmessage = (chunk) => console.log("Received:", chunk.length, "bytes");
+await invoke("stream_file", { path: "/path/to/file", channel });
 ```
 
 ## Organizing Commands in Modules
@@ -443,35 +447,40 @@ pub fn run() {
 Create a typed wrapper:
 
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
-export interface User { id: number; name: string; email: string; }
-export interface CreateUserRequest { name: string; email: string; }
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+export interface CreateUserRequest {
+  name: string;
+  email: string;
+}
 
 export const commands = {
-    createUser: (request: CreateUserRequest): Promise<User> =>
-        invoke('create_user', { request }),
-    greet: (name: string): Promise<string> =>
-        invoke('greet', { name }),
+  createUser: (request: CreateUserRequest): Promise<User> => invoke("create_user", { request }),
+  greet: (name: string): Promise<string> => invoke("greet", { name }),
 };
 
 // Usage
-const user = await commands.createUser({ name: 'Bob', email: 'bob@example.com' });
+const user = await commands.createUser({ name: "Bob", email: "bob@example.com" });
 ```
 
 ## Quick Reference
 
-| Task | Rust | JavaScript |
-|------|------|------------|
-| Define command | `#[tauri::command] fn name() {}` | - |
-| Register command | `tauri::generate_handler![name]` | - |
-| Invoke command | - | `await invoke('name', { args })` |
-| Return value | `-> T` where T: Serialize | `const result = await invoke(...)` |
-| Return error | `-> Result<T, E>` | `try/catch` |
-| Async command | `async fn name()` | Same as sync |
-| Access window | `window: tauri::WebviewWindow` | - |
-| Access app | `app: tauri::AppHandle` | - |
-| Access state | `state: tauri::State<T>` | - |
+| Task             | Rust                             | JavaScript                         |
+| ---------------- | -------------------------------- | ---------------------------------- |
+| Define command   | `#[tauri::command] fn name() {}` | -                                  |
+| Register command | `tauri::generate_handler![name]` | -                                  |
+| Invoke command   | -                                | `await invoke('name', { args })`   |
+| Return value     | `-> T` where T: Serialize        | `const result = await invoke(...)` |
+| Return error     | `-> Result<T, E>`                | `try/catch`                        |
+| Async command    | `async fn name()`                | Same as sync                       |
+| Access window    | `window: tauri::WebviewWindow`   | -                                  |
+| Access app       | `app: tauri::AppHandle`          | -                                  |
+| Access state     | `state: tauri::State<T>`         | -                                  |
 
 ## Key Constraints
 

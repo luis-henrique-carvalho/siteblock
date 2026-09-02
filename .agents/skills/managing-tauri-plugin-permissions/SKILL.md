@@ -16,6 +16,7 @@ Capabilities are JSON configuration files that assign permissions to specific wi
 **Location**: `src-tauri/capabilities/`
 
 **Structure**:
+
 ```json
 {
   "identifier": "capability-name",
@@ -30,6 +31,7 @@ Capabilities are JSON configuration files that assign permissions to specific wi
 ### Permission Levels
 
 Permissions operate at two levels:
+
 - **Commands**: Individual operations (e.g., `allow-write-text-file`)
 - **Scopes**: Path-based restrictions defining accessible files/directories
 
@@ -93,6 +95,7 @@ Define windows in `tauri.conf.json`:
 Create separate capability files for each window's needs:
 
 **`src-tauri/capabilities/main-window.json`**:
+
 ```json
 {
   "identifier": "main-window-capabilities",
@@ -109,16 +112,14 @@ Create separate capability files for each window's needs:
 ```
 
 **`src-tauri/capabilities/settings-window.json`**:
+
 ```json
 {
   "identifier": "settings-window-capabilities",
   "description": "Limited access for settings window",
   "local": true,
   "windows": ["settings"],
-  "permissions": [
-    "fs:allow-app-read",
-    "fs:allow-app-write"
-  ]
+  "permissions": ["fs:allow-app-read", "fs:allow-app-write"]
 }
 ```
 
@@ -159,6 +160,7 @@ plugin-name:permission-name
 ```
 
 Examples:
+
 - `fs:allow-read`
 - `fs:allow-write-text-file`
 - `dialog:allow-open`
@@ -189,15 +191,15 @@ Restrict permissions to specific paths:
 
 ### Common Scope Variables
 
-| Variable | Description |
-|----------|-------------|
-| `$APP` | Application data directory |
-| `$HOME` | User home directory |
-| `$RESOURCE` | Application resources |
-| `$TEMP` | Temporary directory |
-| `$DESKTOP` | User desktop |
-| `$DOCUMENT` | User documents |
-| `$DOWNLOAD` | User downloads |
+| Variable    | Description                |
+| ----------- | -------------------------- |
+| `$APP`      | Application data directory |
+| `$HOME`     | User home directory        |
+| `$RESOURCE` | Application resources      |
+| `$TEMP`     | Temporary directory        |
+| `$DESKTOP`  | User desktop               |
+| `$DOCUMENT` | User documents             |
+| `$DOWNLOAD` | User downloads             |
 
 ### Deny Permissions
 
@@ -205,10 +207,7 @@ Explicitly deny specific operations:
 
 ```json
 {
-  "permissions": [
-    "fs:default",
-    "fs:deny-write-text-file"
-  ]
+  "permissions": ["fs:default", "fs:deny-write-text-file"]
 }
 ```
 
@@ -226,6 +225,7 @@ cd tauri-plugin-my-plugin
 ### Implementing Commands
 
 **`src/commands.rs`**:
+
 ```rust
 use tauri::{command, AppHandle, Runtime};
 
@@ -261,6 +261,7 @@ pub(crate) async fn delete_data<R: Runtime>(
 ### Auto-Generating Permissions
 
 **`src/build.rs`**:
+
 ```rust
 const COMMANDS: &[&str] = &["read_data", "write_data", "delete_data"];
 
@@ -272,6 +273,7 @@ fn main() {
 ```
 
 This generates:
+
 - `allow-read-data` / `deny-read-data`
 - `allow-write-data` / `deny-write-data`
 - `allow-delete-data` / `deny-delete-data`
@@ -279,6 +281,7 @@ This generates:
 ### Defining Default Permissions
 
 **`permissions/default.toml`**:
+
 ```toml
 "$schema" = "schemas/schema.json"
 
@@ -290,6 +293,7 @@ permissions = ["allow-read-data"]
 ### Creating Permission Sets
 
 **`permissions/read-write.toml`**:
+
 ```toml
 "$schema" = "schemas/schema.json"
 
@@ -300,6 +304,7 @@ permissions = ["allow-read-data", "allow-write-data"]
 ```
 
 **`permissions/full-access.toml`**:
+
 ```toml
 "$schema" = "schemas/schema.json"
 
@@ -312,6 +317,7 @@ permissions = ["allow-read-data", "allow-write-data", "allow-delete-data"]
 ### Registering Commands
 
 **`src/lib.rs`**:
+
 ```rust
 use tauri::{
     plugin::{Builder, TauriPlugin},
@@ -334,19 +340,20 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 ### Frontend JavaScript Bindings
 
 **`guest-js/index.ts`**:
+
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 export async function readData(key: string): Promise<string> {
-  return await invoke('plugin:my-plugin|read_data', { key });
+  return await invoke("plugin:my-plugin|read_data", { key });
 }
 
 export async function writeData(key: string, value: string): Promise<void> {
-  return await invoke('plugin:my-plugin|write_data', { key, value });
+  return await invoke("plugin:my-plugin|write_data", { key, value });
 }
 
 export async function deleteData(key: string): Promise<void> {
-  return await invoke('plugin:my-plugin|delete_data', { key });
+  return await invoke("plugin:my-plugin|delete_data", { key });
 }
 ```
 
@@ -358,17 +365,14 @@ In your application's capability file:
 {
   "identifier": "default",
   "windows": ["main"],
-  "permissions": [
-    "my-plugin:default",
-    "my-plugin:read-write",
-    "my-plugin:allow-delete-data"
-  ]
+  "permissions": ["my-plugin:default", "my-plugin:read-write", "my-plugin:allow-delete-data"]
 }
 ```
 
 ## Complete Example: Cross-Platform App
 
 **`src-tauri/capabilities/desktop.json`**:
+
 ```json
 {
   "$schema": "../gen/schemas/desktop-schema.json",
@@ -388,16 +392,13 @@ In your application's capability file:
 ```
 
 **`src-tauri/capabilities/mobile.json`**:
+
 ```json
 {
   "identifier": "mobile",
   "windows": ["main"],
   "platforms": ["android", "ios"],
-  "permissions": [
-    "fs:allow-app-read",
-    "fs:allow-app-write",
-    "notification:default"
-  ]
+  "permissions": ["fs:allow-app-read", "fs:allow-app-write", "notification:default"]
 }
 ```
 

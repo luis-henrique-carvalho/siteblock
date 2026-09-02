@@ -18,15 +18,17 @@ Covers window customization in Tauri v2: custom titlebars, transparent windows, 
 ```json
 {
   "app": {
-    "windows": [{
-      "title": "My App",
-      "width": 800,
-      "height": 600,
-      "decorations": true,
-      "transparent": false,
-      "alwaysOnTop": false,
-      "center": true
-    }]
+    "windows": [
+      {
+        "title": "My App",
+        "width": 800,
+        "height": 600,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "center": true
+      }
+    ]
   }
 }
 ```
@@ -92,7 +94,9 @@ Covers window customization in Tauri v2: custom titlebars, transparent windows, 
   padding-left: 12px;
 }
 
-.titlebar-controls { display: flex; }
+.titlebar-controls {
+  display: flex;
+}
 
 .titlebar-controls button {
   width: 46px;
@@ -103,24 +107,30 @@ Covers window customization in Tauri v2: custom titlebars, transparent windows, 
   cursor: pointer;
 }
 
-.titlebar-controls button:hover { background: rgba(255,255,255,0.1); }
-.titlebar-controls button#titlebar-close:hover { background: #e81123; }
-.content { margin-top: 30px; padding: 16px; }
+.titlebar-controls button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.titlebar-controls button#titlebar-close:hover {
+  background: #e81123;
+}
+.content {
+  margin-top: 30px;
+  padding: 16px;
+}
 ```
 
 ### Step 5: JavaScript Controls
 
 ```typescript
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const appWindow = getCurrentWindow();
 
-document.getElementById('titlebar-minimize')
-  ?.addEventListener('click', () => appWindow.minimize());
-document.getElementById('titlebar-maximize')
-  ?.addEventListener('click', () => appWindow.toggleMaximize());
-document.getElementById('titlebar-close')
-  ?.addEventListener('click', () => appWindow.close());
+document.getElementById("titlebar-minimize")?.addEventListener("click", () => appWindow.minimize());
+document
+  .getElementById("titlebar-maximize")
+  ?.addEventListener("click", () => appWindow.toggleMaximize());
+document.getElementById("titlebar-close")?.addEventListener("click", () => appWindow.close());
 ```
 
 ### Drag Region Behavior
@@ -130,7 +140,7 @@ The `data-tauri-drag-region` attribute applies only to its element, not children
 ### Manual Drag with Double-Click Maximize
 
 ```typescript
-document.getElementById('titlebar')?.addEventListener('mousedown', (e) => {
+document.getElementById("titlebar")?.addEventListener("mousedown", (e) => {
   if (e.buttons === 1 && e.target === e.currentTarget) {
     e.detail === 2 ? appWindow.toggleMaximize() : appWindow.startDragging();
   }
@@ -188,61 +198,71 @@ pub fn run() {
 
 ### Menu Item Types
 
-| Type | Description |
-|------|-------------|
-| Text | Basic labeled menu option |
-| Check | Toggleable entry with checked state |
-| Separator | Visual divider between sections |
-| Icon | Entry with custom icon (Tauri 2.8.0+) |
+| Type      | Description                           |
+| --------- | ------------------------------------- |
+| Text      | Basic labeled menu option             |
+| Check     | Toggleable entry with checked state   |
+| Separator | Visual divider between sections       |
+| Icon      | Entry with custom icon (Tauri 2.8.0+) |
 
 ### Creating Menus (JavaScript/TypeScript)
 
 ```typescript
-import { Menu, MenuItem, Submenu, PredefinedMenuItem, CheckMenuItem } from '@tauri-apps/api/menu';
+import { Menu, MenuItem, Submenu, PredefinedMenuItem, CheckMenuItem } from "@tauri-apps/api/menu";
 
 const fileSubmenu = await Submenu.new({
-  text: 'File',
+  text: "File",
   items: [
     await MenuItem.new({
-      id: 'new', text: 'New', accelerator: 'CmdOrCtrl+N',
-      action: () => console.log('New')
+      id: "new",
+      text: "New",
+      accelerator: "CmdOrCtrl+N",
+      action: () => console.log("New"),
     }),
     await MenuItem.new({
-      id: 'open', text: 'Open', accelerator: 'CmdOrCtrl+O',
-      action: () => console.log('Open')
+      id: "open",
+      text: "Open",
+      accelerator: "CmdOrCtrl+O",
+      action: () => console.log("Open"),
     }),
     await MenuItem.new({
-      id: 'save', text: 'Save', accelerator: 'CmdOrCtrl+S',
-      action: () => console.log('Save')
+      id: "save",
+      text: "Save",
+      accelerator: "CmdOrCtrl+S",
+      action: () => console.log("Save"),
     }),
-    { type: 'Separator' },
+    { type: "Separator" },
     await MenuItem.new({
-      id: 'quit', text: 'Quit', accelerator: 'CmdOrCtrl+Q',
-      action: () => console.log('Quit')
-    })
-  ]
+      id: "quit",
+      text: "Quit",
+      accelerator: "CmdOrCtrl+Q",
+      action: () => console.log("Quit"),
+    }),
+  ],
 });
 
 const editSubmenu = await Submenu.new({
-  text: 'Edit',
+  text: "Edit",
   items: [
-    await PredefinedMenuItem.new({ item: 'Undo' }),
-    await PredefinedMenuItem.new({ item: 'Redo' }),
-    await PredefinedMenuItem.new({ item: 'Separator' }),
-    await PredefinedMenuItem.new({ item: 'Cut' }),
-    await PredefinedMenuItem.new({ item: 'Copy' }),
-    await PredefinedMenuItem.new({ item: 'Paste' })
-  ]
+    await PredefinedMenuItem.new({ item: "Undo" }),
+    await PredefinedMenuItem.new({ item: "Redo" }),
+    await PredefinedMenuItem.new({ item: "Separator" }),
+    await PredefinedMenuItem.new({ item: "Cut" }),
+    await PredefinedMenuItem.new({ item: "Copy" }),
+    await PredefinedMenuItem.new({ item: "Paste" }),
+  ],
 });
 
 const viewSubmenu = await Submenu.new({
-  text: 'View',
+  text: "View",
   items: [
     await CheckMenuItem.new({
-      id: 'sidebar', text: 'Show Sidebar', checked: true,
-      action: async (item) => console.log('Sidebar:', await item.isChecked())
-    })
-  ]
+      id: "sidebar",
+      text: "Show Sidebar",
+      checked: true,
+      action: async (item) => console.log("Sidebar:", await item.isChecked()),
+    }),
+  ],
 });
 
 const menu = await Menu.new({ items: [fileSubmenu, editSubmenu, viewSubmenu] });
@@ -297,24 +317,26 @@ app.on_menu_event(|_app_handle, event| {
 ### Dynamic Menu Updates
 
 **JavaScript:**
+
 ```typescript
-const statusItem = await menu.get('status');
-if (statusItem) await statusItem.setText('Status: Ready');
+const statusItem = await menu.get("status");
+if (statusItem) await statusItem.setText("Status: Ready");
 ```
 
 **Rust:**
+
 ```rust
 menu.get("status").unwrap().as_menuitem_unchecked().set_text("Status: Ready")?;
 ```
 
 ## Keyboard Shortcuts (Accelerators)
 
-| Shortcut | Accelerator String |
-|----------|-------------------|
-| Ctrl+S / Cmd+S | `CmdOrCtrl+S` |
-| Ctrl+Shift+S | `CmdOrCtrl+Shift+S` |
-| Alt+F4 | `Alt+F4` |
-| F11 | `F11` |
+| Shortcut       | Accelerator String  |
+| -------------- | ------------------- |
+| Ctrl+S / Cmd+S | `CmdOrCtrl+S`       |
+| Ctrl+Shift+S   | `CmdOrCtrl+Shift+S` |
+| Alt+F4         | `Alt+F4`            |
+| F11            | `F11`               |
 
 ## Complete Example
 
@@ -357,8 +379,8 @@ pub fn run() {
 ### React Component
 
 ```tsx
-import { useEffect } from 'react';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useEffect } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 function App() {
   useEffect(() => {
@@ -367,14 +389,14 @@ function App() {
     const maximize = () => appWindow.toggleMaximize();
     const close = () => appWindow.close();
 
-    document.getElementById('titlebar-minimize')?.addEventListener('click', minimize);
-    document.getElementById('titlebar-maximize')?.addEventListener('click', maximize);
-    document.getElementById('titlebar-close')?.addEventListener('click', close);
+    document.getElementById("titlebar-minimize")?.addEventListener("click", minimize);
+    document.getElementById("titlebar-maximize")?.addEventListener("click", maximize);
+    document.getElementById("titlebar-close")?.addEventListener("click", close);
 
     return () => {
-      document.getElementById('titlebar-minimize')?.removeEventListener('click', minimize);
-      document.getElementById('titlebar-maximize')?.removeEventListener('click', maximize);
-      document.getElementById('titlebar-close')?.removeEventListener('click', close);
+      document.getElementById("titlebar-minimize")?.removeEventListener("click", minimize);
+      document.getElementById("titlebar-maximize")?.removeEventListener("click", maximize);
+      document.getElementById("titlebar-close")?.removeEventListener("click", close);
     };
   }, []);
 

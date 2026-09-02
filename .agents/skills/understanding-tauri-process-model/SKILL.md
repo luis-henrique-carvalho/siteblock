@@ -53,13 +53,13 @@ The Core process is the application's entry point and central hub. It runs Rust 
 
 ### Responsibilities
 
-| Responsibility | Description |
-|----------------|-------------|
-| Window Management | Creates and orchestrates application windows |
-| System Integration | Manages system tray menus and notifications |
-| IPC Routing | Handles all inter-process communication |
-| Global State | Manages application-wide settings and database connections |
-| OS Abstractions | Provides cross-platform APIs |
+| Responsibility     | Description                                                |
+| ------------------ | ---------------------------------------------------------- |
+| Window Management  | Creates and orchestrates application windows               |
+| System Integration | Manages system tray menus and notifications                |
+| IPC Routing        | Handles all inter-process communication                    |
+| Global State       | Manages application-wide settings and database connections |
+| OS Abstractions    | Provides cross-platform APIs                               |
 
 ### Why Rust for the Core Process
 
@@ -158,14 +158,16 @@ All communication between processes flows through the Core process.
 ### Example: Basic IPC
 
 **Frontend (JavaScript)**
+
 ```javascript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 // Call a Rust command
-const result = await invoke('greet', { name: 'World' });
+const result = await invoke("greet", { name: "World" });
 ```
 
 **Backend (Rust)**
+
 ```rust
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -201,6 +203,7 @@ A single Core process manages multiple WebView processes.
 ### Window Management Patterns
 
 **Creating Windows**
+
 ```rust
 use tauri::Manager;
 
@@ -218,6 +221,7 @@ fn open_settings(app: tauri::AppHandle) {
 ```
 
 **Cross-Window Communication**
+
 ```rust
 use tauri::Manager;
 
@@ -229,6 +233,7 @@ fn broadcast_update(app: tauri::AppHandle, data: String) {
 ```
 
 **Window-Specific Events**
+
 ```rust
 use tauri::Manager;
 
@@ -272,12 +277,12 @@ fn notify_window(app: tauri::AppHandle, window_label: String, data: String) {
 
 ### Security Benefits of Process Isolation
 
-| Benefit | Description |
-|---------|-------------|
-| Crash Containment | Failures in one process don't crash the entire app |
-| State Recovery | Invalid processes can be restarted independently |
-| Attack Surface Reduction | Compromised WebView has limited capabilities |
-| Resource Protection | Sensitive data stays in Core process |
+| Benefit                  | Description                                        |
+| ------------------------ | -------------------------------------------------- |
+| Crash Containment        | Failures in one process don't crash the entire app |
+| State Recovery           | Invalid processes can be restarted independently   |
+| Attack Surface Reduction | Compromised WebView has limited capabilities       |
+| Resource Protection      | Sensitive data stays in Core process               |
 
 ### Security Best Practices
 
@@ -317,12 +322,7 @@ Tauri uses a capability system to control what each window can access.
   "identifier": "main-capability",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "fs:read-files",
-    "fs:write-files",
-    "http:default"
-  ]
+  "permissions": ["core:default", "fs:read-files", "fs:write-files", "http:default"]
 }
 ```
 
@@ -364,13 +364,13 @@ Tauri uses a capability system to control what each window can access.
 
 ## Summary
 
-| Aspect | Core Process | WebView Process |
-|--------|--------------|-----------------|
-| Language | Rust | JavaScript/TypeScript |
-| Quantity | One per app | One or more per app |
-| OS Access | Full | None (via IPC only) |
-| Role | Backend, orchestration | UI rendering |
-| Security | Trusted | Untrusted |
-| Crash Impact | App terminates | Window closes |
+| Aspect       | Core Process           | WebView Process       |
+| ------------ | ---------------------- | --------------------- |
+| Language     | Rust                   | JavaScript/TypeScript |
+| Quantity     | One per app            | One or more per app   |
+| OS Access    | Full                   | None (via IPC only)   |
+| Role         | Backend, orchestration | UI rendering          |
+| Security     | Trusted                | Untrusted             |
+| Crash Impact | App terminates         | Window closes         |
 
 The Tauri process model provides a secure foundation for building desktop applications by maintaining strict separation between the trusted Core process and the potentially vulnerable WebView processes. All sensitive operations should be implemented in the Core process, with the WebView serving only as a presentation layer.

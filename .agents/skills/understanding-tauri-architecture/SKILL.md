@@ -80,6 +80,7 @@ The Shell is the user interface layer rendered in a webview:
 ### tauri Crate
 
 The central orchestrator that:
+
 - Reads `tauri.conf.json` at compile time
 - Manages script injection into the webview
 - Hosts the system interaction API
@@ -93,6 +94,7 @@ The glue layer between Tauri and lower-level webview libraries. Abstracts platfo
 ### tauri-macros and tauri-codegen
 
 Generate compile-time code for:
+
 - Command handlers (`#[tauri::command]`)
 - Context and configuration parsing
 - Asset embedding and compression
@@ -100,6 +102,7 @@ Generate compile-time code for:
 ### TAO (Window Management)
 
 Cross-platform window creation library (forked from Winit):
+
 - Creates and manages application windows
 - Handles menu bars and system trays
 - Supports Windows, macOS, Linux, iOS, Android
@@ -107,6 +110,7 @@ Cross-platform window creation library (forked from Winit):
 ### WRY (WebView Rendering)
 
 Cross-platform WebView rendering library:
+
 - Abstracts webview implementations per platform
 - Handles webview-to-native communication
 - Manages JavaScript evaluation and event bridging
@@ -188,13 +192,14 @@ tauri::Builder::default()
 
 ```javascript
 // JavaScript frontend
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
-const greeting = await invoke('greet', { name: 'World' });
+const greeting = await invoke("greet", { name: "World" });
 console.log(greeting); // "Hello, World!"
 ```
 
 Key characteristics:
+
 - Built on JSON-RPC protocol
 - All arguments must be JSON-serializable
 - Returns a Promise that resolves with the result
@@ -207,13 +212,13 @@ Bidirectional, asynchronous notifications:
 
 ```javascript
 // Frontend: emit event
-import { emit } from '@tauri-apps/api/event';
-emit('user-action', { action: 'clicked' });
+import { emit } from "@tauri-apps/api/event";
+emit("user-action", { action: "clicked" });
 
 // Frontend: listen for events
-import { listen } from '@tauri-apps/api/event';
-const unlisten = await listen('download-progress', (event) => {
-    console.log(event.payload);
+import { listen } from "@tauri-apps/api/event";
+const unlisten = await listen("download-progress", (event) => {
+  console.log(event.payload);
 });
 ```
 
@@ -230,6 +235,7 @@ app.emit("download-progress", 50)?;
 ```
 
 Key characteristics:
+
 - No return value (one-way)
 - Both frontend and backend can emit/listen
 - Best for lifecycle events and state changes
@@ -399,6 +405,7 @@ fn with_window(window: tauri::WebviewWindow) -> String {
 ## No Runtime Bundled
 
 Tauri does NOT ship a runtime. The final binary:
+
 - Compiles Rust code directly into native machine code
 - Embeds frontend assets in the binary
 - Uses the system's native webview
@@ -408,15 +415,16 @@ This makes reverse engineering Tauri apps non-trivial compared to Electron apps 
 
 ## Summary
 
-| Component | Role |
-|-----------|------|
-| **Core (Rust)** | System access, security, business logic |
-| **Shell (Frontend)** | UI rendering, user interaction |
-| **WebView (TAO+WRY)** | Platform-native rendering bridge |
-| **IPC (Commands/Events)** | Safe message passing between layers |
-| **Capabilities** | Permission control per window |
+| Component                 | Role                                    |
+| ------------------------- | --------------------------------------- |
+| **Core (Rust)**           | System access, security, business logic |
+| **Shell (Frontend)**      | UI rendering, user interaction          |
+| **WebView (TAO+WRY)**     | Platform-native rendering bridge        |
+| **IPC (Commands/Events)** | Safe message passing between layers     |
+| **Capabilities**          | Permission control per window           |
 
 The architecture prioritizes:
+
 1. **Security**: Multiple layers of protection, trust boundaries
 2. **Performance**: Native code, no bundled runtime
 3. **Size**: Minimal binary footprint

@@ -10,6 +10,7 @@ description: Helps users create and initialize new Tauri v2 projects for buildin
 Tauri is a framework for building tiny, fast binaries for all major desktop and mobile platforms. It combines any frontend that compiles to HTML/JS/CSS with Rust for the backend.
 
 **Key characteristics:**
+
 - Minimal apps can be under 600KB (uses system webview, not bundled browser)
 - Built on Rust for memory, thread, and type safety
 - Supports virtually any frontend framework
@@ -32,6 +33,7 @@ xcode-select --install
 1. **Microsoft C++ Build Tools**: Download from Visual Studio, select "Desktop development with C++"
 2. **WebView2**: Pre-installed on Windows 10 v1803+ (install manually if needed)
 3. **Rust toolchain**:
+
 ```powershell
 winget install Rustlang.Rustup
 rustup default stable-msvc
@@ -40,6 +42,7 @@ rustup default stable-msvc
 ### Linux
 
 **Debian/Ubuntu:**
+
 ```bash
 sudo apt update
 sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file \
@@ -47,12 +50,14 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file \
 ```
 
 **Arch Linux:**
+
 ```bash
 sudo pacman -S webkit2gtk-4.1 base-devel curl wget file openssl \
   appmenu-gtk-module libappindicator-gtk3 librsvg xdotool
 ```
 
 **Fedora:**
+
 ```bash
 sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file \
   libappindicator-gtk3-devel librsvg2-devel libxdo-devel \
@@ -76,6 +81,7 @@ Required only for JavaScript/TypeScript frontends. Install LTS version from node
 ### Mobile Development (Optional)
 
 **Android (all platforms):**
+
 ```bash
 # Install Android Studio, then add Rust targets
 rustup target add aarch64-linux-android armv7-linux-androideabi \
@@ -85,6 +91,7 @@ rustup target add aarch64-linux-android armv7-linux-androideabi \
 Set environment variables: `JAVA_HOME`, `ANDROID_HOME`, `NDK_HOME`
 
 **iOS (macOS only):**
+
 ```bash
 # Requires full Xcode (not just Command Line Tools)
 rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
@@ -122,6 +129,7 @@ irm https://create.tauri.app/ps | iex         # PowerShell
 ```
 
 **Prompts you'll see:**
+
 1. Project name
 2. Bundle identifier (e.g., `com.example.app`)
 3. Frontend language: TypeScript/JavaScript, Rust, or .NET
@@ -129,6 +137,7 @@ irm https://create.tauri.app/ps | iex         # PowerShell
 5. UI template: vanilla, Vue, Svelte, React, SolidJS, Angular, Preact, Yew, Leptos, Sycamore
 
 **After scaffolding:**
+
 ```bash
 cd your-project
 npm install
@@ -148,6 +157,7 @@ npx tauri init
 ```
 
 **tauri init prompts:**
+
 - App name
 - Window title
 - Frontend dev server URL (e.g., `http://localhost:5173`)
@@ -183,6 +193,7 @@ my-tauri-app/
 ### Key Files
 
 **tauri.conf.json** - Primary configuration:
+
 ```json
 {
   "productName": "my-app",
@@ -199,6 +210,7 @@ my-tauri-app/
 ```
 
 **src/lib.rs** - Rust application code:
+
 ```rust
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -209,6 +221,7 @@ pub fn run() {
 ```
 
 **src/main.rs** - Desktop entry point:
+
 ```rust
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -218,6 +231,7 @@ fn main() {
 ```
 
 **capabilities/** - Define what commands JavaScript can invoke:
+
 ```json
 {
   "identifier": "main-capability",
@@ -253,15 +267,15 @@ npm run tauri ios dev
 
 ## Quick Reference: Supported Frontend Templates
 
-| Template | Languages | Notes |
-|----------|-----------|-------|
-| vanilla | JS, TS | No framework |
-| react | JS, TS | Vite-based |
-| vue | JS, TS | Vite-based |
-| svelte | JS, TS | Vite-based |
-| solid | JS, TS | Vite-based |
-| angular | TS | Angular CLI |
-| preact | JS, TS | Vite-based |
-| yew | Rust | Rust WASM frontend |
-| leptos | Rust | Rust WASM frontend |
-| sycamore | Rust | Rust WASM frontend |
+| Template | Languages | Notes              |
+| -------- | --------- | ------------------ |
+| vanilla  | JS, TS    | No framework       |
+| react    | JS, TS    | Vite-based         |
+| vue      | JS, TS    | Vite-based         |
+| svelte   | JS, TS    | Vite-based         |
+| solid    | JS, TS    | Vite-based         |
+| angular  | TS        | Angular CLI        |
+| preact   | JS, TS    | Vite-based         |
+| yew      | Rust      | Rust WASM frontend |
+| leptos   | Rust      | Rust WASM frontend |
+| sycamore | Rust      | Rust WASM frontend |

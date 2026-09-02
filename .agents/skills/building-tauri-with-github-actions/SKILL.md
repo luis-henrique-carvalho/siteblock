@@ -16,7 +16,7 @@ GitHub Actions enables automated building, testing, and releasing of Tauri appli
 ### Push to Release Branch
 
 ```yaml
-name: 'publish'
+name: "publish"
 on:
   workflow_dispatch:
   push:
@@ -27,11 +27,11 @@ on:
 ### Tag-Based Releases
 
 ```yaml
-name: 'publish'
+name: "publish"
 on:
   push:
     tags:
-      - 'app-v*'
+      - "app-v*"
 ```
 
 ## Platform Matrix Configuration
@@ -47,14 +47,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04'
-            args: ''
-          - platform: 'windows-latest'
-            args: ''
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
+          - platform: "ubuntu-22.04"
+            args: ""
+          - platform: "windows-latest"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
 ```
@@ -66,7 +66,7 @@ Add `ubuntu-22.04-arm` to the matrix for native ARM64 Linux builds (public repos
 ## Complete Workflow Example
 
 ```yaml
-name: 'publish'
+name: "publish"
 
 on:
   workflow_dispatch:
@@ -82,14 +82,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04'
-            args: ''
-          - platform: 'windows-latest'
-            args: ''
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
+          - platform: "ubuntu-22.04"
+            args: ""
+          - platform: "windows-latest"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -105,7 +105,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'npm'
+          cache: "npm"
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -115,7 +115,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: "./src-tauri -> target"
 
       - name: Install frontend dependencies
         run: npm ci
@@ -126,8 +126,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: app-v__VERSION__
-          releaseName: 'App v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseName: "App v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
@@ -147,7 +147,7 @@ jobs:
   uses: actions/setup-node@v4
   with:
     node-version: lts/*
-    cache: 'pnpm'
+    cache: "pnpm"
 
 - name: Install frontend dependencies
   run: pnpm install
@@ -160,7 +160,7 @@ jobs:
   uses: actions/setup-node@v4
   with:
     node-version: lts/*
-    cache: 'yarn'
+    cache: "yarn"
 
 - name: Install frontend dependencies
   run: yarn install --frozen-lockfile
@@ -174,7 +174,7 @@ jobs:
 - name: Rust cache
   uses: swatinem/rust-cache@v2
   with:
-    workspaces: './src-tauri -> target'
+    workspaces: "./src-tauri -> target"
 ```
 
 ### Node.js Dependency Caching
@@ -203,8 +203,8 @@ Ubuntu requires WebKit and related libraries:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
     tagName: app-v__VERSION__
-    releaseName: 'App v__VERSION__'
-    releaseBody: 'See the assets to download this version and install.'
+    releaseName: "App v__VERSION__"
+    releaseBody: "See the assets to download this version and install."
     releaseDraft: true
     prerelease: false
     args: ${{ matrix.args }}
@@ -216,13 +216,13 @@ The action automatically replaces `__VERSION__` with the app version from `tauri
 
 ### Release Options
 
-| Option | Description |
-|--------|-------------|
-| `tagName` | Git tag for the release (supports `__VERSION__` placeholder) |
-| `releaseName` | Display name for the release |
-| `releaseBody` | Release notes content |
-| `releaseDraft` | Create as draft release (`true`/`false`) |
-| `prerelease` | Mark as prerelease (`true`/`false`) |
+| Option         | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
+| `tagName`      | Git tag for the release (supports `__VERSION__` placeholder) |
+| `releaseName`  | Display name for the release                                 |
+| `releaseBody`  | Release notes content                                        |
+| `releaseDraft` | Create as draft release (`true`/`false`)                     |
+| `prerelease`   | Mark as prerelease (`true`/`false`)                          |
 
 ## Artifact Uploads
 
@@ -271,9 +271,9 @@ For projects where Tauri is not at the repository root:
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
-    projectPath: './apps/desktop'
+    projectPath: "./apps/desktop"
     tagName: app-v__VERSION__
-    releaseName: 'App v__VERSION__'
+    releaseName: "App v__VERSION__"
 ```
 
 ## ARM Build Emulation (Alternative)
@@ -335,7 +335,7 @@ Note: ARM emulation builds take approximately one hour for fresh projects.
 For pull request validation without creating releases:
 
 ```yaml
-name: 'CI Build'
+name: "CI Build"
 
 on:
   pull_request:
@@ -348,12 +348,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-          - platform: 'ubuntu-22.04'
-            args: ''
-          - platform: 'windows-latest'
-            args: ''
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+          - platform: "ubuntu-22.04"
+            args: ""
+          - platform: "windows-latest"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -369,7 +369,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'npm'
+          cache: "npm"
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -379,7 +379,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: "./src-tauri -> target"
 
       - name: Install frontend dependencies
         run: npm ci
@@ -412,7 +412,7 @@ Ensure Rust targets are installed for cross-compilation:
 ```yaml
 - uses: dtolnay/rust-toolchain@stable
   with:
-    targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+    targets: "aarch64-apple-darwin,x86_64-apple-darwin"
 ```
 
 ### Cache Not Working
@@ -422,5 +422,5 @@ Verify the workspace path matches your project structure:
 ```yaml
 - uses: swatinem/rust-cache@v2
   with:
-    workspaces: './src-tauri -> target'
+    workspaces: "./src-tauri -> target"
 ```

@@ -12,6 +12,7 @@ This skill covers Tauri's IPC system, including the brownfield and isolation pat
 Tauri implements Inter-Process Communication using **Asynchronous Message Passing**. This enables isolated processes to exchange serialized requests and responses securely.
 
 **Why Message Passing?**
+
 - Safer than shared memory or direct function access
 - Recipients can reject or discard malicious requests
 - Tauri Core validates all requests before execution
@@ -28,6 +29,7 @@ Tauri provides two IPC primitives:
 - **Best for**: Lifecycle events, state changes, notifications
 
 **Rust (emit to frontend):**
+
 ```rust
 use tauri::{AppHandle, Emitter};
 
@@ -37,21 +39,23 @@ fn emit_event(app: &AppHandle) {
 ```
 
 **Frontend (listen):**
-```typescript
-import { listen } from '@tauri-apps/api/event';
 
-const unlisten = await listen('backend-event', (event) => {
-  console.log('Received:', event.payload);
+```typescript
+import { listen } from "@tauri-apps/api/event";
+
+const unlisten = await listen("backend-event", (event) => {
+  console.log("Received:", event.payload);
 });
 
 // Call unlisten() when done
 ```
 
 **Frontend (emit to backend):**
-```typescript
-import { emit } from '@tauri-apps/api/event';
 
-await emit('frontend-event', { data: 'value' });
+```typescript
+import { emit } from "@tauri-apps/api/event";
+
+await emit("frontend-event", { data: "value" });
 ```
 
 ### Commands
@@ -62,6 +66,7 @@ await emit('frontend-event', { data: 'value' });
 - **Requirement**: Arguments and return data must be JSON-serializable
 
 **Rust command definition:**
+
 ```rust
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -77,14 +82,16 @@ fn main() {
 ```
 
 **Frontend invocation:**
-```typescript
-import { invoke } from '@tauri-apps/api/core';
 
-const greeting = await invoke('greet', { name: 'World' });
+```typescript
+import { invoke } from "@tauri-apps/api/core";
+
+const greeting = await invoke("greet", { name: "World" });
 console.log(greeting); // "Hello, World!"
 ```
 
 **Async command with Result:**
+
 ```rust
 #[tauri::command]
 async fn read_file(path: String) -> Result<String, String> {
@@ -140,6 +147,7 @@ Brownfield is the default. Explicit configuration is optional:
 ### Code Example
 
 **Rust backend:**
+
 ```rust
 #[tauri::command]
 fn process_data(input: String) -> Result<String, String> {
@@ -149,11 +157,12 @@ fn process_data(input: String) -> Result<String, String> {
 ```
 
 **Frontend:**
+
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 // Direct invocation - no isolation layer
-const result = await invoke('process_data', { input: 'test' });
+const result = await invoke("process_data", { input: "test" });
 ```
 
 ### Security Considerations
@@ -182,6 +191,7 @@ The isolation pattern intercepts and modifies **all** Tauri API messages from th
 ### Why Use It
 
 **Protection against Development Threats:**
+
 - Validates all IPC calls before execution
 - Catches malicious or unwanted frontend calls
 - Mitigates supply chain attack risks
@@ -199,6 +209,7 @@ The isolation pattern intercepts and modifies **all** Tauri API messages from th
 6. Encrypted message passes to Tauri Core for decryption and execution
 
 **Key Security Features:**
+
 - New encryption keys generated on each application launch
 - Sandboxed iframe prevents isolation code manipulation
 - All IPC calls validated, including event-based APIs
@@ -206,6 +217,7 @@ The isolation pattern intercepts and modifies **all** Tauri API messages from th
 ### Configuration
 
 **tauri.conf.json:**
+
 ```json
 {
   "app": {
@@ -224,6 +236,7 @@ The isolation pattern intercepts and modifies **all** Tauri API messages from th
 ### Code Example
 
 **Directory structure:**
+
 ```
 project/
   src/           # Main frontend
@@ -234,6 +247,7 @@ project/
 ```
 
 **dist-isolation/index.html:**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -248,10 +262,11 @@ project/
 ```
 
 **dist-isolation/index.js:**
+
 ```javascript
 window.__TAURI_ISOLATION_HOOK__ = (payload) => {
   // Log all IPC calls for debugging
-  console.log('IPC call intercepted:', payload);
+  console.log("IPC call intercepted:", payload);
 
   // Return payload unchanged (passthrough)
   return payload;
@@ -259,24 +274,25 @@ window.__TAURI_ISOLATION_HOOK__ = (payload) => {
 ```
 
 **Validation example (index.js):**
+
 ```javascript
 window.__TAURI_ISOLATION_HOOK__ = (payload) => {
   // Validate command calls
-  if (payload.cmd === 'invoke') {
+  if (payload.cmd === "invoke") {
     const { __tauriModule, message } = payload;
 
     // Block unauthorized file system access
-    if (message.cmd === 'readFile') {
+    if (message.cmd === "readFile") {
       const path = message.path;
-      if (!path.startsWith('/allowed/directory/')) {
-        console.error('Blocked unauthorized file access:', path);
+      if (!path.startsWith("/allowed/directory/")) {
+        console.error("Blocked unauthorized file access:", path);
         return null; // Block the request
       }
     }
 
     // Validate specific commands
-    if (message.cmd === 'deleteItem') {
-      if (!confirm('Are you sure you want to delete this item?')) {
+    if (message.cmd === "deleteItem") {
+      if (!confirm("Are you sure you want to delete this item?")) {
         return null; // User cancelled
       }
     }
@@ -287,18 +303,19 @@ window.__TAURI_ISOLATION_HOOK__ = (payload) => {
 ```
 
 **Comprehensive validation example:**
+
 ```javascript
-const ALLOWED_COMMANDS = ['greet', 'read_config', 'save_settings'];
-const BLOCKED_PATHS = ['/etc/', '/usr/', '/System/'];
+const ALLOWED_COMMANDS = ["greet", "read_config", "save_settings"];
+const BLOCKED_PATHS = ["/etc/", "/usr/", "/System/"];
 
 window.__TAURI_ISOLATION_HOOK__ = (payload) => {
   // Validate invoke commands
-  if (payload.cmd === 'invoke') {
+  if (payload.cmd === "invoke") {
     const commandName = payload.message?.cmd;
 
     // Whitelist approach
     if (!ALLOWED_COMMANDS.includes(commandName)) {
-      console.warn('Blocked unknown command:', commandName);
+      console.warn("Blocked unknown command:", commandName);
       return null;
     }
 
@@ -307,7 +324,7 @@ window.__TAURI_ISOLATION_HOOK__ = (payload) => {
     if (args.path) {
       for (const blocked of BLOCKED_PATHS) {
         if (args.path.startsWith(blocked)) {
-          console.error('Blocked access to protected path:', args.path);
+          console.error("Blocked access to protected path:", args.path);
           return null;
         }
       }
@@ -315,7 +332,7 @@ window.__TAURI_ISOLATION_HOOK__ = (payload) => {
   }
 
   // Validate event emissions
-  if (payload.cmd === 'emit') {
+  if (payload.cmd === "emit") {
     const eventName = payload.event;
     // Add event validation as needed
   }
@@ -351,22 +368,23 @@ window.__TAURI_ISOLATION_HOOK__ = (payload) => {
 
 ## Pattern Comparison
 
-| Aspect | Brownfield | Isolation |
-|--------|------------|-----------|
-| Default | Yes | No |
-| Configuration | None required | Requires isolation app |
-| Security | Basic | Enhanced |
-| Validation | Command-level only | All IPC calls |
-| Encryption | None | AES-GCM |
-| Performance | Fastest | Slight overhead |
-| Complexity | Simple | Moderate |
-| Best for | Trusted code, prototypes | Production, sensitive apps |
+| Aspect        | Brownfield               | Isolation                  |
+| ------------- | ------------------------ | -------------------------- |
+| Default       | Yes                      | No                         |
+| Configuration | None required            | Requires isolation app     |
+| Security      | Basic                    | Enhanced                   |
+| Validation    | Command-level only       | All IPC calls              |
+| Encryption    | None                     | AES-GCM                    |
+| Performance   | Fastest                  | Slight overhead            |
+| Complexity    | Simple                   | Moderate                   |
+| Best for      | Trusted code, prototypes | Production, sensitive apps |
 
 ## Security Best Practices
 
 ### For Both Patterns
 
 1. **Validate all inputs in Rust commands**
+
    ```rust
    #[tauri::command]
    fn process_file(path: String) -> Result<String, String> {
@@ -380,6 +398,7 @@ window.__TAURI_ISOLATION_HOOK__ = (payload) => {
    ```
 
 2. **Use typed arguments**
+
    ```rust
    #[derive(serde::Deserialize)]
    struct CreateUserArgs {
@@ -408,12 +427,14 @@ window.__TAURI_ISOLATION_HOOK__ = (payload) => {
 ## Choosing a Pattern
 
 **Use Brownfield when:**
+
 - Building internal tools
 - Prototyping rapidly
 - Frontend code is fully trusted
 - Minimal security requirements
 
 **Use Isolation when:**
+
 - Building public applications
 - Handling sensitive user data
 - Using many third-party frontend packages

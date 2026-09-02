@@ -27,9 +27,9 @@ If the origin is not allowed, the request is denied and the command never execut
 
 Tauri implements a trust boundary separating Rust core code from WebView frontend code:
 
-| Zone | Trust Level | Access |
-|------|-------------|--------|
-| Rust Core | Full trust | Unrestricted system access |
+| Zone             | Trust Level   | Access                         |
+| ---------------- | ------------- | ------------------------------ |
+| Rust Core        | Full trust    | Unrestricted system access     |
 | WebView Frontend | Limited trust | Only exposed resources via IPC |
 
 The runtime authority enforces this boundary at execution time.
@@ -58,12 +58,12 @@ Frontend (WebView)
 
 ### Key Components
 
-| Component | Role in Runtime |
-|-----------|-----------------|
-| Permissions | Define what commands exist and their access rules |
-| Capabilities | Map permissions to specific windows/webviews |
-| Scopes | Restrict command behavior with path/resource limits |
-| Runtime Authority | Enforces all of the above at execution time |
+| Component         | Role in Runtime                                     |
+| ----------------- | --------------------------------------------------- |
+| Permissions       | Define what commands exist and their access rules   |
+| Capabilities      | Map permissions to specific windows/webviews        |
+| Scopes            | Restrict command behavior with path/resource limits |
+| Runtime Authority | Enforces all of the above at execution time         |
 
 ## Capability Resolution at Runtime
 
@@ -134,6 +134,7 @@ When evaluating access, deny rules always take precedence:
 ```
 
 At runtime:
+
 - Request to read `$HOME/documents/file.txt` - **Allowed**
 - Request to read `$HOME/.ssh/id_rsa` - **Denied** (deny rule matches)
 
@@ -168,16 +169,16 @@ Scopes are not just validation rules; they are injected into command execution c
 
 At runtime, scope variables resolve to actual paths:
 
-| Variable | Runtime Resolution |
-|----------|-------------------|
-| `$APP` | Application install directory |
-| `$APPDATA` | App data directory |
-| `$APPCONFIG` | App config directory |
-| `$HOME` | User home directory |
-| `$TEMP` | Temporary directory |
-| `$DOCUMENT` | Documents directory |
-| `$DOWNLOAD` | Downloads directory |
-| `$DESKTOP` | Desktop directory |
+| Variable     | Runtime Resolution            |
+| ------------ | ----------------------------- |
+| `$APP`       | Application install directory |
+| `$APPDATA`   | App data directory            |
+| `$APPCONFIG` | App config directory          |
+| `$HOME`      | User home directory           |
+| `$TEMP`      | Temporary directory           |
+| `$DOCUMENT`  | Documents directory           |
+| `$DOWNLOAD`  | Downloads directory           |
+| `$DESKTOP`   | Desktop directory             |
 
 ### Scope Combination Example
 
@@ -199,6 +200,7 @@ At runtime, scope variables resolve to actual paths:
 ```
 
 At runtime for the "main" window:
+
 - Read operations allowed in `$APPDATA/*`
 - Write operations only allowed for `$APPDATA/config.json`
 
@@ -225,11 +227,7 @@ Parent directory accessors (`..`) in paths are blocked, ensuring scope restricti
   "identifier": "default-capability",
   "description": "Default runtime permissions",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "core:event:default",
-    "core:window:default"
-  ]
+  "permissions": ["core:default", "core:event:default", "core:window:default"]
 }
 ```
 
@@ -247,19 +245,12 @@ Parent directory accessors (`..`) in paths are blocked, ensuring scope restricti
     "fs:default",
     {
       "identifier": "fs:allow-read-file",
-      "allow": [
-        { "path": "$APPDATA/**" },
-        { "path": "$DOCUMENT/**" }
-      ],
-      "deny": [
-        { "path": "$DOCUMENT/private/**" }
-      ]
+      "allow": [{ "path": "$APPDATA/**" }, { "path": "$DOCUMENT/**" }],
+      "deny": [{ "path": "$DOCUMENT/private/**" }]
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [
-        { "path": "$APPDATA/**" }
-      ]
+      "allow": [{ "path": "$APPDATA/**" }]
     }
   ]
 }
@@ -305,6 +296,7 @@ Parent directory accessors (`..`) in paths are blocked, ensuring scope restricti
 ```
 
 At runtime:
+
 - "editor" window can read/write files and open dialogs
 - "preview" window can only read from temp preview directory
 
@@ -317,13 +309,8 @@ At runtime:
   "permissions": [
     {
       "identifier": "http:default",
-      "allow": [
-        { "url": "https://api.myapp.com/*" },
-        { "url": "https://cdn.myapp.com/*" }
-      ],
-      "deny": [
-        { "url": "https://api.myapp.com/admin/*" }
-      ]
+      "allow": [{ "url": "https://api.myapp.com/*" }, { "url": "https://cdn.myapp.com/*" }],
+      "deny": [{ "url": "https://api.myapp.com/admin/*" }]
     }
   ]
 }
@@ -333,22 +320,22 @@ At runtime:
 
 ### What Runtime Authority Protects
 
-| Threat | Protection |
-|--------|------------|
-| Frontend compromise | Limits damage to granted permissions only |
-| Unauthorized command access | Commands denied without explicit capability |
-| Path traversal attacks | Built-in prevention at runtime |
-| Scope bypass attempts | All scopes enforced before command execution |
-| Cross-window access | Each window isolated to its capabilities |
+| Threat                      | Protection                                   |
+| --------------------------- | -------------------------------------------- |
+| Frontend compromise         | Limits damage to granted permissions only    |
+| Unauthorized command access | Commands denied without explicit capability  |
+| Path traversal attacks      | Built-in prevention at runtime               |
+| Scope bypass attempts       | All scopes enforced before command execution |
+| Cross-window access         | Each window isolated to its capabilities     |
 
 ### What Runtime Authority Does NOT Protect
 
-| Threat | Why Not Protected |
-|--------|-------------------|
-| Malicious Rust code | Rust core has full trust |
-| Overly permissive config | Developer responsibility |
-| WebView vulnerabilities | OS WebView security boundary |
-| Supply chain attacks | Dependency security |
+| Threat                   | Why Not Protected            |
+| ------------------------ | ---------------------------- |
+| Malicious Rust code      | Rust core has full trust     |
+| Overly permissive config | Developer responsibility     |
+| WebView vulnerabilities  | OS WebView security boundary |
+| Supply chain attacks     | Dependency security          |
 
 ## Debugging Runtime Authority
 
@@ -363,12 +350,12 @@ When a command fails with permission denied:
 
 ### Common Runtime Issues
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Command not allowed | Missing permission in capability | Add permission to capability |
-| Scope not applied | No scope defined for permission | Add allow scope |
-| Access denied despite allow | Deny rule takes precedence | Remove conflicting deny |
-| Window has no permissions | Capability not targeting window | Check window label in capability |
+| Issue                       | Cause                            | Solution                         |
+| --------------------------- | -------------------------------- | -------------------------------- |
+| Command not allowed         | Missing permission in capability | Add permission to capability     |
+| Scope not applied           | No scope defined for permission  | Add allow scope                  |
+| Access denied despite allow | Deny rule takes precedence       | Remove conflicting deny          |
+| Window has no permissions   | Capability not targeting window  | Check window label in capability |
 
 ### Verifying Runtime Configuration
 
@@ -427,11 +414,7 @@ Explicitly deny access to sensitive locations:
 {
   "identifier": "fs:allow-read-file",
   "allow": [{ "path": "$HOME/**" }],
-  "deny": [
-    { "path": "$HOME/.ssh/**" },
-    { "path": "$HOME/.gnupg/**" },
-    { "path": "$HOME/.aws/**" }
-  ]
+  "deny": [{ "path": "$HOME/.ssh/**" }, { "path": "$HOME/.gnupg/**" }, { "path": "$HOME/.aws/**" }]
 }
 ```
 

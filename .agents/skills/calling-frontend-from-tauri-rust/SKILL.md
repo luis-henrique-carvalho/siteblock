@@ -19,8 +19,8 @@ use serde::Serialize;
 ```
 
 ```typescript
-import { listen, once, emit } from '@tauri-apps/api/event';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { listen, once, emit } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 ```
 
 ## Emitting Events from Rust
@@ -104,44 +104,44 @@ fn download(app: AppHandle, url: String) {
 ### Global Event Listeners
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
 type DownloadStarted = {
-    url: string;
-    downloadId: number;
-    contentLength: number;
+  url: string;
+  downloadId: number;
+  contentLength: number;
 };
 
-listen<DownloadStarted>('download-started', (event) => {
-    console.log(`downloading ${event.payload.contentLength} bytes from ${event.payload.url}`);
+listen<DownloadStarted>("download-started", (event) => {
+  console.log(`downloading ${event.payload.contentLength} bytes from ${event.payload.url}`);
 });
 ```
 
 ### Webview-Specific Listeners
 
 ```typescript
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 const appWebview = getCurrentWebviewWindow();
-appWebview.listen<string>('logged-in', (event) => {
-    localStorage.setItem('session-token', event.payload);
+appWebview.listen<string>("logged-in", (event) => {
+  localStorage.setItem("session-token", event.payload);
 });
 ```
 
 ### Managing Listeners
 
 ```typescript
-import { listen, once } from '@tauri-apps/api/event';
+import { listen, once } from "@tauri-apps/api/event";
 
 // Unlisten to prevent memory leaks
-const unlisten = await listen('download-started', (event) => {
-    console.log('download started');
+const unlisten = await listen("download-started", (event) => {
+  console.log("download started");
 });
 unlisten(); // Stop listening when done
 
 // Listen once for one-time events
-once('app-ready', (event) => {
-    console.log('App is ready:', event.payload);
+once("app-ready", (event) => {
+  console.log("App is ready:", event.payload);
 });
 ```
 
@@ -238,30 +238,30 @@ fn download(app: AppHandle, url: String, on_event: Channel<DownloadEvent>) {
 ### Frontend Channel Usage
 
 ```typescript
-import { invoke, Channel } from '@tauri-apps/api/core';
+import { invoke, Channel } from "@tauri-apps/api/core";
 
 type DownloadEvent =
-    | { event: 'started'; data: { url: string; downloadId: number; contentLength: number } }
-    | { event: 'progress'; data: { downloadId: number; chunkLength: number } }
-    | { event: 'finished'; data: { downloadId: number } };
+  | { event: "started"; data: { url: string; downloadId: number; contentLength: number } }
+  | { event: "progress"; data: { downloadId: number; chunkLength: number } }
+  | { event: "finished"; data: { downloadId: number } };
 
 const onEvent = new Channel<DownloadEvent>();
 
 onEvent.onmessage = (message) => {
-    switch (message.event) {
-        case 'started':
-            console.log(`Download started: ${message.data.url}`);
-            break;
-        case 'progress':
-            console.log(`Progress: ${message.data.chunkLength} bytes`);
-            break;
-        case 'finished':
-            console.log('Download complete!');
-            break;
-    }
+  switch (message.event) {
+    case "started":
+      console.log(`Download started: ${message.data.url}`);
+      break;
+    case "progress":
+      console.log(`Progress: ${message.data.chunkLength} bytes`);
+      break;
+    case "finished":
+      console.log("Download complete!");
+      break;
+  }
 };
 
-await invoke('download', { url: 'https://example.com/file.json', onEvent });
+await invoke("download", { url: "https://example.com/file.json", onEvent });
 ```
 
 ## JavaScript Evaluation
@@ -322,11 +322,11 @@ fn sync_state(app: tauri::AppHandle) {
 
 ## Choosing the Right Method
 
-| Method | Use Case | Performance |
-|--------|----------|-------------|
-| Events (`emit`) | Multi-consumer, broadcast | Moderate |
-| Channels | High-throughput streaming, single consumer | High |
-| JS Eval | Direct DOM manipulation, no response needed | Low overhead |
+| Method          | Use Case                                    | Performance  |
+| --------------- | ------------------------------------------- | ------------ |
+| Events (`emit`) | Multi-consumer, broadcast                   | Moderate     |
+| Channels        | High-throughput streaming, single consumer  | High         |
+| JS Eval         | Direct DOM manipulation, no response needed | Low overhead |
 
 **Events**: Notifying multiple windows, loose coupling, simple status updates.
 
@@ -364,15 +364,15 @@ fn watch_directory(app: AppHandle, path: PathBuf) {
 ### Frontend Side
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api/core';
+import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 
 type FileChange = { path: string; eventType: string };
 
-await invoke('watch_directory', { path: '/some/directory' });
+await invoke("watch_directory", { path: "/some/directory" });
 
-const unlisten = await listen<FileChange>('file-changed', (event) => {
-    console.log(`File ${event.payload.eventType}: ${event.payload.path}`);
+const unlisten = await listen<FileChange>("file-changed", (event) => {
+  console.log(`File ${event.payload.eventType}: ${event.payload.path}`);
 });
 
 // Cleanup when component unmounts: unlisten();

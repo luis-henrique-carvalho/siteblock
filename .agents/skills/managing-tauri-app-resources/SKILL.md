@@ -21,11 +21,11 @@ cargo tauri icon --ios-color "#000000"    # iOS background color
 
 ### Generated Formats
 
-| Format | Platform |
-|--------|----------|
-| `icon.icns` | macOS |
-| `icon.ico` | Windows |
-| `*.png` | Linux, Android, iOS |
+| Format      | Platform            |
+| ----------- | ------------------- |
+| `icon.icns` | macOS               |
+| `icon.ico`  | Windows             |
+| `*.png`     | Linux, Android, iOS |
 
 ### Configuration
 
@@ -82,12 +82,12 @@ cargo tauri icon --ios-color "#000000"    # iOS background color
 
 ### Path Patterns
 
-| Pattern | Behavior |
-|---------|----------|
-| `"dir/file.txt"` | Single file |
-| `"dir/"` | Directory recursive |
-| `"dir/*"` | Files non-recursive |
-| `"dir/**/*"` | All files recursive |
+| Pattern          | Behavior            |
+| ---------------- | ------------------- |
+| `"dir/file.txt"` | Single file         |
+| `"dir/"`         | Directory recursive |
+| `"dir/*"`        | Files non-recursive |
+| `"dir/**/*"`     | All files recursive |
 
 ### Accessing Resources - Rust
 
@@ -108,10 +108,10 @@ fn load_resource(handle: tauri::AppHandle) -> Result<String, String> {
 ### Accessing Resources - JavaScript
 
 ```javascript
-import { resolveResource } from '@tauri-apps/api/path';
-import { readTextFile } from '@tauri-apps/plugin-fs';
+import { resolveResource } from "@tauri-apps/api/path";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 
-const resourcePath = await resolveResource('lang/de.json');
+const resourcePath = await resolveResource("lang/de.json");
 const content = await readTextFile(resourcePath);
 const data = JSON.parse(content);
 ```
@@ -120,10 +120,7 @@ const data = JSON.parse(content);
 
 ```json
 {
-  "permissions": [
-    "fs:allow-read-text-file",
-    "fs:allow-resource-read-recursive"
-  ]
+  "permissions": ["fs:allow-read-text-file", "fs:allow-resource-read-recursive"]
 }
 ```
 
@@ -291,12 +288,7 @@ fn set_theme(settings: State<'_, Mutex<AppSettings>>, theme: String) {
 ```json
 {
   "bundle": {
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.icns", "icons/icon.ico"],
     "resources": {
       "assets/config.json": "config.json",
       "assets/translations/": "lang/"
@@ -351,13 +343,13 @@ fn main() {
 **Frontend:**
 
 ```javascript
-import { invoke } from '@tauri-apps/api/core';
-import { resolveResource } from '@tauri-apps/api/path';
-import { readTextFile } from '@tauri-apps/plugin-fs';
+import { invoke } from "@tauri-apps/api/core";
+import { resolveResource } from "@tauri-apps/api/path";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 
-const newValue = await invoke('increment');
-const config = await invoke('load_config');
-const langPath = await resolveResource('lang/en.json');
+const newValue = await invoke("increment");
+const config = await invoke("load_config");
+const langPath = await resolveResource("lang/en.json");
 const translations = JSON.parse(await readTextFile(langPath));
 ```
 
@@ -366,12 +358,14 @@ const translations = JSON.parse(await readTextFile(langPath));
 ## Quick Reference
 
 ### Icon Commands
+
 ```bash
 cargo tauri icon                    # Generate from ./app-icon.png
 cargo tauri icon ./icon.png -o out  # Custom source/output
 ```
 
 ### Resource Patterns
+
 ```json
 { "resources": ["data.json"] }              // Single file
 { "resources": ["assets/"] }                // Directory recursive
@@ -379,6 +373,7 @@ cargo tauri icon ./icon.png -o out  # Custom source/output
 ```
 
 ### State Patterns
+
 ```rust
 app.manage(Config { ... });              // Immutable
 app.manage(Mutex::new(State { ... }));   // Mutable

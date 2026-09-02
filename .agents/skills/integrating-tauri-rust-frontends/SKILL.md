@@ -9,12 +9,12 @@ This skill covers integrating Rust-based frontend frameworks with Tauri v2 for b
 
 ## Supported Frameworks
 
-| Framework | Description | Bundler |
-|-----------|-------------|---------|
-| Leptos | Reactive Rust framework for building web UIs | Trunk |
-| Yew | Component-based Rust framework | Trunk |
-| Dioxus | Cross-platform UI framework | Trunk |
-| Sycamore | Reactive library for Rust | Trunk |
+| Framework | Description                                  | Bundler |
+| --------- | -------------------------------------------- | ------- |
+| Leptos    | Reactive Rust framework for building web UIs | Trunk   |
+| Yew       | Component-based Rust framework               | Trunk   |
+| Dioxus    | Cross-platform UI framework                  | Trunk   |
+| Sycamore  | Reactive library for Rust                    | Trunk   |
 
 All Rust/WASM frontends use **Trunk** as the bundler/dev server.
 
@@ -61,6 +61,7 @@ my-tauri-app/
 ```
 
 **Key settings:**
+
 - `beforeDevCommand`: Runs Trunk dev server before Tauri
 - `devUrl`: URL where Trunk serves the frontend (default: 1420 for Leptos, 8080 for plain Trunk)
 - `beforeBuildCommand`: Builds WASM bundle before packaging
@@ -86,6 +87,7 @@ ws_protocol = "ws"
 ```
 
 **Key settings:**
+
 - `target`: HTML entry point with Trunk directives
 - `ignore`: Prevents watching Tauri backend changes
 - `port`: Must match `devUrl` in tauri.conf.json
@@ -129,6 +131,7 @@ panic = "abort"
 ```
 
 **Key settings:**
+
 - `crate-type = ["cdylib", "rlib"]`: Required for WASM compilation
 - `tauri-wasm`: Provides Rust bindings to Tauri APIs
 - `features = ["csr"]`: Client-side rendering for framework
@@ -139,20 +142,21 @@ panic = "abort"
 ```html
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>My Tauri App</title>
     <link data-trunk rel="css" href="styles.css" />
-</head>
-<body>
+  </head>
+  <body>
     <div id="app"></div>
     <link data-trunk rel="rust" href="." data-wasm-opt="z" />
-</body>
+  </body>
 </html>
 ```
 
 **Trunk directives:**
+
 - `data-trunk rel="css"`: Include CSS files
 - `data-trunk rel="rust"`: Compile Rust crate to WASM
 - `data-wasm-opt="z"`: Optimize for size
@@ -393,39 +397,44 @@ let contents = fs::read_text_file("path/to/file").await?;
 ## Troubleshooting
 
 ### WASM not loading
+
 - Verify `withGlobalTauri: true` in tauri.conf.json
 - Check browser console for WASM errors
 - Ensure `wasm32-unknown-unknown` target is installed
 
 ### Hot-reload not working on mobile
+
 - Set `ws_protocol = "ws"` in Trunk.toml
 - Use `address = "0.0.0.0"` for mobile access
 - Verify firewall allows connections on dev port
 
 ### Tauri APIs undefined
+
 - `withGlobalTauri` must be `true`
 - Check `window.__TAURI__` exists in browser console
 - Verify tauri-wasm version matches Tauri version
 
 ### Large WASM binary size
+
 - Enable release profile optimizations
 - Use `opt-level = "z"` for size optimization
 - Enable LTO with `lto = true`
 - Consider `wasm-opt` post-processing
 
 ### Trunk build fails
+
 - Check Cargo.toml has `crate-type = ["cdylib", "rlib"]`
 - Verify index.html has correct `data-trunk` directives
 - Ensure no server-side features enabled in framework
 
 ## Version Compatibility
 
-| Component | Version |
-|-----------|---------|
-| Tauri | 2.x |
-| Trunk | 0.17+ |
-| Leptos | 0.6+ |
-| wasm-bindgen | 0.2.x |
-| tauri-wasm | 2.x |
+| Component    | Version |
+| ------------ | ------- |
+| Tauri        | 2.x     |
+| Trunk        | 0.17+   |
+| Leptos       | 0.6+    |
+| wasm-bindgen | 0.2.x   |
+| tauri-wasm   | 2.x     |
 
 Always match `tauri-wasm` version with your Tauri version.

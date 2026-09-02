@@ -86,6 +86,7 @@ Fallback policy for all resource types not explicitly defined.
 ```
 
 Common values:
+
 - `'self'` - Same origin only
 - `'none'` - Block all resources
 - `customprotocol:` - Tauri custom protocol
@@ -126,6 +127,7 @@ Controls allowed connection destinations for fetch, WebSocket, etc.
 ```
 
 Tauri-specific:
+
 - `ipc:` - Inter-process communication with Rust backend
 - `http://ipc.localhost` - Alternative IPC endpoint
 
@@ -138,6 +140,7 @@ Controls image loading sources.
 ```
 
 Common values:
+
 - `blob:` - Blob URLs (for dynamically created images)
 - `data:` - Data URLs (base64 encoded images)
 - `asset:` - Tauri asset protocol
@@ -361,11 +364,13 @@ Additional XSS protection by freezing JavaScript prototypes:
 Check browser DevTools console for CSP violation messages. They indicate which directive is blocking the resource.
 
 Example error:
+
 ```
 Refused to load the script 'https://example.com/script.js' because it violates the following Content Security Policy directive: "script-src 'self'"
 ```
 
 Solution: Add the domain to the appropriate directive:
+
 ```json
 "script-src": "'self' https://example.com"
 ```
@@ -373,6 +378,7 @@ Solution: Add the domain to the appropriate directive:
 ### WebAssembly Not Loading
 
 Add `'wasm-unsafe-eval'` to script-src:
+
 ```json
 "script-src": "'self' 'wasm-unsafe-eval'"
 ```
@@ -380,6 +386,7 @@ Add `'wasm-unsafe-eval'` to script-src:
 ### Inline Styles Not Working
 
 For CSS-in-JS libraries, add `'unsafe-inline'` to style-src:
+
 ```json
 "style-src": "'self' 'unsafe-inline'"
 ```
@@ -387,6 +394,7 @@ For CSS-in-JS libraries, add `'unsafe-inline'` to style-src:
 ### IPC Not Working
 
 Ensure connect-src includes Tauri IPC endpoints:
+
 ```json
 "connect-src": "ipc: http://ipc.localhost"
 ```

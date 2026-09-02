@@ -16,6 +16,7 @@ Tauri allows configuring HTTP headers that are included in responses to the webv
 Tauri restricts header configuration to a specific allowlist for security:
 
 ### CORS Headers
+
 - `Access-Control-Allow-Credentials`
 - `Access-Control-Allow-Headers`
 - `Access-Control-Allow-Methods`
@@ -23,17 +24,20 @@ Tauri restricts header configuration to a specific allowlist for security:
 - `Access-Control-Max-Age`
 
 ### Cross-Origin Policies
+
 - `Cross-Origin-Embedder-Policy`
 - `Cross-Origin-Opener-Policy`
 - `Cross-Origin-Resource-Policy`
 
 ### Security Headers
+
 - `X-Content-Type-Options`
 - `Permissions-Policy`
 - `Timing-Allow-Origin`
 - `Service-Worker-Allowed`
 
 ### Testing Only
+
 - `Tauri-Custom-Header` (not for production use)
 
 ## Configuration in tauri.conf.json
@@ -73,10 +77,7 @@ Headers are configured under `app.security.headers` in `src-tauri/tauri.conf.jso
         "Cross-Origin-Opener-Policy": "same-origin",
         "Cross-Origin-Embedder-Policy": "require-corp",
         "Cross-Origin-Resource-Policy": "same-origin",
-        "Timing-Allow-Origin": [
-          "https://example.com",
-          "https://api.example.com"
-        ],
+        "Timing-Allow-Origin": ["https://example.com", "https://api.example.com"],
         "X-Content-Type-Options": "nosniff",
         "Permissions-Policy": {
           "camera": "()",
@@ -155,16 +156,16 @@ Development frameworks require separate header configuration for their dev serve
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 export default defineConfig({
   server: {
     headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'X-Content-Type-Options': 'nosniff'
-    }
-  }
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "X-Content-Type-Options": "nosniff",
+    },
+  },
 });
 ```
 
@@ -198,11 +199,11 @@ export default defineNuxtConfig({
   vite: {
     server: {
       headers: {
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp'
-      }
-    }
-  }
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp",
+      },
+    },
+  },
 });
 ```
 
@@ -214,20 +215,20 @@ module.exports = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin'
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
           },
           {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp'
-          }
-        ]
-      }
+            key: "Cross-Origin-Embedder-Policy",
+            value: "require-corp",
+          },
+        ],
+      },
     ];
-  }
+  },
 };
 ```
 
@@ -245,30 +246,30 @@ headers = { "Cross-Origin-Opener-Policy" = "same-origin", "Cross-Origin-Embedder
 
 Controls window opener relationships:
 
-| Value | Description |
-|-------|-------------|
-| `unsafe-none` | Default, allows opener access |
-| `same-origin` | Isolates browsing context to same-origin |
-| `same-origin-allow-popups` | Same-origin but allows popups |
+| Value                      | Description                              |
+| -------------------------- | ---------------------------------------- |
+| `unsafe-none`              | Default, allows opener access            |
+| `same-origin`              | Isolates browsing context to same-origin |
+| `same-origin-allow-popups` | Same-origin but allows popups            |
 
 ### Cross-Origin-Embedder-Policy (COEP)
 
 Controls resource embedding:
 
-| Value | Description |
-|-------|-------------|
-| `unsafe-none` | Default, no restrictions |
-| `require-corp` | Requires CORP or CORS for cross-origin resources |
-| `credentialless` | Cross-origin requests without credentials |
+| Value            | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| `unsafe-none`    | Default, no restrictions                         |
+| `require-corp`   | Requires CORP or CORS for cross-origin resources |
+| `credentialless` | Cross-origin requests without credentials        |
 
 ### Cross-Origin-Resource-Policy (CORP)
 
 Controls who can load your resources:
 
-| Value | Description |
-|-------|-------------|
-| `same-site` | Only same-site requests |
-| `same-origin` | Only same-origin requests |
+| Value          | Description                  |
+| -------------- | ---------------------------- |
+| `same-site`    | Only same-site requests      |
+| `same-origin`  | Only same-origin requests    |
 | `cross-origin` | Allows cross-origin requests |
 
 ### X-Content-Type-Options
@@ -315,6 +316,7 @@ Controls browser feature access:
 ### SharedArrayBuffer Not Available
 
 Ensure both headers are set:
+
 ```json
 {
   "Cross-Origin-Opener-Policy": "same-origin",
@@ -329,6 +331,7 @@ Headers in `tauri.conf.json` only apply to production builds. Configure your dev
 ### CORS Errors with External APIs
 
 Add required headers for cross-origin requests:
+
 ```json
 {
   "Access-Control-Allow-Methods": ["GET", "POST", "OPTIONS"],
@@ -339,6 +342,7 @@ Add required headers for cross-origin requests:
 ### Custom Headers Not Visible
 
 Expose custom headers via:
+
 ```json
 {
   "Access-Control-Expose-Headers": ["X-Custom-Header", "X-Request-Id"]

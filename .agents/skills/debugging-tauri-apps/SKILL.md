@@ -107,10 +107,10 @@ tauri = { version = "...", features = ["...", "devtools"] }
 
 ### Required Extensions
 
-| Extension | Platform | Purpose |
-|-----------|----------|---------|
-| [vscode-lldb](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb) | All | LLDB debugger |
-| [C/C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) | Windows | Visual Studio debugger |
+| Extension                                                                              | Platform | Purpose                |
+| -------------------------------------------------------------------------------------- | -------- | ---------------------- |
+| [vscode-lldb](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb) | All      | LLDB debugger          |
+| [C/C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)        | Windows  | Visual Studio debugger |
 
 ### launch.json Configuration
 
@@ -125,11 +125,7 @@ Create `.vscode/launch.json`:
       "request": "launch",
       "name": "Tauri Development Debug",
       "cargo": {
-        "args": [
-          "build",
-          "--manifest-path=./src-tauri/Cargo.toml",
-          "--no-default-features"
-        ]
+        "args": ["build", "--manifest-path=./src-tauri/Cargo.toml", "--no-default-features"]
       },
       "preLaunchTask": "ui:dev"
     },
@@ -138,11 +134,7 @@ Create `.vscode/launch.json`:
       "request": "launch",
       "name": "Tauri Production Debug",
       "cargo": {
-        "args": [
-          "build",
-          "--release",
-          "--manifest-path=./src-tauri/Cargo.toml"
-        ]
+        "args": ["build", "--release", "--manifest-path=./src-tauri/Cargo.toml"]
       },
       "preLaunchTask": "ui:build"
     }
@@ -248,11 +240,13 @@ The `--no-default-features` flag is critical - it tells Tauri to load assets fro
 #### 2. Development Server Configuration
 
 For Node-based projects:
+
 - Create an npm Run Configuration
 - Set package manager (npm/pnpm/yarn)
 - Set script to `dev`
 
 For Rust WASM (Trunk):
+
 - Create a Shell Script configuration
 - Command: `trunk serve`
 
@@ -442,6 +436,7 @@ fn main() {
 ### Usage
 
 When running `tauri dev`, DevTools automatically opens a web-based interface showing:
+
 - Application logs with filtering
 - IPC command calls with timing
 - Event payloads and responses
@@ -453,21 +448,21 @@ For full documentation, see [CrabNebula DevTools docs](https://docs.crabnebula.d
 
 ## Quick Reference
 
-| Task | Command/Action |
-|------|----------------|
-| Enable backtraces | `RUST_BACKTRACE=1 tauri dev` |
-| Open WebView DevTools | `Ctrl+Shift+i` / `Cmd+Option+i` |
-| Debug build | `tauri build --debug` |
-| Add DevTools plugin | `cargo add tauri-plugin-devtools@2.0.0` |
+| Task                  | Command/Action                          |
+| --------------------- | --------------------------------------- |
+| Enable backtraces     | `RUST_BACKTRACE=1 tauri dev`            |
+| Open WebView DevTools | `Ctrl+Shift+i` / `Cmd+Option+i`         |
+| Debug build           | `tauri build --debug`                   |
+| Add DevTools plugin   | `cargo add tauri-plugin-devtools@2.0.0` |
 
 ### IDE Comparison
 
-| Feature | VS Code | RustRover | Neovim |
-|---------|---------|-----------|--------|
-| Extension/Plugin | vscode-lldb | Built-in | nvim-dap + codelldb |
-| Windows Alt | cppvsdbg | Built-in | codelldb |
-| Task Runner | tasks.json | Run configs | overseer.nvim |
-| Setup Complexity | Medium | Low | High |
+| Feature          | VS Code     | RustRover   | Neovim              |
+| ---------------- | ----------- | ----------- | ------------------- |
+| Extension/Plugin | vscode-lldb | Built-in    | nvim-dap + codelldb |
+| Windows Alt      | cppvsdbg    | Built-in    | codelldb            |
+| Task Runner      | tasks.json  | Run configs | overseer.nvim       |
+| Setup Complexity | Medium      | Low         | High                |
 
 ### Common Issues
 

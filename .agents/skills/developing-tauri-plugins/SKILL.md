@@ -10,6 +10,7 @@ Tauri plugins extend application functionality through modular Rust crates with 
 ## Plugin Architecture
 
 A complete plugin includes:
+
 - **Rust crate** (`tauri-plugin-{name}`) - Core logic
 - **JavaScript bindings** (`@scope/plugin-{name}`) - NPM package
 - **Android library** (Kotlin) - Optional
@@ -178,16 +179,16 @@ Builder::new("my-plugin")
 ## JavaScript Bindings (guest-js/index.ts)
 
 ```typescript
-import { invoke, Channel } from '@tauri-apps/api/core';
+import { invoke, Channel } from "@tauri-apps/api/core";
 
 export async function doSomething(input: string): Promise<string> {
-  return invoke('plugin:my-plugin|do_something', { input });
+  return invoke("plugin:my-plugin|do_something", { input });
 }
 
 export async function upload(path: string, onProgress: (p: number) => void): Promise<void> {
   const channel = new Channel<number>();
   channel.onmessage = onProgress;
-  return invoke('plugin:my-plugin|upload', { path, onProgress: channel });
+  return invoke("plugin:my-plugin|upload", { path, onProgress: channel });
 }
 ```
 
@@ -397,9 +398,9 @@ pub fn run() {
 ### Frontend Usage
 
 ```typescript
-import { doSomething, upload } from '@myorg/plugin-my-plugin';
-const result = await doSomething('hello');
-await upload('/path/to/file', (p) => console.log(`${p}%`));
+import { doSomething, upload } from "@myorg/plugin-my-plugin";
+const result = await doSomething("hello");
+await upload("/path/to/file", (p) => console.log(`${p}%`));
 ```
 
 ## Best Practices

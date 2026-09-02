@@ -33,11 +33,11 @@ yarn add @tauri-apps/api
 ### Basic Listen Pattern
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
 // Listen for a global event
-const unlisten = await listen('download-started', (event) => {
-  console.log('Event received:', event.payload);
+const unlisten = await listen("download-started", (event) => {
+  console.log("Event received:", event.payload);
 });
 
 // Clean up when done
@@ -49,7 +49,7 @@ unlisten();
 Define TypeScript interfaces matching your Rust payload structures:
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
 // Define the payload type (matches Rust struct with camelCase)
 interface DownloadStarted {
@@ -59,7 +59,7 @@ interface DownloadStarted {
 }
 
 // Use generic type parameter for type safety
-const unlisten = await listen<DownloadStarted>('download-started', (event) => {
+const unlisten = await listen<DownloadStarted>("download-started", (event) => {
   console.log(`Downloading from ${event.payload.url}`);
   console.log(`Content length: ${event.payload.contentLength} bytes`);
   console.log(`Download ID: ${event.payload.downloadId}`);
@@ -86,16 +86,16 @@ interface Event<T> {
 For events emitted with `emit_to` or `emit_filter` targeting specific webviews:
 
 ```typescript
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 const appWebview = getCurrentWebviewWindow();
 
 // Listen for events targeted to this specific webview
-const unlisten = await appWebview.listen<string>('login-result', (event) => {
-  if (event.payload === 'loggedIn') {
-    localStorage.setItem('authenticated', 'true');
+const unlisten = await appWebview.listen<string>("login-result", (event) => {
+  if (event.payload === "loggedIn") {
+    localStorage.setItem("authenticated", "true");
   } else {
-    console.error('Login failed:', event.payload);
+    console.error("Login failed:", event.payload);
   }
 });
 ```
@@ -105,18 +105,18 @@ const unlisten = await appWebview.listen<string>('login-result', (event) => {
 Use `once` for events that should only be handled a single time:
 
 ```typescript
-import { once } from '@tauri-apps/api/event';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { once } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 // Global one-time listener
-await once('app-ready', (event) => {
-  console.log('Application is ready');
+await once("app-ready", (event) => {
+  console.log("Application is ready");
 });
 
 // Webview-specific one-time listener
 const appWebview = getCurrentWebviewWindow();
-await appWebview.once('initialized', (event) => {
-  console.log('Webview initialized');
+await appWebview.once("initialized", (event) => {
+  console.log("Webview initialized");
 });
 ```
 
@@ -127,9 +127,9 @@ await appWebview.once('initialized', (event) => {
 Always unsubscribe listeners when they are no longer needed:
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
-const unlisten = await listen('my-event', (event) => {
+const unlisten = await listen("my-event", (event) => {
   // Handle event
 });
 
@@ -175,8 +175,8 @@ function DownloadProgress() {
 ### Vue Composition API Cleanup
 
 ```typescript
-import { onMounted, onUnmounted } from 'vue';
-import { listen } from '@tauri-apps/api/event';
+import { onMounted, onUnmounted } from "vue";
+import { listen } from "@tauri-apps/api/event";
 
 interface NotificationPayload {
   title: string;
@@ -188,7 +188,7 @@ export default {
     let unlisten: (() => void) | undefined;
 
     onMounted(async () => {
-      unlisten = await listen<NotificationPayload>('notification', (event) => {
+      unlisten = await listen<NotificationPayload>("notification", (event) => {
         console.log(`${event.payload.title}: ${event.payload.body}`);
       });
     });
@@ -198,7 +198,7 @@ export default {
         unlisten();
       }
     });
-  }
+  },
 };
 ```
 
@@ -243,7 +243,7 @@ Tauri automatically clears listeners in these scenarios:
 ### Listening to Multiple Events
 
 ```typescript
-import { listen } from '@tauri-apps/api/event';
+import { listen } from "@tauri-apps/api/event";
 
 interface DownloadEvent {
   url: string;
@@ -262,21 +262,21 @@ async function setupDownloadListeners() {
   const unlisteners: Array<() => void> = [];
 
   unlisteners.push(
-    await listen<DownloadEvent>('download-started', (event) => {
+    await listen<DownloadEvent>("download-started", (event) => {
       console.log(`Started downloading: ${event.payload.url}`);
-    })
+    }),
   );
 
   unlisteners.push(
-    await listen<ProgressEvent>('download-progress', (event) => {
+    await listen<ProgressEvent>("download-progress", (event) => {
       console.log(`Progress: ${event.payload.percent}%`);
-    })
+    }),
   );
 
   unlisteners.push(
-    await listen<CompleteEvent>('download-complete', (event) => {
+    await listen<CompleteEvent>("download-complete", (event) => {
       console.log(`Complete: ${event.payload.path} (${event.payload.size} bytes)`);
-    })
+    }),
   );
 
   // Return cleanup function
@@ -296,27 +296,27 @@ cleanup();
 ### Creating Typed Event Helpers
 
 ```typescript
-import { listen, once, Event } from '@tauri-apps/api/event';
+import { listen, once, Event } from "@tauri-apps/api/event";
 
 // Define all your event types in one place
 export interface AppEvents {
-  'download-started': { url: string; downloadId: number };
-  'download-progress': { downloadId: number; percent: number };
-  'download-complete': { downloadId: number; path: string };
-  'download-error': { downloadId: number; error: string };
-  'notification': { title: string; body: string };
+  "download-started": { url: string; downloadId: number };
+  "download-progress": { downloadId: number; percent: number };
+  "download-complete": { downloadId: number; path: string };
+  "download-error": { downloadId: number; error: string };
+  notification: { title: string; body: string };
 }
 
 // Type-safe listen helper
 export async function listenTyped<K extends keyof AppEvents>(
   eventName: K,
-  handler: (event: Event<AppEvents[K]>) => void
+  handler: (event: Event<AppEvents[K]>) => void,
 ): Promise<() => void> {
   return listen<AppEvents[K]>(eventName, handler);
 }
 
 // Usage
-const unlisten = await listenTyped('download-started', (event) => {
+const unlisten = await listenTyped("download-started", (event) => {
   // event.payload is typed as { url: string; downloadId: number }
   console.log(event.payload.url);
 });
@@ -399,7 +399,7 @@ fn broadcast_to_editors(app: AppHandle, content: String) {
 ### Event Bus Pattern
 
 ```typescript
-import { listen, Event } from '@tauri-apps/api/event';
+import { listen, Event } from "@tauri-apps/api/event";
 
 type EventHandler<T> = (payload: T) => void;
 

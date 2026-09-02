@@ -24,15 +24,15 @@ Capability files reside in `src-tauri/capabilities/` and use JSON or TOML format
 
 A capability file contains:
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `identifier` | Yes | Unique capability name |
-| `description` | No | Purpose explanation |
-| `windows` | Yes | Target window labels (supports wildcards) |
-| `permissions` | Yes | Array of allowed/denied operations |
-| `platforms` | No | Target platforms (linux, macOS, windows, iOS, android) |
-| `remote` | No | Remote URL access configuration |
-| `$schema` | No | Reference to generated schema for IDE support |
+| Field         | Required | Description                                            |
+| ------------- | -------- | ------------------------------------------------------ |
+| `identifier`  | Yes      | Unique capability name                                 |
+| `description` | No       | Purpose explanation                                    |
+| `windows`     | Yes      | Target window labels (supports wildcards)              |
+| `permissions` | Yes      | Array of allowed/denied operations                     |
+| `platforms`   | No       | Target platforms (linux, macOS, windows, iOS, android) |
+| `remote`      | No       | Remote URL access configuration                        |
+| `$schema`     | No       | Reference to generated schema for IDE support          |
 
 ## Basic Capability Example
 
@@ -190,11 +190,11 @@ Assign different permissions to different windows using window labels:
 
 Permissions follow a naming convention:
 
-| Pattern | Description |
-|---------|-------------|
-| `<plugin>:default` | Default permission set for a plugin |
-| `<plugin>:allow-<command>` | Allow a specific command |
-| `<plugin>:deny-<command>` | Deny a specific command |
+| Pattern                    | Description                         |
+| -------------------------- | ----------------------------------- |
+| `<plugin>:default`         | Default permission set for a plugin |
+| `<plugin>:allow-<command>` | Allow a specific command            |
+| `<plugin>:deny-<command>`  | Deny a specific command             |
 
 ### Core Permissions
 
@@ -260,11 +260,7 @@ Target specific platforms using the `platforms` array.
   "identifier": "mobile-capability",
   "windows": ["main"],
   "platforms": ["iOS", "android"],
-  "permissions": [
-    "nfc:allow-scan",
-    "biometric:allow-authenticate",
-    "barcode-scanner:allow-scan"
-  ]
+  "permissions": ["nfc:allow-scan", "biometric:allow-authenticate", "barcode-scanner:allow-scan"]
 }
 ```
 
@@ -273,6 +269,7 @@ Target specific platforms using the `platforms` array.
 Create platform-specific capability files:
 
 `src-tauri/capabilities/desktop.json`:
+
 ```json
 {
   "identifier": "desktop-features",
@@ -283,6 +280,7 @@ Create platform-specific capability files:
 ```
 
 `src-tauri/capabilities/mobile.json`:
+
 ```json
 {
   "identifier": "mobile-features",
@@ -313,6 +311,7 @@ Allow remote URLs to access Tauri commands (use with caution):
 A multi-window application with different permission levels:
 
 `src-tauri/capabilities/main.json`:
+
 ```json
 {
   "$schema": "../gen/schemas/desktop-schema.json",
@@ -331,6 +330,7 @@ A multi-window application with different permission levels:
 ```
 
 `src-tauri/capabilities/settings.json`:
+
 ```json
 {
   "$schema": "../gen/schemas/desktop-schema.json",
@@ -347,17 +347,14 @@ A multi-window application with different permission levels:
 ```
 
 `src-tauri/capabilities/preview.json`:
+
 ```json
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "preview-window",
   "description": "Read-only access for preview window",
   "windows": ["preview"],
-  "permissions": [
-    "core:window:default",
-    "core:event:default",
-    "fs:allow-read-file"
-  ]
+  "permissions": ["core:window:default", "core:event:default", "fs:allow-read-file"]
 }
 ```
 
@@ -395,6 +392,7 @@ Generated schemas provide IDE autocompletion. Reference them in capability files
 ```
 
 Available schemas after build:
+
 - `desktop-schema.json` - Desktop platforms
 - `mobile-schema.json` - Mobile platforms
 - `remote-schema.json` - Remote access capabilities

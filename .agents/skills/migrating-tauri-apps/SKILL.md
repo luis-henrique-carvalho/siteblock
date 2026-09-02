@@ -9,10 +9,10 @@ This skill covers migrating Tauri applications to v2 stable from either v1 or v2
 
 ## Migration Paths
 
-| Source Version | Target | Complexity |
-|----------------|--------|------------|
-| Tauri v1.x | v2 stable | High - significant breaking changes |
-| Tauri v2 beta | v2 stable | Low - minor breaking changes |
+| Source Version | Target    | Complexity                          |
+| -------------- | --------- | ----------------------------------- |
+| Tauri v1.x     | v2 stable | High - significant breaking changes |
+| Tauri v2 beta  | v2 stable | Low - minor breaking changes        |
 
 ---
 
@@ -40,6 +40,7 @@ npm run tauri migrate
 #### BREAKING: Top-Level Structure Changes
 
 **Before (v1):**
+
 ```json
 {
   "package": {
@@ -54,6 +55,7 @@ npm run tauri migrate
 ```
 
 **After (v2):**
+
 ```json
 {
   "productName": "my-app",
@@ -67,16 +69,16 @@ npm run tauri migrate
 
 #### Key Renames
 
-| v1 Path | v2 Path |
-|---------|---------|
-| `package.productName` | `productName` (top-level) |
-| `package.version` | `version` (top-level) |
-| `tauri` | `app` |
-| `tauri.bundle` | `bundle` (top-level) |
-| `tauri.bundle.identifier` | `identifier` (top-level) |
-| `tauri.systemTray` | `app.trayIcon` |
-| `build.distDir` | `frontendDist` |
-| `build.devPath` | `devUrl` |
+| v1 Path                   | v2 Path                   |
+| ------------------------- | ------------------------- |
+| `package.productName`     | `productName` (top-level) |
+| `package.version`         | `version` (top-level)     |
+| `tauri`                   | `app`                     |
+| `tauri.bundle`            | `bundle` (top-level)      |
+| `tauri.bundle.identifier` | `identifier` (top-level)  |
+| `tauri.systemTray`        | `app.trayIcon`            |
+| `build.distDir`           | `frontendDist`            |
+| `build.devPath`           | `devUrl`                  |
 
 #### BREAKING: New Required Field
 
@@ -94,6 +96,7 @@ Add `mainBinaryName` matching your `productName` - this is no longer automatic:
 Platform-specific bundle configs moved under their platform key:
 
 **Before:**
+
 ```json
 {
   "tauri": {
@@ -106,6 +109,7 @@ Platform-specific bundle configs moved under their platform key:
 ```
 
 **After:**
+
 ```json
 {
   "bundle": {
@@ -144,6 +148,7 @@ The v1 allowlist system is completely replaced with a capability-based ACL syste
 Create JSON files in `src-tauri/capabilities/`:
 
 **src-tauri/capabilities/default.json:**
+
 ```json
 {
   "identifier": "default",
@@ -167,6 +172,7 @@ The `tauri migrate` command auto-generates capabilities from your v1 allowlist.
 #### Removed Features
 
 These features no longer exist in v2:
+
 - `reqwest-client`
 - `reqwest-native-tls-vendored`
 - `process-command-api`
@@ -183,34 +189,35 @@ These features no longer exist in v2:
 
 The entire `api` module is removed. Functionality moved to plugins:
 
-| v1 API | v2 Replacement |
-|--------|----------------|
-| `tauri::api::dialog` | `tauri-plugin-dialog` |
-| `tauri::api::http` | `tauri-plugin-http` |
-| `tauri::api::process` | `tauri-plugin-process` |
+| v1 API                       | v2 Replacement         |
+| ---------------------------- | ---------------------- |
+| `tauri::api::dialog`         | `tauri-plugin-dialog`  |
+| `tauri::api::http`           | `tauri-plugin-http`    |
+| `tauri::api::process`        | `tauri-plugin-process` |
 | `tauri::api::path` functions | `tauri::Manager::path` |
 
 ### BREAKING: Rust API Changes
 
 #### Removed APIs
 
-| v1 | v2 Alternative |
-|----|----------------|
-| `App::clipboard_manager` | `tauri-plugin-clipboard-manager` |
-| `App::global_shortcut_manager` | `tauri-plugin-global-shortcut` |
-| `App::get_cli_matches` | `tauri-plugin-cli` |
-| `tauri::updater` | `tauri-plugin-updater` |
+| v1                             | v2 Alternative                   |
+| ------------------------------ | -------------------------------- |
+| `App::clipboard_manager`       | `tauri-plugin-clipboard-manager` |
+| `App::global_shortcut_manager` | `tauri-plugin-global-shortcut`   |
+| `App::get_cli_matches`         | `tauri-plugin-cli`               |
+| `tauri::updater`               | `tauri-plugin-updater`           |
 
 #### Renamed Types/Methods
 
-| v1 | v2 |
-|----|-----|
-| `Window` | `WebviewWindow` |
+| v1                    | v2                            |
+| --------------------- | ----------------------------- |
+| `Window`              | `WebviewWindow`               |
 | `Manager::get_window` | `Manager::get_webview_window` |
 
 #### Menu API Changes
 
 **Before:**
+
 ```rust
 use tauri::{Menu, CustomMenuItem};
 let menu = Menu::new()
@@ -218,6 +225,7 @@ let menu = Menu::new()
 ```
 
 **After:**
+
 ```rust
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 let menu = MenuBuilder::new(app)
@@ -228,12 +236,14 @@ let menu = MenuBuilder::new(app)
 #### Tray API Changes
 
 **Before:**
+
 ```rust
 use tauri::SystemTray;
 SystemTray::new().with_menu(menu);
 ```
 
 **After:**
+
 ```rust
 use tauri::tray::TrayIconBuilder;
 TrayIconBuilder::new()
@@ -249,14 +259,15 @@ TrayIconBuilder::new()
 
 #### Package Renames
 
-| v1 | v2 |
-|----|-----|
-| `@tauri-apps/api/tauri` | `@tauri-apps/api/core` |
+| v1                       | v2                              |
+| ------------------------ | ------------------------------- |
+| `@tauri-apps/api/tauri`  | `@tauri-apps/api/core`          |
 | `@tauri-apps/api/window` | `@tauri-apps/api/webviewWindow` |
 
 #### Core API Reduction
 
 The core `@tauri-apps/api` package now only includes:
+
 - `core`
 - `path`
 - `event`
@@ -270,19 +281,19 @@ All other APIs require plugin packages.
 
 All formerly built-in APIs are now separate plugins:
 
-| v1 Import | v2 Plugin Package |
-|-----------|-------------------|
-| `@tauri-apps/api/cli` | `@tauri-apps/plugin-cli` |
-| `@tauri-apps/api/clipboard` | `@tauri-apps/plugin-clipboard-manager` |
-| `@tauri-apps/api/dialog` | `@tauri-apps/plugin-dialog` |
-| `@tauri-apps/api/fs` | `@tauri-apps/plugin-fs` |
-| `@tauri-apps/api/global-shortcut` | `@tauri-apps/plugin-global-shortcut` |
-| `@tauri-apps/api/http` | `@tauri-apps/plugin-http` |
-| `@tauri-apps/api/notification` | `@tauri-apps/plugin-notification` |
-| `@tauri-apps/api/os` | `@tauri-apps/plugin-os` |
-| `@tauri-apps/api/process` | `@tauri-apps/plugin-process` |
-| `@tauri-apps/api/shell` | `@tauri-apps/plugin-shell` |
-| `@tauri-apps/api/updater` | `@tauri-apps/plugin-updater` |
+| v1 Import                         | v2 Plugin Package                      |
+| --------------------------------- | -------------------------------------- |
+| `@tauri-apps/api/cli`             | `@tauri-apps/plugin-cli`               |
+| `@tauri-apps/api/clipboard`       | `@tauri-apps/plugin-clipboard-manager` |
+| `@tauri-apps/api/dialog`          | `@tauri-apps/plugin-dialog`            |
+| `@tauri-apps/api/fs`              | `@tauri-apps/plugin-fs`                |
+| `@tauri-apps/api/global-shortcut` | `@tauri-apps/plugin-global-shortcut`   |
+| `@tauri-apps/api/http`            | `@tauri-apps/plugin-http`              |
+| `@tauri-apps/api/notification`    | `@tauri-apps/plugin-notification`      |
+| `@tauri-apps/api/os`              | `@tauri-apps/plugin-os`                |
+| `@tauri-apps/api/process`         | `@tauri-apps/plugin-process`           |
+| `@tauri-apps/api/shell`           | `@tauri-apps/plugin-shell`             |
+| `@tauri-apps/api/updater`         | `@tauri-apps/plugin-updater`           |
 
 #### Installing Plugins
 
@@ -309,23 +320,23 @@ fn main() {
 
 Function renames in `@tauri-apps/plugin-fs`:
 
-| v1 | v2 |
-|----|-----|
-| `createDir` | `mkdir` |
-| `readBinaryFile` | `readFile` |
-| `writeBinaryFile` | `writeFile` |
-| `removeDir` | `remove` |
-| `removeFile` | `remove` |
-| `renameFile` | `rename` |
-| `Dir` enum | `BaseDirectory` |
+| v1                | v2              |
+| ----------------- | --------------- |
+| `createDir`       | `mkdir`         |
+| `readBinaryFile`  | `readFile`      |
+| `writeBinaryFile` | `writeFile`     |
+| `removeDir`       | `remove`        |
+| `removeFile`      | `remove`        |
+| `renameFile`      | `rename`        |
+| `Dir` enum        | `BaseDirectory` |
 
 ### BREAKING: Event System Changes
 
-| v1 | v2 |
-|----|-----|
-| `emit()` | Broadcasts to ALL listeners (behavior change) |
-| N/A | `emit_to()` - target specific event targets |
-| `listen_global` | `listen_any` |
+| v1              | v2                                            |
+| --------------- | --------------------------------------------- |
+| `emit()`        | Broadcasts to ALL listeners (behavior change) |
+| N/A             | `emit_to()` - target specific event targets   |
+| `listen_global` | `listen_any`                                  |
 
 ### BREAKING: Windows Origin URL
 
@@ -336,27 +347,30 @@ Production Windows apps now serve from `http://tauri.localhost` instead of `http
 ```json
 {
   "app": {
-    "windows": [{
-      "useHttpsScheme": true
-    }]
+    "windows": [
+      {
+        "useHttpsScheme": true
+      }
+    ]
   }
 }
 ```
 
 ### BREAKING: Environment Variables
 
-| v1 | v2 |
-|----|-----|
-| `TAURI_PRIVATE_KEY` | `TAURI_SIGNING_PRIVATE_KEY` |
-| `TAURI_KEY_PASSWORD` | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` |
-| `TAURI_DEV_SERVER_PORT` | `TAURI_CLI_PORT` |
-| Platform variables | Now prefixed `TAURI_ENV_` |
+| v1                      | v2                                   |
+| ----------------------- | ------------------------------------ |
+| `TAURI_PRIVATE_KEY`     | `TAURI_SIGNING_PRIVATE_KEY`          |
+| `TAURI_KEY_PASSWORD`    | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` |
+| `TAURI_DEV_SERVER_PORT` | `TAURI_CLI_PORT`                     |
+| Platform variables      | Now prefixed `TAURI_ENV_`            |
 
 ### Mobile Support Setup
 
 To target mobile alongside desktop:
 
 **1. Update Cargo.toml:**
+
 ```toml
 [lib]
 name = "app_lib"
@@ -364,6 +378,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 ```
 
 **2. Rename src/main.rs to src/lib.rs:**
+
 ```rust
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -374,6 +389,7 @@ pub fn run() {
 ```
 
 **3. Create new src/main.rs:**
+
 ```rust
 fn main() {
     app_lib::run();
@@ -389,24 +405,18 @@ fn main() {
 All core permissions now require the `"core:"` prefix:
 
 **Before (beta):**
+
 ```json
 {
-  "permissions": [
-    "path:default",
-    "event:default",
-    "window:default"
-  ]
+  "permissions": ["path:default", "event:default", "window:default"]
 }
 ```
 
 **After (stable):**
+
 ```json
 {
-  "permissions": [
-    "core:path:default",
-    "core:event:default",
-    "core:window:default"
-  ]
+  "permissions": ["core:path:default", "core:event:default", "core:window:default"]
 }
 ```
 
@@ -425,31 +435,35 @@ All core permissions now require the `"core:"` prefix:
 The mobile development server no longer exposes across networks. Traffic tunnels directly from local machine to devices.
 
 **Before (beta):**
+
 ```javascript
 const mobile = !!/android|ios/.exec(process.env.TAURI_ENV_PLATFORM);
 export default {
   server: {
-    host: mobile ? '0.0.0.0' : false
-  }
+    host: mobile ? "0.0.0.0" : false,
+  },
 };
 ```
 
 **After (stable):**
+
 ```javascript
 const host = process.env.TAURI_DEV_HOST;
 export default {
   server: {
-    host: host || false
-  }
+    host: host || false,
+  },
 };
 ```
 
 Remove dependency on the `internal-ip` NPM package if previously used.
 
 **iOS Device Development:** Requires additional steps. Use:
+
 ```bash
 tauri ios dev --force-ip-prompt
 ```
+
 Select the device's TUN address when prompted.
 
 ---
@@ -485,9 +499,9 @@ Select the device's TUN address when prompted.
 
 ## Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Permission denied errors | Check `src-tauri/capabilities/` files for required permissions |
-| IndexedDB/localStorage lost (Windows) | Set `useHttpsScheme: true` in window config |
-| Plugin not found | Add to Cargo.toml, register with `.plugin()`, install npm package |
-| Mobile build fails | Verify `[lib]` section in Cargo.toml and `src/lib.rs` with mobile entry point |
+| Issue                                 | Solution                                                                      |
+| ------------------------------------- | ----------------------------------------------------------------------------- |
+| Permission denied errors              | Check `src-tauri/capabilities/` files for required permissions                |
+| IndexedDB/localStorage lost (Windows) | Set `useHttpsScheme: true` in window config                                   |
+| Plugin not found                      | Add to Cargo.toml, register with `.plugin()`, install npm package             |
+| Mobile build fails                    | Verify `[lib]` section in Cargo.toml and `src/lib.rs` with mobile entry point |

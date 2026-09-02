@@ -218,11 +218,7 @@ Capabilities grant permissions to specific windows or webviews:
   "identifier": "main-window-capability",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "fs:read-files",
-    "fs:scope-home"
-  ]
+  "permissions": ["core:default", "fs:read-files", "fs:scope-home"]
 }
 ```
 
@@ -306,24 +302,28 @@ Only Tauri versions greater than 1.0 receive security support. Earlier versions 
 
 ```markdown
 ## Dependency Audit
+
 - [ ] Run `cargo audit` - no critical vulnerabilities
 - [ ] Run `npm audit` - no critical vulnerabilities
 - [ ] Review new dependencies for trustworthiness
 - [ ] Check dependency update status
 
 ## Configuration Audit
+
 - [ ] CSP configured and restrictive
 - [ ] Capabilities follow least-privilege principle
 - [ ] Scopes properly deny sensitive paths
 - [ ] No overly permissive glob patterns
 
 ## Code Audit
+
 - [ ] IPC commands validate all inputs
 - [ ] No scope bypass vulnerabilities
 - [ ] Secrets not hardcoded or logged
 - [ ] Error messages do not leak sensitive info
 
 ## Build Audit
+
 - [ ] CI/CD actions pinned to specific versions
 - [ ] Build artifacts signed
 - [ ] Distribution channels secured
@@ -333,18 +333,21 @@ Only Tauri versions greater than 1.0 receive security support. Earlier versions 
 
 ```markdown
 ## Upstream Review
+
 - [ ] Tauri updated to latest stable
 - [ ] Rust toolchain updated
 - [ ] Frontend dependencies updated
 - [ ] Known CVEs addressed
 
 ## Access Control Review
+
 - [ ] Repository access appropriate
 - [ ] Commit signing enforced
 - [ ] CI/CD secrets rotated
 - [ ] Development machine security verified
 
 ## Runtime Review
+
 - [ ] WebView security patches applied (OS updates)
 - [ ] Capability configuration still appropriate
 - [ ] No deprecated permissions in use
@@ -370,13 +373,13 @@ Based on historical advisories, watch for:
 
 ### Recommended Tools
 
-| Tool | Purpose |
-|------|---------|
-| `cargo audit` | Rust vulnerability scanning |
-| `npm audit` | Node.js vulnerability scanning |
-| `cargo vet` | Dependency verification |
-| `cargo crev` | Community code reviews |
-| `cargo outdated` | Dependency freshness |
+| Tool             | Purpose                        |
+| ---------------- | ------------------------------ |
+| `cargo audit`    | Rust vulnerability scanning    |
+| `npm audit`      | Node.js vulnerability scanning |
+| `cargo vet`      | Dependency verification        |
+| `cargo crev`     | Community code reviews         |
+| `cargo outdated` | Dependency freshness           |
 
 ## Summary
 

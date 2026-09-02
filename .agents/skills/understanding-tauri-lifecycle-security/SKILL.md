@@ -10,6 +10,7 @@ Security in Tauri applications depends on systematic protection across all lifec
 ## Core Security Principle
 
 Tauri implements a two-tier security model:
+
 - **Rust Core**: Full system access
 - **WebView Frontend**: Access only through controlled IPC layer
 
@@ -39,6 +40,7 @@ cargo supply-chain
 ```
 
 **Best Practices:**
+
 - Keep Tauri, `rustc`, and `nodejs` current to patch vulnerabilities
 - Evaluate trustworthiness of third-party libraries before integration
 - Prefer consuming critical dependencies via git hash revisions rather than version ranges
@@ -54,27 +56,30 @@ critical-lib = { git = "https://github.com/org/critical-lib", rev = "abc123def45
 Development servers typically run unencrypted and unauthenticated on local networks, allowing attackers to push malicious frontend code to development devices.
 
 **Threat Scenario:**
+
 ```
 Attacker on same network -> Intercepts dev server traffic -> Injects malicious frontend code
 ```
 
 **Mitigation:**
+
 - Develop only on trusted networks
 - Implement mutual TLS (mTLS) authentication when necessary
 - Note: Tauri's built-in dev server lacks mutual authentication features
 
 ### Machine Hardening
 
-| Practice | Purpose |
-|----------|---------|
-| Avoid admin accounts for coding | Limit blast radius of compromise |
-| Block secrets from version control | Prevent credential leaks |
-| Use hardware security tokens | Minimize compromise impact |
-| Minimize installed applications | Reduce attack surface |
+| Practice                           | Purpose                          |
+| ---------------------------------- | -------------------------------- |
+| Avoid admin accounts for coding    | Limit blast radius of compromise |
+| Block secrets from version control | Prevent credential leaks         |
+| Use hardware security tokens       | Minimize compromise impact       |
+| Minimize installed applications    | Reduce attack surface            |
 
 ### Source Control Security
 
 **Required Protections:**
+
 - Implement proper access controls in version control systems
 - Require contributor commit signing to prevent unauthorized attribution
 - Use established hardening guidelines for authentication workflows
@@ -94,12 +99,14 @@ git config --global user.signingkey YOUR_KEY_ID
 CI/CD systems access source code, secrets, and can modify builds without local verification.
 
 **Threat Vectors:**
+
 1. Compromised CI/CD provider
 2. Malicious build scripts
 3. Unauthorized secret access
 4. Build artifact tampering
 
 **Mitigation Options:**
+
 - Trust reputable third-party providers (GitHub Actions, GitLab CI)
 - Host and control your own infrastructure for sensitive applications
 
@@ -109,13 +116,14 @@ Applications must be cryptographically signed for their target platform.
 
 **Platform Requirements:**
 
-| Platform | Signing Requirement |
-|----------|---------------------|
-| macOS | Apple Developer Certificate + Notarization |
-| Windows | Code Signing Certificate (EV recommended) |
-| Linux | GPG signing for packages |
+| Platform | Signing Requirement                        |
+| -------- | ------------------------------------------ |
+| macOS    | Apple Developer Certificate + Notarization |
+| Windows  | Code Signing Certificate (EV recommended)  |
+| Linux    | GPG signing for packages                   |
 
 **Key Protection:**
+
 ```bash
 # Use hardware tokens for signing credentials
 # Prevents compromised build systems from leaking keys
@@ -131,6 +139,7 @@ Hardware tokens prevent key exfiltration but cannot prevent key misuse on a comp
 Rust is not fully reliable at producing reproducible builds despite theoretical support. Frontend bundlers similarly struggle with reproducible output.
 
 **Implications:**
+
 - Cannot entirely eliminate reliance on build system trust
 - Implement multiple verification layers
 - Consider build provenance attestation
@@ -220,6 +229,7 @@ CSP restricts webview communication types to prevent XSS and injection attacks.
 ```
 
 **CSP Best Practices:**
+
 - Start with restrictive policy, relax only as needed
 - Avoid `'unsafe-eval'` and `'unsafe-inline'` for scripts
 - Use nonces or hashes for inline scripts when required
@@ -236,15 +246,12 @@ Define which permissions are granted to specific windows.
   "identifier": "main-capability",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": [
-    "core:path:default",
-    "core:window:allow-set-title",
-    "fs:read-files"
-  ]
+  "permissions": ["core:path:default", "core:window:allow-set-title", "fs:read-files"]
 }
 ```
 
 **Security Notes:**
+
 - Windows in multiple capabilities merge security boundaries
 - Security boundaries depend on window labels, not titles
 - Capabilities protect against frontend compromise and privilege escalation
@@ -307,18 +314,18 @@ Control which external URLs can access Tauri commands.
 
 ## Threat Mitigation Quick Reference
 
-| Phase | Threat | Mitigation |
-|-------|--------|------------|
-| Development | Dependency vulnerabilities | `cargo audit`, `npm audit`, pin versions |
-| Development | Dev server exposure | Trusted networks, mTLS |
-| Development | Credential leaks | Hardware tokens, gitignore secrets |
-| Build | CI/CD compromise | Trusted providers, self-hosted options |
-| Build | Unsigned binaries | Platform signing, hardware key storage |
-| Distribution | Manifest tampering | HTTPS, certificate pinning |
-| Distribution | Binary replacement | Checksums, signed manifests |
-| Runtime | XSS/injection | CSP, input validation |
-| Runtime | Privilege escalation | Capabilities, permissions, scopes |
-| Runtime | Prototype pollution | `freezePrototype: true` |
+| Phase        | Threat                     | Mitigation                               |
+| ------------ | -------------------------- | ---------------------------------------- |
+| Development  | Dependency vulnerabilities | `cargo audit`, `npm audit`, pin versions |
+| Development  | Dev server exposure        | Trusted networks, mTLS                   |
+| Development  | Credential leaks           | Hardware tokens, gitignore secrets       |
+| Build        | CI/CD compromise           | Trusted providers, self-hosted options   |
+| Build        | Unsigned binaries          | Platform signing, hardware key storage   |
+| Distribution | Manifest tampering         | HTTPS, certificate pinning               |
+| Distribution | Binary replacement         | Checksums, signed manifests              |
+| Runtime      | XSS/injection              | CSP, input validation                    |
+| Runtime      | Privilege escalation       | Capabilities, permissions, scopes        |
+| Runtime      | Prototype pollution        | `freezePrototype: true`                  |
 
 ---
 

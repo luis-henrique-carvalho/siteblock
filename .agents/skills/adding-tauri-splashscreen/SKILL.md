@@ -10,6 +10,7 @@ This skill covers implementing splash screens in Tauri v2 applications. A splash
 ## Overview
 
 The splash screen pattern involves:
+
 1. Showing a splash window immediately on launch
 2. Hiding the main window until ready
 3. Performing initialization tasks (frontend and backend)
@@ -50,6 +51,7 @@ Configure both windows in `tauri.conf.json`:
 ```
 
 Key settings:
+
 - `"visible": false` on main window - hides it until ready
 - `"url": "splashscreen.html"` - points to splash screen HTML
 - `"decorations": false` - removes window chrome for cleaner look
@@ -63,79 +65,82 @@ Create `splashscreen.html` in your frontend source directory (e.g., `src/` or `p
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loading</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loading</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      background: transparent;
-    }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+      }
 
-    .splash-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-radius: 12px;
-      color: white;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
+      .splash-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 12px;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
 
-    .logo {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 24px;
-    }
+      .logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 24px;
+      }
 
-    .app-name {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
+      .app-name {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
 
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #4f46e5;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #4f46e5;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-    .loading-text {
-      margin-top: 16px;
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.7);
-    }
-  </style>
-</head>
-<body>
-  <div class="splash-container">
-    <!-- Replace with your logo -->
-    <svg class="logo" viewBox="0 0 100 100" fill="none">
-      <circle cx="50" cy="50" r="45" stroke="#4f46e5" stroke-width="4"/>
-      <path d="M30 50 L45 65 L70 35" stroke="#4f46e5" stroke-width="4" fill="none"/>
-    </svg>
-    <div class="app-name">My Application</div>
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Loading...</div>
-  </div>
-</body>
+      .loading-text {
+        margin-top: 16px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="splash-container">
+      <!-- Replace with your logo -->
+      <svg class="logo" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="45" stroke="#4f46e5" stroke-width="4" />
+        <path d="M30 50 L45 65 L70 35" stroke="#4f46e5" stroke-width="4" fill="none" />
+      </svg>
+      <div class="app-name">My Application</div>
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading...</div>
+    </div>
+  </body>
 </html>
 ```
 
@@ -146,11 +151,11 @@ Create `splashscreen.html` in your frontend source directory (e.g., `src/` or `p
 In your main entry file (e.g., `src/main.ts`):
 
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 // Helper function for delays
 function sleep(seconds: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
 // Frontend initialization
@@ -165,11 +170,11 @@ async function initializeFrontend(): Promise<void> {
   await sleep(1);
 
   // Notify backend that frontend is ready
-  await invoke('set_complete', { task: 'frontend' });
+  await invoke("set_complete", { task: "frontend" });
 }
 
 // Start initialization when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   initializeFrontend().catch(console.error);
 });
 ```
@@ -177,8 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
 ### Alternative: Using Window Events
 
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 async function initializeFrontend(): Promise<void> {
   // Your initialization logic
@@ -187,11 +192,11 @@ async function initializeFrontend(): Promise<void> {
   await preloadAssets();
 
   // Signal completion
-  await invoke('set_complete', { task: 'frontend' });
+  await invoke("set_complete", { task: "frontend" });
 }
 
 // Wait for window to be fully ready
-getCurrentWindow().once('tauri://created', () => {
+getCurrentWindow().once("tauri://created", () => {
   initializeFrontend();
 });
 ```
@@ -330,17 +335,17 @@ For simpler cases where you only need to wait for the frontend:
 ### Frontend
 
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 async function init() {
   // Initialize your app
   await setupApp();
 
   // Close splash, show main
-  await invoke('close_splashscreen');
+  await invoke("close_splashscreen");
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener("DOMContentLoaded", init);
 ```
 
 ### Backend
@@ -391,8 +396,15 @@ pub fn run() {
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(0.95); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(0.95);
+    }
   }
 </style>
 ```
@@ -417,9 +429,15 @@ pub fn run() {
   }
 
   @keyframes progress {
-    0% { width: 0%; }
-    50% { width: 70%; }
-    100% { width: 100%; }
+    0% {
+      width: 0%;
+    }
+    50% {
+      width: 70%;
+    }
+    100% {
+      width: 100%;
+    }
   }
 </style>
 
@@ -464,18 +482,22 @@ pub fn run() {
 ## Troubleshooting
 
 **Splash screen doesn't appear:**
+
 - Verify the URL path is correct in `tauri.conf.json`
 - Check that the HTML file exists in the correct location
 
 **Main window shows too early:**
+
 - Ensure `visible: false` is set on the main window
 - Verify the `set_complete` command is being called correctly
 
 **Transparent background not working:**
+
 - Set `transparent: true` in window config
 - Set `background: transparent` in CSS for html and body
 - On some platforms, you may need `decorations: false`
 
 **Window position issues:**
+
 - Use `center: true` for centered splash screens
 - Or specify explicit `x` and `y` coordinates

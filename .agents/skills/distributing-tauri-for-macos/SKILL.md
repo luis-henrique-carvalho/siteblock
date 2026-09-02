@@ -92,17 +92,17 @@ Configure DMG appearance in `tauri.conf.json`:
 
 ### DMG Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `background` | string | - | Path to background image relative to `src-tauri` |
-| `windowSize.width` | number | 660 | DMG window width in pixels |
-| `windowSize.height` | number | 400 | DMG window height in pixels |
-| `windowPosition.x` | number | - | Initial window X position on screen |
-| `windowPosition.y` | number | - | Initial window Y position on screen |
-| `appPosition.x` | number | 180 | App icon X position in window |
-| `appPosition.y` | number | 220 | App icon Y position in window |
-| `applicationFolderPosition.x` | number | 480 | Applications folder X position |
-| `applicationFolderPosition.y` | number | 480 | Applications folder Y position |
+| Option                        | Type   | Default | Description                                      |
+| ----------------------------- | ------ | ------- | ------------------------------------------------ |
+| `background`                  | string | -       | Path to background image relative to `src-tauri` |
+| `windowSize.width`            | number | 660     | DMG window width in pixels                       |
+| `windowSize.height`           | number | 400     | DMG window height in pixels                      |
+| `windowPosition.x`            | number | -       | Initial window X position on screen              |
+| `windowPosition.y`            | number | -       | Initial window Y position on screen              |
+| `appPosition.x`               | number | 180     | App icon X position in window                    |
+| `appPosition.y`               | number | 220     | App icon Y position in window                    |
+| `applicationFolderPosition.x` | number | 480     | Applications folder X position                   |
+| `applicationFolderPosition.y` | number | 480     | Applications folder Y position                   |
 
 **Note:** Icon sizes and positions may not apply correctly when building on CI/CD platforms due to a known issue with headless environments.
 
@@ -164,22 +164,23 @@ Create `src-tauri/Info.plist` to extend the default configuration. The Tauri CLI
 
 ### Common Info.plist Keys
 
-| Key | Description |
-|-----|-------------|
-| `NSCameraUsageDescription` | Camera access explanation |
-| `NSMicrophoneUsageDescription` | Microphone access explanation |
-| `NSLocationUsageDescription` | Location access explanation |
-| `NSPhotoLibraryUsageDescription` | Photo library access explanation |
-| `NSAppleEventsUsageDescription` | AppleScript/automation access |
-| `CFBundleDocumentTypes` | Supported document types |
-| `CFBundleURLTypes` | Custom URL schemes |
-| `LSMinimumSystemVersion` | Minimum macOS version (prefer tauri.conf.json) |
+| Key                              | Description                                    |
+| -------------------------------- | ---------------------------------------------- |
+| `NSCameraUsageDescription`       | Camera access explanation                      |
+| `NSMicrophoneUsageDescription`   | Microphone access explanation                  |
+| `NSLocationUsageDescription`     | Location access explanation                    |
+| `NSPhotoLibraryUsageDescription` | Photo library access explanation               |
+| `NSAppleEventsUsageDescription`  | AppleScript/automation access                  |
+| `CFBundleDocumentTypes`          | Supported document types                       |
+| `CFBundleURLTypes`               | Custom URL schemes                             |
+| `LSMinimumSystemVersion`         | Minimum macOS version (prefer tauri.conf.json) |
 
 ### Info.plist Localization
 
 Support multiple languages with localized strings:
 
 **Directory structure:**
+
 ```
 src-tauri/
     infoplist/
@@ -194,12 +195,14 @@ src-tauri/
 ```
 
 **Example `InfoPlist.strings` (German):**
+
 ```
 "NSCameraUsageDescription" = "Diese App benötigt Kamerazugriff für Videoanrufe";
 "NSMicrophoneUsageDescription" = "Diese App benötigt Mikrofonzugriff für Audioaufnahmen";
 ```
 
 **Configure in `tauri.conf.json`:**
+
 ```json
 {
   "bundle": {
@@ -270,28 +273,31 @@ Create `src-tauri/Entitlements.plist`:
 ### Common Entitlements Reference
 
 **Sandbox Entitlements:**
-| Entitlement | Description |
-|-------------|-------------|
-| `com.apple.security.app-sandbox` | Enable app sandbox (required for App Store) |
-| `com.apple.security.network.client` | Outbound network connections |
-| `com.apple.security.network.server` | Incoming network connections |
-| `com.apple.security.files.user-selected.read-write` | Access user-selected files |
-| `com.apple.security.files.downloads.read-write` | Access Downloads folder |
+
+| Entitlement                                         | Description                                 |
+| --------------------------------------------------- | ------------------------------------------- |
+| `com.apple.security.app-sandbox`                    | Enable app sandbox (required for App Store) |
+| `com.apple.security.network.client`                 | Outbound network connections                |
+| `com.apple.security.network.server`                 | Incoming network connections                |
+| `com.apple.security.files.user-selected.read-write` | Access user-selected files                  |
+| `com.apple.security.files.downloads.read-write`     | Access Downloads folder                     |
 
 **Hardware Entitlements:**
-| Entitlement | Description |
-|-------------|-------------|
-| `com.apple.security.device.camera` | Camera access |
+
+| Entitlement                            | Description       |
+| -------------------------------------- | ----------------- |
+| `com.apple.security.device.camera`     | Camera access     |
 | `com.apple.security.device.microphone` | Microphone access |
-| `com.apple.security.device.usb` | USB device access |
-| `com.apple.security.device.bluetooth` | Bluetooth access |
+| `com.apple.security.device.usb`        | USB device access |
+| `com.apple.security.device.bluetooth`  | Bluetooth access  |
 
 **Hardened Runtime Entitlements:**
-| Entitlement | Description |
-|-------------|-------------|
-| `com.apple.security.cs.allow-jit` | Allow JIT compilation |
+
+| Entitlement                                              | Description                      |
+| -------------------------------------------------------- | -------------------------------- |
+| `com.apple.security.cs.allow-jit`                        | Allow JIT compilation            |
 | `com.apple.security.cs.allow-unsigned-executable-memory` | Allow unsigned executable memory |
-| `com.apple.security.cs.disable-library-validation` | Load arbitrary plugins |
+| `com.apple.security.cs.disable-library-validation`       | Load arbitrary plugins           |
 
 ## macOS Bundle Configuration
 
@@ -396,18 +402,22 @@ Format: `"destination": "source"` where paths are relative to `tauri.conf.json`
 ### Common Issues
 
 **DMG icons not positioned correctly on CI/CD:**
+
 - This is a known issue with headless environments
 - Consider building DMGs locally or accepting default positioning
 
 **App rejected due to missing usage descriptions:**
+
 - Add all required `NS*UsageDescription` keys to `Info.plist`
 - Ensure descriptions clearly explain why access is needed
 
 **Entitlements not applied:**
+
 - Verify the entitlements file path in `tauri.conf.json`
 - Ensure the app is properly code-signed
 
 **Framework not found at runtime:**
+
 - Check framework path is correct relative to `src-tauri`
 - Verify framework is properly signed
 
@@ -431,12 +441,12 @@ find path/to/App.app -type f | head -50
 
 ### File Locations
 
-| File | Location | Purpose |
-|------|----------|---------|
-| `Info.plist` | `src-tauri/Info.plist` | App metadata extensions |
-| `Entitlements.plist` | `src-tauri/Entitlements.plist` | Capability entitlements |
-| `DMG Background` | Any path in project | DMG window background |
-| `Localized strings` | `src-tauri/infoplist/<lang>.lproj/` | Localized Info.plist values |
+| File                 | Location                            | Purpose                     |
+| -------------------- | ----------------------------------- | --------------------------- |
+| `Info.plist`         | `src-tauri/Info.plist`              | App metadata extensions     |
+| `Entitlements.plist` | `src-tauri/Entitlements.plist`      | Capability entitlements     |
+| `DMG Background`     | Any path in project                 | DMG window background       |
+| `Localized strings`  | `src-tauri/infoplist/<lang>.lproj/` | Localized Info.plist values |
 
 ### Build Output Locations
 

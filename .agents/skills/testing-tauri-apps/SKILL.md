@@ -62,14 +62,14 @@ describe('Tauri Commands', () => {
 ### Mock Sidecar and Shell Commands
 
 ```javascript
-import { mockIPC } from '@tauri-apps/api/mocks';
+import { mockIPC } from "@tauri-apps/api/mocks";
 
 mockIPC(async (cmd, args) => {
-  if (args.message.cmd === 'execute') {
+  if (args.message.cmd === "execute") {
     const eventCallbackId = `_${args.message.onEventFn}`;
     const eventEmitter = window[eventCallbackId];
-    eventEmitter({ event: 'Stdout', payload: 'process output data' });
-    eventEmitter({ event: 'Terminated', payload: { code: 0 } });
+    eventEmitter({ event: "Stdout", payload: "process output data" });
+    eventEmitter({ event: "Terminated", payload: { code: 0 } });
   }
 });
 ```
@@ -77,40 +77,40 @@ mockIPC(async (cmd, args) => {
 ### Mock Events (v2.7.0+)
 
 ```javascript
-import { mockIPC } from '@tauri-apps/api/mocks';
-import { emit, listen } from '@tauri-apps/api/event';
+import { mockIPC } from "@tauri-apps/api/mocks";
+import { emit, listen } from "@tauri-apps/api/event";
 
 mockIPC(() => {}, { shouldMockEvents: true });
 
 const eventHandler = vi.fn();
-await listen('test-event', eventHandler);
-await emit('test-event', { foo: 'bar' });
+await listen("test-event", eventHandler);
+await emit("test-event", { foo: "bar" });
 expect(eventHandler).toHaveBeenCalled();
 ```
 
 ### Mock Windows
 
 ```javascript
-import { mockWindows } from '@tauri-apps/api/mocks';
-import { getCurrent, getAll } from '@tauri-apps/api/webviewWindow';
+import { mockWindows } from "@tauri-apps/api/mocks";
+import { getCurrent, getAll } from "@tauri-apps/api/webviewWindow";
 
-mockWindows('main', 'second', 'third');
+mockWindows("main", "second", "third");
 
 // First parameter is the "current" window
-expect(getCurrent()).toHaveProperty('label', 'main');
-expect(getAll().map((w) => w.label)).toEqual(['main', 'second', 'third']);
+expect(getCurrent()).toHaveProperty("label", "main");
+expect(getAll().map((w) => w.label)).toEqual(["main", "second", "third"]);
 ```
 
 ### Vitest Configuration
 
 ```javascript
 // vitest.config.js
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./test/setup.js'],
+    environment: "jsdom",
+    setupFiles: ["./test/setup.js"],
   },
 });
 
@@ -127,11 +127,11 @@ WebDriver testing uses `tauri-driver` to automate Tauri applications.
 
 ### Platform Support
 
-| Platform | Support | Notes |
-|----------|---------|-------|
-| Windows | Full | Requires Microsoft Edge Driver |
-| Linux | Full | Requires WebKitWebDriver |
-| macOS | None | WKWebView lacks WebDriver tooling |
+| Platform | Support | Notes                             |
+| -------- | ------- | --------------------------------- |
+| Windows  | Full    | Requires Microsoft Edge Driver    |
+| Linux    | Full    | Requires WebKitWebDriver          |
+| macOS    | None    | WKWebView lacks WebDriver tooling |
 
 ### Install tauri-driver
 
@@ -187,37 +187,39 @@ my-tauri-app/
 
 ```javascript
 // e2e-tests/wdio.conf.js
-import { spawn, spawnSync } from 'child_process';
+import { spawn, spawnSync } from "child_process";
 
 let tauriDriver;
 
 export const config = {
-  hostname: '127.0.0.1',
+  hostname: "127.0.0.1",
   port: 4444,
-  specs: ['./specs/**/*.js'],
+  specs: ["./specs/**/*.js"],
   maxInstances: 1,
-  capabilities: [{
-    browserName: 'wry',
-    'tauri:options': {
-      application: '../src-tauri/target/debug/my-tauri-app',
+  capabilities: [
+    {
+      browserName: "wry",
+      "tauri:options": {
+        application: "../src-tauri/target/debug/my-tauri-app",
+      },
     },
-  }],
-  framework: 'mocha',
-  reporters: ['spec'],
-  mochaOpts: { ui: 'bdd', timeout: 60000 },
+  ],
+  framework: "mocha",
+  reporters: ["spec"],
+  mochaOpts: { ui: "bdd", timeout: 60000 },
 
   onPrepare: () => {
-    const result = spawnSync('cargo', ['build', '--manifest-path', '../src-tauri/Cargo.toml'], {
-      stdio: 'inherit',
+    const result = spawnSync("cargo", ["build", "--manifest-path", "../src-tauri/Cargo.toml"], {
+      stdio: "inherit",
     });
-    if (result.status !== 0) throw new Error('Failed to build Tauri app');
+    if (result.status !== 0) throw new Error("Failed to build Tauri app");
   },
 
   beforeSession: () => {
-    tauriDriver = spawn('tauri-driver', [], { stdio: ['ignore', 'pipe', 'pipe'] });
+    tauriDriver = spawn("tauri-driver", [], { stdio: ["ignore", "pipe", "pipe"] });
     return new Promise((resolve) => {
-      tauriDriver.stdout.on('data', (data) => {
-        if (data.toString().includes('listening')) resolve();
+      tauriDriver.stdout.on("data", (data) => {
+        if (data.toString().includes("listening")) resolve();
       });
     });
   },
@@ -230,18 +232,18 @@ export const config = {
 
 ```javascript
 // e2e-tests/specs/app.spec.js
-describe('My Tauri App', () => {
-  it('should display the header', async () => {
-    const header = await $('body > h1');
+describe("My Tauri App", () => {
+  it("should display the header", async () => {
+    const header = await $("body > h1");
     expect(await header.getText()).toMatch(/^[hH]ello/);
   });
 
-  it('should interact with a button', async () => {
-    const button = await $('#greet-button');
+  it("should interact with a button", async () => {
+    const button = await $("#greet-button");
     await button.click();
-    const output = await $('#greet-output');
+    const output = await $("#greet-output");
     await output.waitForExist({ timeout: 5000 });
-    expect(await output.getText()).toContain('Hello');
+    expect(await output.getText()).toContain("Hello");
   });
 });
 ```
@@ -267,34 +269,35 @@ describe('My Tauri App', () => {
 
 ```javascript
 // e2e-tests/test/test.js
-import { spawn, spawnSync } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { Builder, By } from 'selenium-webdriver';
-import { expect } from 'chai';
+import { spawn, spawnSync } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
+import { Builder, By } from "selenium-webdriver";
+import { expect } from "chai";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let driver, tauriDriver;
-const application = path.resolve(__dirname, '../../src-tauri/target/debug/my-tauri-app');
+const application = path.resolve(__dirname, "../../src-tauri/target/debug/my-tauri-app");
 
-describe('Tauri App Tests', function () {
+describe("Tauri App Tests", function () {
   this.timeout(60000);
 
   before(async function () {
-    spawnSync('cargo', ['build', '--manifest-path', '../../src-tauri/Cargo.toml'], {
-      cwd: __dirname, stdio: 'inherit',
+    spawnSync("cargo", ["build", "--manifest-path", "../../src-tauri/Cargo.toml"], {
+      cwd: __dirname,
+      stdio: "inherit",
     });
 
-    tauriDriver = spawn('tauri-driver', [], { stdio: ['ignore', 'pipe', 'pipe'] });
+    tauriDriver = spawn("tauri-driver", [], { stdio: ["ignore", "pipe", "pipe"] });
     await new Promise((resolve) => {
-      tauriDriver.stdout.on('data', (data) => {
-        if (data.toString().includes('listening')) resolve();
+      tauriDriver.stdout.on("data", (data) => {
+        if (data.toString().includes("listening")) resolve();
       });
     });
 
     driver = await new Builder()
-      .usingServer('http://127.0.0.1:4444/')
-      .withCapabilities({ browserName: 'wry', 'tauri:options': { application } })
+      .usingServer("http://127.0.0.1:4444/")
+      .withCapabilities({ browserName: "wry", "tauri:options": { application } })
       .build();
   });
 
@@ -303,16 +306,16 @@ describe('Tauri App Tests', function () {
     tauriDriver?.kill();
   });
 
-  it('should display greeting', async function () {
-    const header = await driver.findElement(By.css('body > h1'));
+  it("should display greeting", async function () {
+    const header = await driver.findElement(By.css("body > h1"));
     expect(await header.getText()).to.match(/^[hH]ello/);
   });
 
-  it('should click button and show output', async function () {
-    const button = await driver.findElement(By.id('greet-button'));
+  it("should click button and show output", async function () {
+    const button = await driver.findElement(By.id("greet-button"));
     await button.click();
-    const output = await driver.findElement(By.id('greet-output'));
-    expect(await output.getText()).to.include('Hello');
+    const output = await driver.findElement(By.id("greet-output"));
+    expect(await output.getText()).to.include("Hello");
   });
 });
 ```
@@ -361,7 +364,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - run: npm install
       - run: npm run build
@@ -381,17 +384,20 @@ jobs:
 ## Best Practices
 
 ### Mock Testing
+
 - Always call `clearMocks()` in `afterEach` to prevent state leakage
 - Use spies to verify IPC calls were made correctly
 - Mock at the right level: IPC for commands, windows for multi-window logic
 
 ### WebDriver Testing
+
 - Use debug builds for faster iteration during development
 - Set appropriate timeouts as Tauri apps may need time to initialize
 - Wait for elements explicitly rather than using implicit waits
 - Keep tests independent so each test works in isolation
 
 ### CI Integration
+
 - Use `xvfb-run` on Linux for headless WebDriver testing
 - Match Edge Driver version on Windows to avoid connection issues
 - Build the app before running WebDriver tests
@@ -400,16 +406,19 @@ jobs:
 ## Troubleshooting
 
 ### WebDriver Connection Timeout
+
 - Windows: Verify Edge Driver version matches installed Edge
 - Linux: Ensure `webkit2gtk-driver` is installed
 - Check `tauri-driver` is running and listening on port 4444
 
 ### Mock Not Working
+
 - Import `@tauri-apps/api/mocks` before the code under test
 - Call `clearMocks()` in `afterEach` to reset state
 - Ensure `window.__TAURI_INTERNALS__` is properly mocked in setup
 
 ### CI Failures
+
 - Linux: Add `xvfb-run` prefix to test commands
 - Windows: Install Edge Driver via `msedgedriver-tool`
 - Increase timeout for slower CI runners

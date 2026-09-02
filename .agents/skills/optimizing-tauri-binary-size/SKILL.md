@@ -19,7 +19,7 @@ Tauri is designed from the ground up to produce minimal binaries:
 ### Size Comparison
 
 | Framework | Minimum Binary Size |
-|-----------|---------------------|
+| --------- | ------------------- |
 | Tauri     | ~3-6 MB             |
 | Electron  | ~120-180 MB         |
 | NW.js     | ~80-100 MB          |
@@ -43,13 +43,13 @@ strip = true         # Strip debug symbols from final binary
 
 ### Configuration Options Explained
 
-| Option | Values | Description |
-|--------|--------|-------------|
-| `codegen-units` | `1` | Reduces parallelism but allows LLVM to perform better whole-program optimization |
-| `lto` | `true`, `"thin"`, `"fat"` | Link-time optimization; `true` or `"fat"` produces smallest binaries |
-| `opt-level` | `"s"`, `"z"`, `"3"` | `"s"` balances size/speed, `"z"` prioritizes size, `"3"` prioritizes speed |
-| `panic` | `"abort"` | Removes panic handler code, reducing binary size |
-| `strip` | `true`, `"symbols"`, `"debuginfo"` | Removes symbols and debug information from binary |
+| Option          | Values                             | Description                                                                      |
+| --------------- | ---------------------------------- | -------------------------------------------------------------------------------- |
+| `codegen-units` | `1`                                | Reduces parallelism but allows LLVM to perform better whole-program optimization |
+| `lto`           | `true`, `"thin"`, `"fat"`          | Link-time optimization; `true` or `"fat"` produces smallest binaries             |
+| `opt-level`     | `"s"`, `"z"`, `"3"`                | `"s"` balances size/speed, `"z"` prioritizes size, `"3"` prioritizes speed       |
+| `panic`         | `"abort"`                          | Removes panic handler code, reducing binary size                                 |
+| `strip`         | `true`, `"symbols"`, `"debuginfo"` | Removes symbols and debug information from binary                                |
 
 ### Nightly Toolchain Options
 
@@ -90,6 +90,7 @@ Tauri 2.4 introduced the ability to automatically remove code for commands not p
 ```
 
 This feature:
+
 - Analyzes your ACL configuration
 - Removes Tauri command handlers that are not allowed
 - Reduces binary size without changing functionality
@@ -199,14 +200,14 @@ And corresponding `tauri.conf.json`:
 
 ## Optimization Trade-offs
 
-| Setting | Size Impact | Build Time | Runtime Performance |
-|---------|-------------|------------|---------------------|
-| `codegen-units = 1` | Smaller | Slower | Better |
-| `lto = true` | Smaller | Much slower | Better |
-| `opt-level = "s"` | Smaller | Similar | Slightly slower |
-| `opt-level = "z"` | Smallest | Similar | Slower |
-| `panic = "abort"` | Smaller | Faster | No unwinding |
-| `strip = true` | Smaller | Similar | No impact |
+| Setting             | Size Impact | Build Time  | Runtime Performance |
+| ------------------- | ----------- | ----------- | ------------------- |
+| `codegen-units = 1` | Smaller     | Slower      | Better              |
+| `lto = true`        | Smaller     | Much slower | Better              |
+| `opt-level = "s"`   | Smaller     | Similar     | Slightly slower     |
+| `opt-level = "z"`   | Smallest    | Similar     | Slower              |
+| `panic = "abort"`   | Smaller     | Faster      | No unwinding        |
+| `strip = true`      | Smaller     | Similar     | No impact           |
 
 ## Troubleshooting
 
@@ -220,6 +221,7 @@ And corresponding `tauri.conf.json`:
 ### Build Failures with LTO
 
 If `lto = true` causes build failures:
+
 - Try `lto = "thin"` as a fallback
 - Ensure sufficient memory (LTO is memory-intensive)
 - Update Rust toolchain to latest version

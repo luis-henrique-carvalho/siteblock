@@ -9,11 +9,11 @@ Tauri v2 applications use three primary configuration files to manage applicatio
 
 ## Configuration File Overview
 
-| File | Purpose | Format |
-|------|---------|--------|
-| `tauri.conf.json` | Tauri-specific settings | JSON, JSON5, or TOML |
-| `Cargo.toml` | Rust dependencies and metadata | TOML |
-| `package.json` | Frontend dependencies and scripts | JSON |
+| File              | Purpose                           | Format               |
+| ----------------- | --------------------------------- | -------------------- |
+| `tauri.conf.json` | Tauri-specific settings           | JSON, JSON5, or TOML |
+| `Cargo.toml`      | Rust dependencies and metadata    | TOML                 |
+| `package.json`    | Frontend dependencies and scripts | JSON                 |
 
 ## tauri.conf.json
 
@@ -91,12 +91,19 @@ The main configuration file located in `src-tauri/`. Defines application metadat
     "windows": {
       "certificateThumbprint": null,
       "timestampUrl": "http://timestamp.digicert.com",
-      "nsis": { "license": "../LICENSE", "installerIcon": "icons/icon.ico", "installMode": "currentUser" }
+      "nsis": {
+        "license": "../LICENSE",
+        "installerIcon": "icons/icon.ico",
+        "installMode": "currentUser"
+      }
     },
     "macOS": {
       "minimumSystemVersion": "10.13",
       "signingIdentity": null,
-      "dmg": { "appPosition": { "x": 180, "y": 170 }, "applicationFolderPosition": { "x": 480, "y": 170 } }
+      "dmg": {
+        "appPosition": { "x": 180, "y": 170 },
+        "applicationFolderPosition": { "x": 480, "y": 170 }
+      }
     },
     "linux": {
       "appimage": { "bundleMediaFramework": false },
@@ -117,73 +124,73 @@ The main configuration file located in `src-tauri/`. Defines application metadat
 
 ### Root-Level Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `productName` | string | No | Application display name |
-| `version` | string | No | Semver version or path to package.json |
-| `identifier` | string | Yes | Reverse domain identifier (e.g., `com.tauri.example`) |
-| `mainBinaryName` | string | No | Override the main binary filename |
+| Field            | Type   | Required | Description                                           |
+| ---------------- | ------ | -------- | ----------------------------------------------------- |
+| `productName`    | string | No       | Application display name                              |
+| `version`        | string | No       | Semver version or path to package.json                |
+| `identifier`     | string | Yes      | Reverse domain identifier (e.g., `com.tauri.example`) |
+| `mainBinaryName` | string | No       | Override the main binary filename                     |
 
 ### Build Configuration Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `devUrl` | string | Development server URL for hot-reload |
-| `frontendDist` | string | Path to built frontend assets or remote URL |
-| `beforeDevCommand` | string | Script to run before `tauri dev` |
-| `beforeBuildCommand` | string | Script to run before `tauri build` |
-| `features` | string[] | Cargo features to enable during build |
-| `removeUnusedCommands` | boolean | Strip unused plugin commands from binary |
+| Field                  | Type     | Description                                 |
+| ---------------------- | -------- | ------------------------------------------- |
+| `devUrl`               | string   | Development server URL for hot-reload       |
+| `frontendDist`         | string   | Path to built frontend assets or remote URL |
+| `beforeDevCommand`     | string   | Script to run before `tauri dev`            |
+| `beforeBuildCommand`   | string   | Script to run before `tauri build`          |
+| `features`             | string[] | Cargo features to enable during build       |
+| `removeUnusedCommands` | boolean  | Strip unused plugin commands from binary    |
 
 ### Window Configuration Options
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `title` | string | `"Tauri"` | Window title |
-| `width` / `height` | number | `800` / `600` | Window dimensions in pixels |
-| `minWidth` / `minHeight` | number | - | Minimum dimensions |
-| `maxWidth` / `maxHeight` | number | - | Maximum dimensions |
-| `x` / `y` | number | - | Window position |
-| `resizable` | boolean | `true` | Allow window resizing |
-| `fullscreen` | boolean | `false` | Start in fullscreen |
-| `center` | boolean | `false` | Center window on screen |
-| `visible` | boolean | `true` | Window visibility on start |
-| `decorations` | boolean | `true` | Show window decorations |
-| `transparent` | boolean | `false` | Enable window transparency |
-| `alwaysOnTop` | boolean | `false` | Keep window above others |
-| `url` | string | `"index.html"` | Initial URL to load |
+| Field                    | Type    | Default        | Description                 |
+| ------------------------ | ------- | -------------- | --------------------------- |
+| `title`                  | string  | `"Tauri"`      | Window title                |
+| `width` / `height`       | number  | `800` / `600`  | Window dimensions in pixels |
+| `minWidth` / `minHeight` | number  | -              | Minimum dimensions          |
+| `maxWidth` / `maxHeight` | number  | -              | Maximum dimensions          |
+| `x` / `y`                | number  | -              | Window position             |
+| `resizable`              | boolean | `true`         | Allow window resizing       |
+| `fullscreen`             | boolean | `false`        | Start in fullscreen         |
+| `center`                 | boolean | `false`        | Center window on screen     |
+| `visible`                | boolean | `true`         | Window visibility on start  |
+| `decorations`            | boolean | `true`         | Show window decorations     |
+| `transparent`            | boolean | `false`        | Enable window transparency  |
+| `alwaysOnTop`            | boolean | `false`        | Keep window above others    |
+| `url`                    | string  | `"index.html"` | Initial URL to load         |
 
 ### Security Configuration
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `capabilities` | string[] | Permission capabilities for the application |
-| `assetProtocol.enable` | boolean | Enable custom asset protocol |
-| `assetProtocol.scope` | string[] | Allowed paths for asset protocol |
-| `pattern.use` | string | Security pattern (`"brownfield"` default) |
-| `freezePrototype` | boolean | Prevent prototype mutation |
+| Field                  | Type     | Description                                 |
+| ---------------------- | -------- | ------------------------------------------- |
+| `capabilities`         | string[] | Permission capabilities for the application |
+| `assetProtocol.enable` | boolean  | Enable custom asset protocol                |
+| `assetProtocol.scope`  | string[] | Allowed paths for asset protocol            |
+| `pattern.use`          | string   | Security pattern (`"brownfield"` default)   |
+| `freezePrototype`      | boolean  | Prevent prototype mutation                  |
 
 ### Bundle Targets by Platform
 
-| Platform | Targets |
-|----------|---------|
-| Windows | `nsis`, `msi` |
-| macOS | `app`, `dmg` |
-| Linux | `appimage`, `deb`, `rpm` |
-| Android | `apk`, `aab` |
-| iOS | `app` |
+| Platform | Targets                  |
+| -------- | ------------------------ |
+| Windows  | `nsis`, `msi`            |
+| macOS    | `app`, `dmg`             |
+| Linux    | `appimage`, `deb`, `rpm` |
+| Android  | `apk`, `aab`             |
+| iOS      | `app`                    |
 
 ## Platform-Specific Configuration
 
 Create platform-specific files that override base configuration using JSON Merge Patch (RFC 7396).
 
-| Platform | Filename |
-|----------|----------|
-| Linux | `tauri.linux.conf.json` |
-| Windows | `tauri.windows.conf.json` |
-| macOS | `tauri.macos.conf.json` |
-| Android | `tauri.android.conf.json` |
-| iOS | `tauri.ios.conf.json` |
+| Platform | Filename                  |
+| -------- | ------------------------- |
+| Linux    | `tauri.linux.conf.json`   |
+| Windows  | `tauri.windows.conf.json` |
+| macOS    | `tauri.macos.conf.json`   |
+| Android  | `tauri.android.conf.json` |
+| iOS      | `tauri.ios.conf.json`     |
 
 Example `src-tauri/tauri.windows.conf.json`:
 
@@ -369,8 +376,21 @@ endpoints = ["https://releases.example.com/{{target}}/{{arch}}/{{current_version
 {
   "app": {
     "windows": [
-      { "label": "main", "title": "Main Window", "width": 1200, "height": 800, "url": "index.html" },
-      { "label": "settings", "title": "Settings", "width": 600, "height": 400, "url": "settings.html", "visible": false }
+      {
+        "label": "main",
+        "title": "Main Window",
+        "width": 1200,
+        "height": 800,
+        "url": "index.html"
+      },
+      {
+        "label": "settings",
+        "title": "Settings",
+        "width": 600,
+        "height": 400,
+        "url": "settings.html",
+        "visible": false
+      }
     ]
   }
 }
@@ -413,12 +433,12 @@ endpoints = ["https://releases.example.com/{{target}}/{{arch}}/{{current_version
 
 Commit lock files for reproducible builds:
 
-| File | Purpose |
-|------|---------|
-| `Cargo.lock` | Locks Rust dependency versions |
-| `package-lock.json` | Locks npm dependency versions |
-| `yarn.lock` | Locks Yarn dependency versions |
-| `pnpm-lock.yaml` | Locks pnpm dependency versions |
+| File                | Purpose                        |
+| ------------------- | ------------------------------ |
+| `Cargo.lock`        | Locks Rust dependency versions |
+| `package-lock.json` | Locks npm dependency versions  |
+| `yarn.lock`         | Locks Yarn dependency versions |
+| `pnpm-lock.yaml`    | Locks pnpm dependency versions |
 
 ## Configuration Validation
 
