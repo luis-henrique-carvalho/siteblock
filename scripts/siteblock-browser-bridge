@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import json
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 import struct
 import sys
@@ -12,6 +14,34 @@ from pathlib import Path
 
 STATE = Path("/var/lib/siteblock/effective-state.json")
 CLIENTS = Path("/run/siteblock/browser-clients.json")
+LOG_FILE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "siteblock" / "bridge.log"
+
+
+def setup_bridge_logger() -> logging.Logger:
+    logger = logging.getLogger("siteblock-bridge")
+    logger.setLevel(logging.INFO)
+    if not logger.handlers:
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] [pid=%(process)d] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        try:
+            LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            file_handler = RotatingFileHandler(
+                LOG_FILE, maxBytes=2 * 1024 * 1024, backupCount=2, encoding="utf-8"
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        except OSError:
+            pass
+
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setFormatter(formatter)
+        logger.addHandler(stderr_handler)
+    return logger
+
+
+LOGGER = setup_bridge_logger()
 
 
 def read_message() -> object | None:
@@ -24,6 +54,7 @@ def read_message() -> object | None:
 
 
 def send(message: object) -> None:
+    LOGGER.debug("Enviando estado para extensão do navegador: %s", message)
     payload = json.dumps(message, ensure_ascii=False).encode("utf-8")
     sys.stdout.buffer.write(struct.pack("@I", len(payload)) + payload)
     sys.stdout.buffer.flush()
@@ -32,7 +63,8 @@ def send(message: object) -> None:
 def state() -> dict:
     try:
         value = json.loads(STATE.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError) as err:
+        LOGGER.debug("Não foi possível ler effective-state.json (%s), usando fallback", err)
         value = {"active": False, "domains": [], "revision": 0}
     return {"active": bool(value.get("active")), "domains": value.get("domains", []), "revision": value.get("revision", 0)}
 
@@ -54,14 +86,18 @@ def record_client(kind: str) -> None:
 
 def main() -> int:
     kind = sys.argv[1] if len(sys.argv) > 1 else "chromium"
+    LOGGER.info("Bridge iniciado para navegador: '%s' (PID: %d)", kind, os.getpid())
     record_client(kind)
     previous = None
     while True:
         incoming = read_message()
         if incoming is None:
+            LOGGER.info("Canal stdin do bridge fechado pelo navegador. Encerrando bridge.")
             return 0
+        LOGGER.debug("Mensagem recebida da extensão: %s", incoming)
         next_state = state()
         if next_state != previous:
+            LOGGER.info("Novo estado detectado (revision: %s, active: %s), enviando para extensão", next_state.get("revision"), next_state.get("active"))
             send(next_state)
             previous = next_state
         heartbeat = time.monotonic()
@@ -72,6 +108,7 @@ def main() -> int:
                 heartbeat = time.monotonic()
             next_state = state()
             if next_state != previous:
+                LOGGER.info("Novo estado detectado no loop (revision: %s, active: %s), enviando para extensão", next_state.get("revision"), next_state.get("active"))
                 send(next_state)
                 previous = next_state
 

@@ -6,12 +6,44 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 import re
 import shutil
 import sys
 import tempfile
 from pathlib import Path
+
+LOG_FILE = Path("/var/log/siteblock-admin.log")
+
+
+def setup_logger() -> logging.Logger:
+    logger = logging.getLogger("siteblock-admin")
+    logger.setLevel(logging.INFO)
+    if not logger.handlers:
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] [pid=%(process)d] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        try:
+            LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            file_handler = RotatingFileHandler(
+                LOG_FILE, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        except OSError:
+            # Em fallback ou modo sem permissão de escrita em /var/log
+            pass
+
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setFormatter(formatter)
+        logger.addHandler(stderr_handler)
+    return logger
+
+
+LOGGER = setup_logger()
 
 BASE = Path("/etc/siteblock")
 CONFIG = BASE / "config.json"
@@ -177,6 +209,9 @@ def write_hosts(config: dict, enabled: bool) -> None:
             kept.append(f"0.0.0.0 {' '.join(aliases)}")
             kept.append(f"::1 {' '.join(aliases)}")
         kept.append(END)
+        LOGGER.info("Aplicando bloqueio no /etc/hosts para %d domínios: %s", len(config["domains"]), config["domains"])
+    else:
+        LOGGER.info("Removendo entradas de bloqueio do /etc/hosts")
     mode = HOSTS.stat().st_mode & 0o777
     atomic_write(HOSTS, "\n".join(kept).rstrip() + "\n", mode)
 
@@ -190,6 +225,7 @@ def write_chromium_policies(filters: list[str]) -> dict[str, bool]:
     for browser, path in CHROMIUM_POLICIES.items():
         write_json(path, {"URLBlocklist": filters})
         results[browser] = True
+        LOGGER.debug("Política Chromium atualizada para %s (%s) com %d filtros", browser, path, len(filters))
     return results
 
 
@@ -205,9 +241,11 @@ def write_firefox_policy(filters: list[str]) -> bool:
     previous_digest = FIREFOX_OWNERSHIP.read_text(encoding="utf-8").strip() if FIREFOX_OWNERSHIP.exists() else None
     current_digest = file_digest(FIREFOX_POLICY)
     if FIREFOX_POLICY.exists() and previous_digest != current_digest:
+        LOGGER.warning("Política do Firefox existente não pertence ao SiteBlock (digest mismatch). Ignorando escrita.")
         return False
     write_json(FIREFOX_POLICY, {"policies": {"WebsiteFilter": {"Block": filters}}})
     atomic_write(FIREFOX_OWNERSHIP, file_digest(FIREFOX_POLICY) or "")
+    LOGGER.debug("Política do Firefox atualizada (%s) com %d filtros", FIREFOX_POLICY, len(filters))
     return True
 
 
@@ -278,42 +316,52 @@ def state(config: dict, chromium: dict[str, bool] | None = None, firefox_policy:
 
 def apply(config: dict) -> dict:
     enabled = should_block(config)
+    LOGGER.info("Aplicando estado de bloqueio: enabled=%s, active=%s, domains=%s", config.get("enabled"), enabled, config.get("domains"))
     write_hosts(config, enabled)
     filters = blocked_url_filters(config, enabled)
     chromium = write_chromium_policies(filters)
     firefox_policy = write_firefox_policy(filters)
-    write_effective_state(config, enabled)
+    eff = write_effective_state(config, enabled)
+    LOGGER.info("Estado efetivo atualizado: revision=%s, active=%s", eff.get("revision"), eff.get("active"))
     return state(config, chromium, firefox_policy)
 
 
 def require_root() -> None:
     if os.geteuid() != 0:
+        LOGGER.error("Tentativa de executar ação privilegiada sem UID 0 (euid=%d)", os.geteuid())
         raise PermissionError("Essa ação precisa de autorização administrativa.")
 
 
 def session() -> int:
     """Serve validated requests on stdin while the desktop app remains open."""
     require_root()
+    LOGGER.info("Sessão administrativa iniciada (PID: %d, UID: %d)", os.getpid(), os.geteuid())
     for line in sys.stdin:
         try:
             request = json.loads(line)
             action = request.get("action")
+            LOGGER.debug("Sessão recebeu ação: %s", action)
             if action == "status":
                 response = state(read_config())
             elif action == "set-config":
                 config = normalize(request.get("config"))
+                LOGGER.info("Salvando nova configuração via sessão administrativa")
                 write_config(config)
                 response = apply(config)
             else:
+                LOGGER.warning("Ação desconhecida recebida na sessão: %s", action)
                 raise ValueError("Ação inválida.")
         except (OSError, PermissionError, ValueError, json.JSONDecodeError) as error:
+            LOGGER.error("Erro ao processar mensagem na sessão: %s", error)
             response = {"error": str(error)}
         print(json.dumps(response, ensure_ascii=False), flush=True)
+    LOGGER.info("Sessão administrativa finalizada (stdin fechado)")
     return 0
 
 
 def main() -> int:
     command = sys.argv[1] if len(sys.argv) > 1 else ""
+    LOGGER.debug("siteblock-admin invocado com comando: '%s'", command)
     if command == "status":
         print(json.dumps(state(read_config()), ensure_ascii=False))
         return 0
@@ -328,7 +376,10 @@ def main() -> int:
     require_root()
     config = normalize(json.load(sys.stdin)) if command == "set-config" else read_config()
     if command == "set-config":
+        LOGGER.info("Comando 'set-config' executado via CLI")
         write_config(config)
+    elif command == "reconcile":
+        LOGGER.info("Comando 'reconcile' executado (agendador/systemd)")
     print(json.dumps(apply(config), ensure_ascii=False))
     return 0
 
@@ -337,5 +388,6 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except (OSError, PermissionError, ValueError, json.JSONDecodeError) as error:
+        LOGGER.error("Erro fatal: %s", error)
         print(f"Erro: {error}", file=sys.stderr)
         raise SystemExit(1)

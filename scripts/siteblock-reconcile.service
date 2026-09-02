@@ -4,3 +4,6 @@ Description=Aplica os horários do SiteBlock
 [Service]
 Type=oneshot
 ExecStart=/usr/local/lib/siteblock/siteblock-admin reconcile
+SyslogIdentifier=siteblock-reconcile
+StandardOutput=journal
+StandardError=journal

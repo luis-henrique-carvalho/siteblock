@@ -1,3 +1,4 @@
+use std::time::Instant;
 use crate::domain::entities::{SiteBlockConfig, SiteBlockState};
 use crate::presentation::state::AppState;
 
@@ -5,20 +6,43 @@ use crate::presentation::state::AppState;
 pub fn get_siteblock_status(
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
-    state
+    log::debug!("Invocando command: get_siteblock_status");
+    let start = Instant::now();
+    let result = state
         .get_status_use_case
         .execute()
-        .map_err(|err| err.to_string())
+        .map_err(|err| {
+            log::error!("Erro em get_siteblock_status: {err}");
+            err.to_string()
+        });
+    if let Ok(ref s) = result {
+        log::debug!(
+            "get_siteblock_status concluído em {:?} (active={}, enabled={})",
+            start.elapsed(),
+            s.active,
+            s.enabled
+        );
+    }
+    result
 }
 
 #[tauri::command]
 pub fn start_privileged_session(
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
-    state
+    log::info!("Invocando command: start_privileged_session");
+    let start = Instant::now();
+    let result = state
         .start_session_use_case
         .execute()
-        .map_err(|err| err.to_string())
+        .map_err(|err| {
+            log::warn!("Erro em start_privileged_session: {err}");
+            err.to_string()
+        });
+    if result.is_ok() {
+        log::info!("start_privileged_session concluído com sucesso em {:?}", start.elapsed());
+    }
+    result
 }
 
 #[tauri::command]
@@ -26,18 +50,47 @@ pub fn save_siteblock_config(
     config: SiteBlockConfig,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
-    state
+    log::info!(
+        "Invocando command: save_siteblock_config (enabled={}, domains={:?}, schedules={})",
+        config.enabled,
+        config.domains,
+        config.schedules.len()
+    );
+    let start = Instant::now();
+    let result = state
         .save_config_use_case
         .execute(config)
-        .map_err(|err| err.to_string())
+        .map_err(|err| {
+            log::error!("Erro em save_siteblock_config: {err}");
+            err.to_string()
+        });
+    if let Ok(ref s) = result {
+        log::info!(
+            "save_siteblock_config concluído em {:?} (active={}, revision={})",
+            start.elapsed(),
+            s.active,
+            s.revision
+        );
+    }
+    result
 }
 
 #[tauri::command]
 pub fn install_siteblock_service(
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
-    state
+    log::info!("Invocando command: install_siteblock_service");
+    let start = Instant::now();
+    let result = state
         .install_service_use_case
         .execute()
-        .map_err(|err| err.to_string())
+        .map_err(|err| {
+            log::error!("Erro em install_siteblock_service: {err}");
+            err.to_string()
+        });
+    if result.is_ok() {
+        log::info!("install_siteblock_service concluído com sucesso em {:?}", start.elapsed());
+    }
+    result
 }
+
