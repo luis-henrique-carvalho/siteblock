@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod menu;
 pub mod state;
 pub mod tray;
 

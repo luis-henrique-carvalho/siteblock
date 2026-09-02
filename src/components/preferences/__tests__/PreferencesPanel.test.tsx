@@ -13,7 +13,7 @@ describe("PreferencesPanel", () => {
     const user = userEvent.setup();
     render(
       <LanguageProvider>
-        <PreferencesPanel />
+        <PreferencesPanel open onOpenChange={() => undefined} />
       </LanguageProvider>,
     );
 

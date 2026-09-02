@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { useSiteBlock } from "./hooks/useSiteBlock";
 import { getScheduleSummary } from "./utils/scheduleHelpers";
 import { TopBar } from "./components/layout/TopBar";
@@ -11,6 +12,7 @@ import { DomainManager } from "./components/domains/DomainManager";
 import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { LoadingScreen } from "./components/common/LoadingScreen";
 import { PreferencesPanel } from "./components/preferences/PreferencesPanel";
+import { AboutDialog } from "./components/preferences/AboutDialog";
 import { LanguageProvider, useLanguage } from "./i18n";
 import "./App.css";
 
@@ -24,6 +26,8 @@ export function App() {
 
 function AppContent() {
   const { t } = useLanguage();
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const {
     state,
     message,
@@ -41,6 +45,31 @@ function AppContent() {
     () => getScheduleSummary(state?.schedules.length ?? 0, t),
     [state?.schedules.length, t],
   );
+
+  useEffect(() => {
+    let mounted = true;
+    let unlistenPreferences: (() => void) | undefined;
+    let unlistenAbout: (() => void) | undefined;
+
+    void Promise.all([
+      listen("siteblock://open-preferences", () => setPreferencesOpen(true)),
+      listen("siteblock://open-about", () => setAboutOpen(true)),
+    ]).then(([preferencesCleanup, aboutCleanup]) => {
+      if (mounted) {
+        unlistenPreferences = preferencesCleanup;
+        unlistenAbout = aboutCleanup;
+      } else {
+        preferencesCleanup();
+        aboutCleanup();
+      }
+    });
+
+    return () => {
+      mounted = false;
+      unlistenPreferences?.();
+      unlistenAbout?.();
+    };
+  }, []);
 
   if (!state) {
     return <LoadingScreen />;
@@ -88,7 +117,8 @@ function AppContent() {
           />
         </div>
 
-        <PreferencesPanel />
+        <PreferencesPanel open={preferencesOpen} onOpenChange={setPreferencesOpen} />
+        <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
         <Footer message={message} />
       </main>

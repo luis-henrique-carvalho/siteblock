@@ -8,11 +8,14 @@ use presentation::commands::{
     get_siteblock_status, install_siteblock_service, save_siteblock_config,
     start_privileged_session,
 };
+use presentation::menu::{build_app_menu, handle_menu_event};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .menu(build_app_menu)
+        .on_menu_event(handle_menu_event)
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             log::info!("Segunda instância detectada: restaurando janela principal.");
             if let Some(window) = app.get_webview_window("main") {
