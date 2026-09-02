@@ -1,10 +1,10 @@
-use std::sync::Arc;
 use crate::application::use_cases::{
     GetStatusUseCase, InstallServiceUseCase, SaveConfigUseCase, StartSessionUseCase,
     ToggleBlockingUseCase,
 };
 use crate::domain::ports::{HelperPort, InstallerPort, SessionPort};
 use crate::infrastructure::{SystemHelper, SystemInstaller, SystemSession};
+use std::sync::Arc;
 
 pub struct AppState {
     pub get_status_use_case: Arc<GetStatusUseCase>,
@@ -21,7 +21,10 @@ impl AppState {
         installer: Arc<dyn InstallerPort>,
     ) -> Self {
         let get_status_use_case = Arc::new(GetStatusUseCase::new(Arc::clone(&helper)));
-        let start_session_use_case = Arc::new(StartSessionUseCase::new(Arc::clone(&helper), Arc::clone(&session)));
+        let start_session_use_case = Arc::new(StartSessionUseCase::new(
+            Arc::clone(&helper),
+            Arc::clone(&session),
+        ));
         let save_config_use_case = Arc::new(SaveConfigUseCase::new(Arc::clone(&session)));
         let install_service_use_case = Arc::new(InstallServiceUseCase::new(installer, session));
         let toggle_blocking_use_case = Arc::new(ToggleBlockingUseCase::new(

@@ -33,7 +33,8 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
                     "status" => {
                         let cfg = read_config();
                         let state = get_current_state(&cfg, None, None);
-                        serde_json::to_string(&state).unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
+                        serde_json::to_string(&state)
+                            .unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
                     }
                     "set-config" => {
                         if let Some(config_val) = request.get("config") {
@@ -42,14 +43,18 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
                                     Ok(_) => {
                                         let _ = write_config_file(&config);
                                         let state = apply_config(&config);
-                                        serde_json::to_string(&state).unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
+                                        serde_json::to_string(&state)
+                                            .unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
                                     }
                                     Err(validation_err) => {
                                         format!("{{\"error\":\"{}\"}}", validation_err)
                                     }
                                 },
                                 Err(parse_err) => {
-                                    format!("{{\"error\":\"Configuração inválida: {}\"}}", parse_err)
+                                    format!(
+                                        "{{\"error\":\"Configuração inválida: {}\"}}",
+                                        parse_err
+                                    )
                                 }
                             }
                         } else {

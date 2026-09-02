@@ -1,8 +1,8 @@
-use std::sync::Mutex;
 use siteblock_lib::domain::entities::SiteBlockState;
 use siteblock_lib::domain::errors::{AppError, AppResult};
 use siteblock_lib::domain::ports::{HelperPort, InstallerPort, SessionPort};
 use std::process::{Child, Command, Stdio};
+use std::sync::Mutex;
 
 pub struct MockHelperPort {
     pub installed: bool,
@@ -11,7 +11,11 @@ pub struct MockHelperPort {
 }
 
 impl MockHelperPort {
-    pub fn new(installed: bool, session_supported: bool, status_raw: Result<String, AppError>) -> Self {
+    pub fn new(
+        installed: bool,
+        session_supported: bool,
+        status_raw: Result<String, AppError>,
+    ) -> Self {
         Self {
             installed,
             session_supported,
@@ -86,7 +90,9 @@ impl MockInstallerPort {
 impl InstallerPort for MockInstallerPort {
     fn prepare_and_install(&self) -> AppResult<Child> {
         if self.should_fail {
-            return Err(AppError::AuthorizationDenied("Permissão negada pelo usuário".into()));
+            return Err(AppError::AuthorizationDenied(
+                "Permissão negada pelo usuário".into(),
+            ));
         }
 
         // Spawn a dummy sleep/true process for test child handling

@@ -3,17 +3,18 @@ pub mod domain;
 pub mod infrastructure;
 pub mod presentation;
 
-pub use presentation::AppState;
 use presentation::commands::{
     get_siteblock_status, install_siteblock_service, save_siteblock_config,
     start_privileged_session,
 };
 use presentation::menu::{build_app_menu, handle_menu_event};
+pub use presentation::AppState;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .menu(build_app_menu)
         .on_menu_event(handle_menu_event)
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {

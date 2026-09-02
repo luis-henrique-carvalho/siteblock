@@ -1,8 +1,8 @@
-use std::sync::Arc;
-use serde_json::json;
 use crate::domain::entities::SiteBlockState;
 use crate::domain::errors::AppResult;
 use crate::domain::ports::{InstallerPort, SessionPort};
+use serde_json::json;
+use std::sync::Arc;
 
 pub struct InstallServiceUseCase {
     installer: Arc<dyn InstallerPort>,

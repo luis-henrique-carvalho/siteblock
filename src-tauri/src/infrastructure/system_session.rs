@@ -1,13 +1,13 @@
+use crate::domain::entities::SiteBlockState;
+use crate::domain::errors::{AppError, AppResult};
+use crate::domain::ports::SessionPort;
+use crate::infrastructure::embedded_assets::HELPER_PATH;
 use std::{
     io::{BufRead, BufReader, Write},
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
     sync::Mutex,
     time::Instant,
 };
-use crate::domain::entities::SiteBlockState;
-use crate::domain::errors::{AppError, AppResult};
-use crate::domain::ports::SessionPort;
-use crate::infrastructure::embedded_assets::HELPER_PATH;
 
 #[derive(Default)]
 struct PrivilegedSessionInner {
@@ -19,7 +19,10 @@ struct PrivilegedSessionInner {
 impl PrivilegedSessionInner {
     fn reset(&mut self) {
         if let Some(mut child) = self.child.take() {
-            log::info!("Encerrando processo da sessão privilegiada existente (PID: {:?})", child.id());
+            log::info!(
+                "Encerrando processo da sessão privilegiada existente (PID: {:?})",
+                child.id()
+            );
             let _ = child.kill();
         }
         self.stdin = None;
@@ -38,7 +41,10 @@ impl PrivilegedSessionInner {
         }
 
         self.reset();
-        log::info!("Iniciando nova sessão privilegiada via pkexec com helper: {}", helper_path);
+        log::info!(
+            "Iniciando nova sessão privilegiada via pkexec com helper: {}",
+            helper_path
+        );
 
         let mut child = Command::new("pkexec")
             .args([helper_path, "session"])
@@ -52,7 +58,10 @@ impl PrivilegedSessionInner {
             })?;
 
         let pid = child.id();
-        log::info!("Processo privilegiado pkexec iniciado com sucesso (PID: {})", pid);
+        log::info!(
+            "Processo privilegiado pkexec iniciado com sucesso (PID: {})",
+            pid
+        );
 
         self.stdin = child.stdin.take();
         self.stdout = child.stdout.take().map(BufReader::new);
@@ -60,8 +69,14 @@ impl PrivilegedSessionInner {
 
         if self.stdin.is_none() || self.stdout.is_none() {
             self.reset();
-            log::error!("Falha ao capturar stdin/stdout do processo pkexec (PID: {})", pid);
-            return Err(AppError::SessionUnavailable("Não foi possível iniciar os canais de comunicação da sessão administrativa.".into()));
+            log::error!(
+                "Falha ao capturar stdin/stdout do processo pkexec (PID: {})",
+                pid
+            );
+            return Err(AppError::SessionUnavailable(
+                "Não foi possível iniciar os canais de comunicação da sessão administrativa."
+                    .into(),
+            ));
         }
 
         Ok(())
@@ -77,7 +92,9 @@ impl PrivilegedSessionInner {
         if self.stdin.is_none() || self.stdout.is_none() {
             self.reset();
             log::error!("Falha ao adotar processo existente (PID: {})", pid);
-            return Err(AppError::SessionUnavailable("Não foi possível adotar a sessão administrativa iniciada.".into()));
+            return Err(AppError::SessionUnavailable(
+                "Não foi possível adotar a sessão administrativa iniciada.".into(),
+            ));
         }
         log::info!("Processo privilegiado adotado com sucesso (PID: {})", pid);
         Ok(())
@@ -107,7 +124,9 @@ impl PrivilegedSessionInner {
 
         if bytes_read == 0 {
             log::warn!("Sessão administrativa retornou EOF (0 bytes lidos)");
-            return Err(AppError::SessionUnavailable("A sessão administrativa foi encerrada.".into()));
+            return Err(AppError::SessionUnavailable(
+                "A sessão administrativa foi encerrada.".into(),
+            ));
         }
 
         Ok(response)
@@ -143,14 +162,19 @@ impl Default for SystemSession {
 
 impl SessionPort for SystemSession {
     fn send_request(&self, request: serde_json::Value) -> AppResult<SiteBlockState> {
-        let action = request.get("action").and_then(serde_json::Value::as_str).unwrap_or("unknown");
-        log::debug!("Enviando requisição para sessão privilegiada (action: {})", action);
+        let action = request
+            .get("action")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("unknown");
+        log::debug!(
+            "Enviando requisição para sessão privilegiada (action: {})",
+            action
+        );
         let start = Instant::now();
 
-        let mut session = self
-            .inner
-            .lock()
-            .map_err(|_| AppError::SessionUnavailable("Falha ao adquirir lock da sessão administrativa.".into()))?;
+        let mut session = self.inner.lock().map_err(|_| {
+            AppError::SessionUnavailable("Falha ao adquirir lock da sessão administrativa.".into())
+        })?;
 
         session.ensure_started(&self.helper_path)?;
 
@@ -159,29 +183,34 @@ impl SessionPort for SystemSession {
 
         match result {
             Ok(response) => {
-                let value: serde_json::Value = serde_json::from_str(&response)
-                    .map_err(|err| {
-                        log::error!("Resposta inválida do helper: {err}");
-                        AppError::InvalidResponse(format!("Resposta inválida do serviço: {err}"))
-                    })?;
+                let value: serde_json::Value = serde_json::from_str(&response).map_err(|err| {
+                    log::error!("Resposta inválida do helper: {err}");
+                    AppError::InvalidResponse(format!("Resposta inválida do serviço: {err}"))
+                })?;
 
                 if let Some(error_msg) = value.get("error").and_then(serde_json::Value::as_str) {
                     log::error!("Helper retornou erro para action {action}: {error_msg}");
                     return Err(AppError::Generic(error_msg.to_string()));
                 }
 
-                let mut state: SiteBlockState = serde_json::from_value(value)
-                    .map_err(|err| {
-                        log::error!("Estrutura de estado inválida retornada pelo helper: {err}");
-                        AppError::InvalidResponse(format!("Estrutura de estado inválida: {err}"))
-                    })?;
+                let mut state: SiteBlockState = serde_json::from_value(value).map_err(|err| {
+                    log::error!("Estrutura de estado inválida retornada pelo helper: {err}");
+                    AppError::InvalidResponse(format!("Estrutura de estado inválida: {err}"))
+                })?;
 
                 state.session_supported = true;
-                log::debug!("Requisição (action: {}) processada com sucesso em {:?}", action, start.elapsed());
+                log::debug!(
+                    "Requisição (action: {}) processada com sucesso em {:?}",
+                    action,
+                    start.elapsed()
+                );
                 Ok(state)
             }
             Err(err) => {
-                log::warn!("Comunicação com a sessão privilegiada falhou ({:?}): {err}", start.elapsed());
+                log::warn!(
+                    "Comunicação com a sessão privilegiada falhou ({:?}): {err}",
+                    start.elapsed()
+                );
                 session.reset();
                 Err(err)
             }
@@ -189,10 +218,9 @@ impl SessionPort for SystemSession {
     }
 
     fn adopt_child(&self, child: Child) -> AppResult<()> {
-        let mut session = self
-            .inner
-            .lock()
-            .map_err(|_| AppError::SessionUnavailable("Falha ao adquirir lock da sessão administrativa.".into()))?;
+        let mut session = self.inner.lock().map_err(|_| {
+            AppError::SessionUnavailable("Falha ao adquirir lock da sessão administrativa.".into())
+        })?;
 
         session.adopt(child)
     }

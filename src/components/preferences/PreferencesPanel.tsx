@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, Languages, MonitorCog } from "lucide-react";
+import { AlertCircle, BadgeCheck, Languages, MonitorCog } from "lucide-react";
 import { LANGUAGES, type Language, useLanguage } from "../../i18n";
 
 const languageNames: Record<Language, string> = {
@@ -23,7 +23,7 @@ interface PreferencesPanelProps {
 }
 
 export function PreferencesPanel({ open, onOpenChange }: PreferencesPanelProps) {
-  const { language, setLanguage, t } = useLanguage();
+  const { hasPersistenceError, language, setLanguage, t } = useLanguage();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,9 +75,19 @@ export function PreferencesPanel({ open, onOpenChange }: PreferencesPanelProps) 
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-              <span className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <BadgeCheck className="size-4 text-primary" aria-hidden="true" />
-                {t("preferences.saved")}
+              <span
+                className={
+                  hasPersistenceError
+                    ? "mt-3 flex items-center gap-1.5 text-xs font-medium text-destructive"
+                    : "mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                }
+              >
+                {hasPersistenceError ? (
+                  <AlertCircle className="size-4" aria-hidden="true" />
+                ) : (
+                  <BadgeCheck className="size-4 text-primary" aria-hidden="true" />
+                )}
+                {t(hasPersistenceError ? "preferences.saveError" : "preferences.saved")}
               </span>
             </div>
           </section>

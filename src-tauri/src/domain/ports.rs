@@ -1,6 +1,6 @@
-use std::process::Child;
 use crate::domain::entities::SiteBlockState;
 use crate::domain::errors::AppResult;
+use std::process::Child;
 
 pub trait HelperPort: Send + Sync {
     fn is_installed(&self) -> bool;

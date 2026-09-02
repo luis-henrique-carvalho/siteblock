@@ -10,7 +10,12 @@ pub struct Schedule {
 }
 
 impl Schedule {
-    pub fn new(id: impl Into<String>, days: Vec<u8>, start: impl Into<String>, end: impl Into<String>) -> Self {
+    pub fn new(
+        id: impl Into<String>,
+        days: Vec<u8>,
+        start: impl Into<String>,
+        end: impl Into<String>,
+    ) -> Self {
         Self {
             id: id.into(),
             days,
@@ -26,7 +31,9 @@ impl Schedule {
 
         for &day in &self.days {
             if day > 6 {
-                return Err(format!("Dia da semana inválido ({day}). Deve ser entre 0 e 6."));
+                return Err(format!(
+                    "Dia da semana inválido ({day}). Deve ser entre 0 e 6."
+                ));
             }
         }
 
@@ -39,13 +46,21 @@ impl Schedule {
     fn validate_time(time_str: &str, field_name: &str) -> Result<(), String> {
         let parts: Vec<&str> = time_str.split(':').collect();
         if parts.len() != 2 || parts[0].len() != 2 || parts[1].len() != 2 {
-            return Err(format!("Horário de {field_name} inválido: '{time_str}'. Use o formato HH:MM."));
+            return Err(format!(
+                "Horário de {field_name} inválido: '{time_str}'. Use o formato HH:MM."
+            ));
         }
-        let hour: u32 = parts[0].parse().map_err(|_| format!("Hora de {field_name} inválida: '{}'.", parts[0]))?;
-        let minute: u32 = parts[1].parse().map_err(|_| format!("Minuto de {field_name} inválido: '{}'.", parts[1]))?;
+        let hour: u32 = parts[0]
+            .parse()
+            .map_err(|_| format!("Hora de {field_name} inválida: '{}'.", parts[0]))?;
+        let minute: u32 = parts[1]
+            .parse()
+            .map_err(|_| format!("Minuto de {field_name} inválido: '{}'.", parts[1]))?;
 
         if hour > 23 || minute > 59 {
-            return Err(format!("Horário de {field_name} fora do intervalo: '{time_str}'."));
+            return Err(format!(
+                "Horário de {field_name} fora do intervalo: '{time_str}'."
+            ));
         }
 
         Ok(())

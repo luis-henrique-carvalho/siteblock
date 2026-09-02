@@ -1,9 +1,5 @@
 mod common;
 
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
 use common::mocks::{MockHelperPort, MockSessionPort};
 use serde_json::json;
 use siteblock_lib::application::use_cases::{
@@ -13,6 +9,10 @@ use siteblock_lib::domain::entities::{Schedule, SiteBlockConfig, SiteBlockState}
 use siteblock_lib::domain::errors::AppError;
 use siteblock_lib::domain::ports::{HelperPort, SessionPort};
 use siteblock_lib::presentation::{TrayStateView, TrayViewModel};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 fn create_sample_state(enabled: bool, active: bool, helper_installed: bool) -> SiteBlockState {
     SiteBlockState {
@@ -94,7 +94,10 @@ fn test_tray_derivation_error_with_previous_enabled_state() {
     assert_eq!(vm.status_text, "Status indisponível — abra o painel");
     assert_eq!(vm.action_text, "Desativar bloqueio");
     assert!(!vm.action_enabled);
-    assert_eq!(vm.tooltip, "SiteBlock — Status indisponível — abra o painel");
+    assert_eq!(
+        vm.tooltip,
+        "SiteBlock — Status indisponível — abra o painel"
+    );
 }
 
 #[test]
@@ -104,7 +107,10 @@ fn test_tray_derivation_error_without_previous_state() {
     assert_eq!(vm.status_text, "Status indisponível — abra o painel");
     assert_eq!(vm.action_text, "Ativar bloqueio");
     assert!(!vm.action_enabled);
-    assert_eq!(vm.tooltip, "SiteBlock — Status indisponível — abra o painel");
+    assert_eq!(
+        vm.tooltip,
+        "SiteBlock — Status indisponível — abra o painel"
+    );
 }
 
 // -----------------------------------------------------------------------------
@@ -115,21 +121,26 @@ fn test_tray_derivation_error_without_previous_state() {
 fn test_toggle_blocking_inverts_enabled_and_preserves_domains_and_schedules() {
     let initial_state = create_sample_state(false, false, true);
 
-    let mock_helper: Arc<dyn HelperPort> = Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
+    let mock_helper: Arc<dyn HelperPort> =
+        Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
     let mock_session = Arc::new(MockSessionPort::new(Ok(initial_state.clone())));
 
     let start_session = Arc::new(StartSessionUseCase::new(
         Arc::clone(&mock_helper),
         Arc::clone(&mock_session) as Arc<dyn SessionPort>,
     ));
-    let save_config = Arc::new(SaveConfigUseCase::new(Arc::clone(&mock_session) as Arc<dyn SessionPort>));
+    let save_config = Arc::new(SaveConfigUseCase::new(
+        Arc::clone(&mock_session) as Arc<dyn SessionPort>
+    ));
     let toggle_use_case = ToggleBlockingUseCase::new(start_session, save_config);
 
     // Toggle: false -> true
     let result = toggle_use_case.execute().expect("Toggle deve ter sucesso");
     assert_eq!(result.domains, vec!["youtube.com", "instagram.com"]);
 
-    let last_req = mock_session.last_request().expect("Deveria enviar requisição");
+    let last_req = mock_session
+        .last_request()
+        .expect("Deveria enviar requisição");
     assert_eq!(
         last_req,
         json!({
@@ -145,14 +156,17 @@ fn test_toggle_blocking_inverts_enabled_and_preserves_domains_and_schedules() {
 
 #[test]
 fn test_toggle_blocking_fails_when_helper_not_installed() {
-    let mock_helper: Arc<dyn HelperPort> = Arc::new(MockHelperPort::new(false, false, Ok(String::new())));
+    let mock_helper: Arc<dyn HelperPort> =
+        Arc::new(MockHelperPort::new(false, false, Ok(String::new())));
     let mock_session = Arc::new(MockSessionPort::new(Ok(SiteBlockState::empty())));
 
     let start_session = Arc::new(StartSessionUseCase::new(
         Arc::clone(&mock_helper),
         Arc::clone(&mock_session) as Arc<dyn SessionPort>,
     ));
-    let save_config = Arc::new(SaveConfigUseCase::new(Arc::clone(&mock_session) as Arc<dyn SessionPort>));
+    let save_config = Arc::new(SaveConfigUseCase::new(
+        Arc::clone(&mock_session) as Arc<dyn SessionPort>
+    ));
     let toggle_use_case = ToggleBlockingUseCase::new(start_session, save_config);
 
     let result = toggle_use_case.execute();
@@ -163,7 +177,8 @@ fn test_toggle_blocking_fails_when_helper_not_installed() {
 
 #[test]
 fn test_toggle_blocking_fails_when_session_unavailable() {
-    let mock_helper: Arc<dyn HelperPort> = Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
+    let mock_helper: Arc<dyn HelperPort> =
+        Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
     let mock_session = Arc::new(MockSessionPort::new(Err(AppError::SessionUnavailable(
         "Canais indisponíveis".into(),
     ))));
@@ -172,7 +187,9 @@ fn test_toggle_blocking_fails_when_session_unavailable() {
         Arc::clone(&mock_helper),
         Arc::clone(&mock_session) as Arc<dyn SessionPort>,
     ));
-    let save_config = Arc::new(SaveConfigUseCase::new(Arc::clone(&mock_session) as Arc<dyn SessionPort>));
+    let save_config = Arc::new(SaveConfigUseCase::new(
+        Arc::clone(&mock_session) as Arc<dyn SessionPort>
+    ));
     let toggle_use_case = ToggleBlockingUseCase::new(start_session, save_config);
 
     let result = toggle_use_case.execute();
@@ -181,7 +198,8 @@ fn test_toggle_blocking_fails_when_session_unavailable() {
 
 #[test]
 fn test_toggle_blocking_fails_when_authorization_denied() {
-    let mock_helper: Arc<dyn HelperPort> = Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
+    let mock_helper: Arc<dyn HelperPort> =
+        Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
     let mock_session = Arc::new(MockSessionPort::new(Err(AppError::AuthorizationDenied(
         "Autenticação negada".into(),
     ))));
@@ -190,7 +208,9 @@ fn test_toggle_blocking_fails_when_authorization_denied() {
         Arc::clone(&mock_helper),
         Arc::clone(&mock_session) as Arc<dyn SessionPort>,
     ));
-    let save_config = Arc::new(SaveConfigUseCase::new(Arc::clone(&mock_session) as Arc<dyn SessionPort>));
+    let save_config = Arc::new(SaveConfigUseCase::new(
+        Arc::clone(&mock_session) as Arc<dyn SessionPort>
+    ));
     let toggle_use_case = ToggleBlockingUseCase::new(start_session, save_config);
 
     let result = toggle_use_case.execute();
@@ -199,21 +219,23 @@ fn test_toggle_blocking_fails_when_authorization_denied() {
 
 #[test]
 fn test_toggle_blocking_prevents_concurrent_clicks() {
-    let mock_helper: Arc<dyn HelperPort> = Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
-    let mock_session = Arc::new(MockSessionPort::new(Ok(create_sample_state(false, false, true))));
+    let mock_helper: Arc<dyn HelperPort> =
+        Arc::new(MockHelperPort::new(true, true, Ok(String::new())));
+    let mock_session = Arc::new(MockSessionPort::new(Ok(create_sample_state(
+        false, false, true,
+    ))));
 
     let start_session = Arc::new(StartSessionUseCase::new(
         Arc::clone(&mock_helper),
         Arc::clone(&mock_session) as Arc<dyn SessionPort>,
     ));
-    let save_config = Arc::new(SaveConfigUseCase::new(Arc::clone(&mock_session) as Arc<dyn SessionPort>));
+    let save_config = Arc::new(SaveConfigUseCase::new(
+        Arc::clone(&mock_session) as Arc<dyn SessionPort>
+    ));
 
     let shared_flag = Arc::new(AtomicBool::new(true));
-    let toggle_use_case = ToggleBlockingUseCase::with_busy_flag(
-        start_session,
-        save_config,
-        Arc::clone(&shared_flag),
-    );
+    let toggle_use_case =
+        ToggleBlockingUseCase::with_busy_flag(start_session, save_config, Arc::clone(&shared_flag));
 
     let result = toggle_use_case.execute();
     assert!(result.is_err());

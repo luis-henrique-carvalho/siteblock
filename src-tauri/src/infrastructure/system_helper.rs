@@ -1,8 +1,8 @@
-use std::path::Path;
-use std::process::Command;
 use crate::domain::errors::{AppError, AppResult};
 use crate::domain::ports::HelperPort;
 use crate::infrastructure::embedded_assets::HELPER_PATH;
+use std::path::Path;
+use std::process::Command;
 
 pub struct SystemHelper {
     helper_path: String,
@@ -22,20 +22,33 @@ impl SystemHelper {
     }
 
     fn run_command(&self, args: &[&str]) -> AppResult<String> {
-        log::debug!("Executando helper '{}' com args: {:?}", self.helper_path, args);
+        log::debug!(
+            "Executando helper '{}' com args: {:?}",
+            self.helper_path,
+            args
+        );
         let output = Command::new(&self.helper_path)
             .args(args)
             .output()
             .map_err(|err| {
-                log::error!("Falha de I/O ao executar helper '{}': {err}", self.helper_path);
-                AppError::IoError(format!("Falha ao executar helper '{}': {err}", self.helper_path))
+                log::error!(
+                    "Falha de I/O ao executar helper '{}': {err}",
+                    self.helper_path
+                );
+                AppError::IoError(format!(
+                    "Falha ao executar helper '{}': {err}",
+                    self.helper_path
+                ))
             })?;
 
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).to_string())
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-            log::warn!("Helper '{}' retornou código não-zero: {stderr}", self.helper_path);
+            log::warn!(
+                "Helper '{}' retornou código não-zero: {stderr}",
+                self.helper_path
+            );
             Err(AppError::Generic(stderr))
         }
     }

@@ -1,10 +1,26 @@
 /* eslint-disable react-refresh/only-export-components -- The translation catalog and its React provider form one public module. */
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { LazyStore } from "@tauri-apps/plugin-store";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 export const LANGUAGES = ["pt-BR", "en"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
-const STORAGE_KEY = "siteblock.preferences.language";
+const LANGUAGE_KEY = "language";
+const LEGACY_STORAGE_KEY = "siteblock.preferences.language";
+
+// A LazyStore keeps this file in Tauri's per-user app data directory and only
+// opens it on first access. Blocking rules intentionally remain in the
+// privileged system configuration managed by the Rust backend.
+const preferencesStore = new LazyStore("settings.json", { autoSave: 250 });
 
 const translations = {
   "pt-BR": {
@@ -17,7 +33,8 @@ const translations = {
     "setup.loading": "Configurando…",
     "browser.eyebrow": "INTEGRAÇÃO CONTÍNUA",
     "browser.label": "Integração com navegadores",
-    "browser.description": "A lista é aplicada automaticamente. Chrome e Brave recebem a política no momento da mudança; a extensão elimina também páginas que já estão abertas.",
+    "browser.description":
+      "A lista é aplicada automaticamente. Chrome e Brave recebem a política no momento da mudança; a extensão elimina também páginas que já estão abertas.",
     "browser.empty": "Integração será verificada após a configuração.",
     "browser.notInstalled": "Não instalado",
     "browser.active": "Política ativa",
@@ -25,7 +42,8 @@ const translations = {
     "hero.eyebrow": "CONTROLE DE ACESSO",
     "hero.titleBefore": "Seu foco tem um",
     "hero.titleEmphasis": "perímetro.",
-    "hero.description": "Defina os destinos que interrompem seu ritmo e deixe o SiteBlock cuidar do horário.",
+    "hero.description":
+      "Defina os destinos que interrompem seu ritmo e deixe o SiteBlock cuidar do horário.",
     "shield.blocking": "Bloqueando agora",
     "shield.allowed": "Acesso liberado",
     "shield.status": "Status do escudo: {status}",
@@ -72,19 +90,23 @@ const translations = {
     "schedule.summaryMany": "{count} períodos configurados.",
     "preferences.eyebrow": "PREFERÊNCIAS LOCAIS",
     "preferences.title": "Interface do aplicativo",
-    "preferences.description": "Essas escolhas ficam neste computador e não alteram as regras de bloqueio.",
+    "preferences.description":
+      "Essas escolhas ficam neste computador e não alteram as regras de bloqueio.",
     "preferences.language": "Idioma",
     "preferences.languageDescription": "Aplique o idioma à interface do SiteBlock.",
     "preferences.saved": "Salvo neste dispositivo",
+    "preferences.saveError": "Não foi possível salvar a preferência neste dispositivo.",
     "preferences.close": "Fechar",
     "about.title": "Sobre o SiteBlock",
     "about.description": "Um painel local para proteger seu foco com bloqueios e horários.",
     "about.version": "Versão 0.1.0",
-    "footer.description": "Autorização solicitada uma vez por abertura do app, ou ao atualizar a integração. Alterações da lista são aplicadas automaticamente.",
+    "footer.description":
+      "Autorização solicitada uma vez por abertura do app, ou ao atualizar a integração. Alterações da lista são aplicadas automaticamente.",
     "message.integrationUpdate": "A integração do SiteBlock precisa ser atualizada uma vez.",
     "message.blockingEnabled": "Bloqueio ativado.",
     "message.blockingDisabled": "Bloqueio desativado.",
-    "message.integrationConfigured": "Integração configurada. Reinicie o Chrome ou Brave uma única vez para carregar a extensão; depois, use somente esta interface.",
+    "message.integrationConfigured":
+      "Integração configurada. Reinicie o Chrome ou Brave uma única vez para carregar a extensão; depois, use somente esta interface.",
     "message.domainAdded": "{domain} adicionado.",
     "message.domainRemoved": "{domain} removido.",
     "message.scheduleUpdated": "Agenda atualizada.",
@@ -99,7 +121,8 @@ const translations = {
     "setup.loading": "Setting up…",
     "browser.eyebrow": "CONTINUOUS INTEGRATION",
     "browser.label": "Browser integration",
-    "browser.description": "The list is applied automatically. Chrome and Brave receive the policy as it changes; the extension also closes already-open pages.",
+    "browser.description":
+      "The list is applied automatically. Chrome and Brave receive the policy as it changes; the extension also closes already-open pages.",
     "browser.empty": "Integration will be checked after setup.",
     "browser.notInstalled": "Not installed",
     "browser.active": "Policy active",
@@ -107,7 +130,8 @@ const translations = {
     "hero.eyebrow": "ACCESS CONTROL",
     "hero.titleBefore": "Your focus has a",
     "hero.titleEmphasis": "perimeter.",
-    "hero.description": "Set the destinations that disrupt your rhythm and let SiteBlock handle the schedule.",
+    "hero.description":
+      "Set the destinations that disrupt your rhythm and let SiteBlock handle the schedule.",
     "shield.blocking": "Blocking now",
     "shield.allowed": "Access allowed",
     "shield.status": "Shield status: {status}",
@@ -154,19 +178,24 @@ const translations = {
     "schedule.summaryMany": "{count} windows configured.",
     "preferences.eyebrow": "LOCAL PREFERENCES",
     "preferences.title": "Application interface",
-    "preferences.description": "These choices stay on this computer and do not change blocking rules.",
+    "preferences.description":
+      "These choices stay on this computer and do not change blocking rules.",
     "preferences.language": "Language",
     "preferences.languageDescription": "Apply a language to the SiteBlock interface.",
     "preferences.saved": "Saved on this device",
+    "preferences.saveError": "The preference could not be saved on this device.",
     "preferences.close": "Close",
     "about.title": "About SiteBlock",
-    "about.description": "A local dashboard for protecting your focus with blocking rules and schedules.",
+    "about.description":
+      "A local dashboard for protecting your focus with blocking rules and schedules.",
     "about.version": "Version 0.1.0",
-    "footer.description": "Authorization is requested once each time the app opens, or when you update the integration. List changes apply automatically.",
+    "footer.description":
+      "Authorization is requested once each time the app opens, or when you update the integration. List changes apply automatically.",
     "message.integrationUpdate": "The SiteBlock integration needs to be updated once.",
     "message.blockingEnabled": "Blocking enabled.",
     "message.blockingDisabled": "Blocking disabled.",
-    "message.integrationConfigured": "Integration configured. Restart Chrome or Brave once to load the extension; then use only this interface.",
+    "message.integrationConfigured":
+      "Integration configured. Restart Chrome or Brave once to load the extension; then use only this interface.",
     "message.domainAdded": "{domain} added.",
     "message.domainRemoved": "{domain} removed.",
     "message.scheduleUpdated": "Schedule updated.",
@@ -180,40 +209,97 @@ function format(template: string, values: Record<string, string | number> = {}) 
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? `{${key}}`));
 }
 
-export function translate(language: Language, key: TranslationKey, values?: Record<string, string | number>) {
+export function translate(
+  language: Language,
+  key: TranslationKey,
+  values?: Record<string, string | number>,
+) {
   return format(translations[language][key], values);
 }
 
-function getStoredLanguage(): Language {
-  if (typeof window === "undefined") return "pt-BR";
-  const value = window.localStorage.getItem(STORAGE_KEY);
-  return LANGUAGES.includes(value as Language) ? (value as Language) : "pt-BR";
+function isLanguage(value: unknown): value is Language {
+  return typeof value === "string" && LANGUAGES.includes(value as Language);
+}
+
+function getLegacyLanguage(): Language | undefined {
+  if (typeof window === "undefined") return undefined;
+  const value = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+  return isLanguage(value) ? value : undefined;
 }
 
 interface LanguageContextValue {
   language: Language;
   setLanguage: (language: Language) => void;
+  hasPersistenceError: boolean;
   t: Translate;
 }
 
 const defaultContext: LanguageContextValue = {
   language: "pt-BR",
   setLanguage: () => undefined,
+  hasPersistenceError: false,
   t: (key, values) => translate("pt-BR", key, values),
 };
 
 const LanguageContext = createContext<LanguageContextValue>(defaultContext);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(getStoredLanguage);
-  const value = useMemo<LanguageContextValue>(() => ({
-    language,
-    setLanguage: (nextLanguage) => {
-      window.localStorage.setItem(STORAGE_KEY, nextLanguage);
-      setLanguageState(nextLanguage);
-    },
-    t: (key, values) => translate(language, key, values),
-  }), [language]);
+  const [language, setLanguageState] = useState<Language>("pt-BR");
+  const [hasPersistenceError, setHasPersistenceError] = useState(false);
+  const userSelectedLanguage = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreLanguage() {
+      try {
+        const savedLanguage = await preferencesStore.get<unknown>(LANGUAGE_KEY);
+        const storedLanguage = isLanguage(savedLanguage) ? savedLanguage : undefined;
+        const legacyLanguage = getLegacyLanguage();
+        const nextLanguage = storedLanguage ?? legacyLanguage ?? "pt-BR";
+
+        if (!storedLanguage && legacyLanguage) {
+          await preferencesStore.set(LANGUAGE_KEY, legacyLanguage);
+          window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+
+        if (!cancelled && !userSelectedLanguage.current) setLanguageState(nextLanguage);
+      } catch (error) {
+        console.warn("Não foi possível carregar as preferências locais.", error);
+        if (!cancelled) {
+          const legacyLanguage = getLegacyLanguage();
+          if (legacyLanguage) setLanguageState(legacyLanguage);
+          setHasPersistenceError(true);
+        }
+      }
+    }
+
+    void restoreLanguage();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const setLanguage = useCallback((nextLanguage: Language) => {
+    userSelectedLanguage.current = true;
+    setLanguageState(nextLanguage);
+    setHasPersistenceError(false);
+
+    void preferencesStore.set(LANGUAGE_KEY, nextLanguage).catch((error: unknown) => {
+      console.warn("Não foi possível salvar as preferências locais.", error);
+      setHasPersistenceError(true);
+    });
+  }, []);
+
+  const value = useMemo<LanguageContextValue>(
+    () => ({
+      language,
+      setLanguage,
+      hasPersistenceError,
+      t: (key, values) => translate(language, key, values),
+    }),
+    [hasPersistenceError, language, setLanguage],
+  );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

@@ -1,4 +1,8 @@
-use std::{fs, os::unix::fs::PermissionsExt, path::{Path, PathBuf}};
+use std::{
+    fs,
+    os::unix::fs::PermissionsExt,
+    path::{Path, PathBuf},
+};
 
 pub const HELPER_PATH: &str = "/usr/local/lib/siteblock/siteblock-admin";
 
@@ -55,11 +59,26 @@ pub fn extract_all_to(target_dir: &Path) -> std::io::Result<()> {
     let admin_bin = find_binary("siteblock-admin")?;
 
     fs::copy(&admin_bin, target_dir.join("siteblock-admin"))?;
-    fs::set_permissions(target_dir.join("siteblock-admin"), fs::Permissions::from_mode(0o755))?;
+    fs::set_permissions(
+        target_dir.join("siteblock-admin"),
+        fs::Permissions::from_mode(0o755),
+    )?;
 
-    write_text_asset(&target_dir.join("siteblock-reconcile.service"), SERVICE_SOURCE, 0o644)?;
-    write_text_asset(&target_dir.join("siteblock-reconcile.timer"), TIMER_SOURCE, 0o644)?;
-    write_text_asset(&target_dir.join("com.luis.siteblock.policy"), POLICY_SOURCE, 0o644)?;
+    write_text_asset(
+        &target_dir.join("siteblock-reconcile.service"),
+        SERVICE_SOURCE,
+        0o644,
+    )?;
+    write_text_asset(
+        &target_dir.join("siteblock-reconcile.timer"),
+        TIMER_SOURCE,
+        0o644,
+    )?;
+    write_text_asset(
+        &target_dir.join("com.luis.siteblock.policy"),
+        POLICY_SOURCE,
+        0o644,
+    )?;
     write_text_asset(&target_dir.join("install"), INSTALLER_SCRIPT, 0o755)?;
     Ok(())
 }
@@ -68,4 +87,3 @@ fn write_text_asset(path: &Path, content: &str, mode: u32) -> std::io::Result<()
     fs::write(path, content)?;
     fs::set_permissions(path, fs::Permissions::from_mode(mode))
 }
-

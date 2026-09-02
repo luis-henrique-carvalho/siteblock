@@ -1,6 +1,5 @@
 mod common;
 
-use std::sync::Arc;
 use common::mocks::{MockHelperPort, MockInstallerPort, MockSessionPort};
 use serde_json::json;
 use siteblock_lib::application::use_cases::{
@@ -8,6 +7,7 @@ use siteblock_lib::application::use_cases::{
 };
 use siteblock_lib::domain::entities::{Schedule, SiteBlockConfig, SiteBlockState};
 use siteblock_lib::domain::errors::AppError;
+use std::sync::Arc;
 
 fn create_sample_state(active: bool) -> SiteBlockState {
     SiteBlockState {
@@ -27,7 +27,9 @@ fn test_get_status_when_helper_not_installed() {
     let mock_helper = Arc::new(MockHelperPort::new(false, false, Ok(String::new())));
     let use_case = GetStatusUseCase::new(mock_helper);
 
-    let result = use_case.execute().expect("Deveria retornar estado sem erro");
+    let result = use_case
+        .execute()
+        .expect("Deveria retornar estado sem erro");
     assert_eq!(result, SiteBlockState::empty());
 }
 
@@ -38,7 +40,9 @@ fn test_get_status_when_helper_installed_success() {
     let mock_helper = Arc::new(MockHelperPort::new(true, true, Ok(sample_json)));
     let use_case = GetStatusUseCase::new(mock_helper);
 
-    let result = use_case.execute().expect("Deveria obter status com sucesso");
+    let result = use_case
+        .execute()
+        .expect("Deveria obter status com sucesso");
     assert!(result.active);
     assert!(result.session_supported);
     assert_eq!(result.domains, vec!["tiktok.com"]);
@@ -73,7 +77,10 @@ fn test_start_session_when_helper_installed() {
 
     let result = use_case.execute().expect("Deveria iniciar sessão");
     assert_eq!(result, expected_state);
-    assert_eq!(mock_session.last_request(), Some(json!({ "action": "status" })));
+    assert_eq!(
+        mock_session.last_request(),
+        Some(json!({ "action": "status" }))
+    );
 }
 
 #[test]
@@ -88,7 +95,9 @@ fn test_save_config_with_valid_config() {
         vec![Schedule::new("s1", vec![1], "10:00", "12:00")],
     );
 
-    let result = use_case.execute(config.clone()).expect("Deveria salvar configuração");
+    let result = use_case
+        .execute(config.clone())
+        .expect("Deveria salvar configuração");
     assert_eq!(result, expected_state);
     assert_eq!(
         mock_session.last_request(),
@@ -115,10 +124,15 @@ fn test_install_service_success() {
     let mock_session = Arc::new(MockSessionPort::new(Ok(expected_state.clone())));
     let use_case = InstallServiceUseCase::new(mock_installer, mock_session.clone());
 
-    let result = use_case.execute().expect("Deveria instalar e retornar estado");
+    let result = use_case
+        .execute()
+        .expect("Deveria instalar e retornar estado");
     assert_eq!(result, expected_state);
     assert_eq!(*mock_session.adopted_count.lock().unwrap(), 1);
-    assert_eq!(mock_session.last_request(), Some(json!({ "action": "status" })));
+    assert_eq!(
+        mock_session.last_request(),
+        Some(json!({ "action": "status" }))
+    );
 }
 
 #[test]

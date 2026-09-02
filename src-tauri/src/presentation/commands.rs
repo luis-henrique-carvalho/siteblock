@@ -1,8 +1,8 @@
-use std::time::Instant;
-use tauri::{AppHandle, Manager};
 use crate::domain::entities::{SiteBlockConfig, SiteBlockState};
 use crate::presentation::state::AppState;
 use crate::presentation::TrayController;
+use std::time::Instant;
+use tauri::{AppHandle, Manager};
 
 fn sync_tray(app: &AppHandle, state: &SiteBlockState) {
     if let Some(tray) = app.try_state::<TrayController>() {
@@ -17,13 +17,10 @@ pub fn get_siteblock_status(
 ) -> Result<SiteBlockState, String> {
     log::debug!("Invocando command: get_siteblock_status");
     let start = Instant::now();
-    let result = state
-        .get_status_use_case
-        .execute()
-        .map_err(|err| {
-            log::error!("Erro em get_siteblock_status: {err}");
-            err.to_string()
-        });
+    let result = state.get_status_use_case.execute().map_err(|err| {
+        log::error!("Erro em get_siteblock_status: {err}");
+        err.to_string()
+    });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
         log::debug!(
@@ -43,16 +40,16 @@ pub fn start_privileged_session(
 ) -> Result<SiteBlockState, String> {
     log::info!("Invocando command: start_privileged_session");
     let start = Instant::now();
-    let result = state
-        .start_session_use_case
-        .execute()
-        .map_err(|err| {
-            log::warn!("Erro em start_privileged_session: {err}");
-            err.to_string()
-        });
+    let result = state.start_session_use_case.execute().map_err(|err| {
+        log::warn!("Erro em start_privileged_session: {err}");
+        err.to_string()
+    });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
-        log::info!("start_privileged_session concluído com sucesso em {:?}", start.elapsed());
+        log::info!(
+            "start_privileged_session concluído com sucesso em {:?}",
+            start.elapsed()
+        );
     }
     result
 }
@@ -70,13 +67,10 @@ pub fn save_siteblock_config(
         config.schedules.len()
     );
     let start = Instant::now();
-    let result = state
-        .save_config_use_case
-        .execute(config)
-        .map_err(|err| {
-            log::error!("Erro em save_siteblock_config: {err}");
-            err.to_string()
-        });
+    let result = state.save_config_use_case.execute(config).map_err(|err| {
+        log::error!("Erro em save_siteblock_config: {err}");
+        err.to_string()
+    });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
         log::info!(
@@ -96,18 +90,16 @@ pub fn install_siteblock_service(
 ) -> Result<SiteBlockState, String> {
     log::info!("Invocando command: install_siteblock_service");
     let start = Instant::now();
-    let result = state
-        .install_service_use_case
-        .execute()
-        .map_err(|err| {
-            log::error!("Erro em install_siteblock_service: {err}");
-            err.to_string()
-        });
+    let result = state.install_service_use_case.execute().map_err(|err| {
+        log::error!("Erro em install_siteblock_service: {err}");
+        err.to_string()
+    });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
-        log::info!("install_siteblock_service concluído com sucesso em {:?}", start.elapsed());
+        log::info!(
+            "install_siteblock_service concluído com sucesso em {:?}",
+            start.elapsed()
+        );
     }
     result
 }
-
-

@@ -1,10 +1,10 @@
+use crate::application::use_cases::{SaveConfigUseCase, StartSessionUseCase};
+use crate::domain::entities::{SiteBlockConfig, SiteBlockState};
+use crate::domain::errors::{AppError, AppResult};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
-use crate::application::use_cases::{SaveConfigUseCase, StartSessionUseCase};
-use crate::domain::entities::{SiteBlockConfig, SiteBlockState};
-use crate::domain::errors::{AppError, AppResult};
 
 pub struct ToggleBlockingUseCase {
     start_session_use_case: Arc<StartSessionUseCase>,
@@ -68,11 +68,8 @@ impl ToggleBlockingUseCase {
         }
 
         let next_enabled = !current_state.enabled;
-        let new_config = SiteBlockConfig::new(
-            next_enabled,
-            current_state.domains,
-            current_state.schedules,
-        );
+        let new_config =
+            SiteBlockConfig::new(next_enabled, current_state.domains, current_state.schedules);
 
         self.save_config_use_case.execute(new_config)
     }

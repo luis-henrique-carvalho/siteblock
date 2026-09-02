@@ -1,10 +1,4 @@
-use std::{
-    collections::HashMap,
-    fs,
-    io::Write,
-    os::unix::fs::PermissionsExt,
-    path::Path,
-};
+use std::{collections::HashMap, fs, io::Write, os::unix::fs::PermissionsExt, path::Path};
 
 use chrono::{DateTime, Datelike, Local, Timelike, Utc};
 use serde::{Deserialize, Serialize};
@@ -175,8 +169,14 @@ pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Res
 
 pub fn write_chromium_policies(filters: &[String]) -> HashMap<String, bool> {
     let policies = [
-        ("Chrome", Path::new("/etc/opt/chrome/policies/managed/com.luis.siteblock.json")),
-        ("Brave", Path::new("/etc/brave/policies/managed/com.luis.siteblock.json")),
+        (
+            "Chrome",
+            Path::new("/etc/opt/chrome/policies/managed/com.luis.siteblock.json"),
+        ),
+        (
+            "Brave",
+            Path::new("/etc/brave/policies/managed/com.luis.siteblock.json"),
+        ),
     ];
 
     let mut results = HashMap::new();
@@ -245,7 +245,10 @@ fn command_exists(names: &[&str]) -> bool {
     false
 }
 
-pub fn get_browser_integrations(chromium: &HashMap<String, bool>, firefox_policy: bool) -> Vec<BrowserIntegration> {
+pub fn get_browser_integrations(
+    chromium: &HashMap<String, bool>,
+    firefox_policy: bool,
+) -> Vec<BrowserIntegration> {
     let chrome_detected = command_exists(&["google-chrome", "google-chrome-stable"]);
     let brave_detected = command_exists(&["brave-browser", "brave"]);
     let firefox_detected = command_exists(&["firefox"]);
@@ -293,7 +296,11 @@ pub fn write_effective_state(config: &SiteBlockConfig, enabled: bool) -> Effecti
         .ok()
         .and_then(|c| serde_json::from_str(&c).ok());
 
-    let desired_domains = if enabled { blocked_hosts(config) } else { Vec::new() };
+    let desired_domains = if enabled {
+        blocked_hosts(config)
+    } else {
+        Vec::new()
+    };
     let mut revision = previous.as_ref().map(|p| p.revision).unwrap_or(0);
 
     let changed = match &previous {
@@ -319,9 +326,15 @@ pub fn write_effective_state(config: &SiteBlockConfig, enabled: bool) -> Effecti
 }
 
 pub fn flush_dns() {
-    let _ = std::process::Command::new("resolvectl").arg("flush-caches").status();
-    let _ = std::process::Command::new("systemd-resolve").arg("--flush-caches").status();
-    let _ = std::process::Command::new("nscd").args(["-i", "hosts"]).status();
+    let _ = std::process::Command::new("resolvectl")
+        .arg("flush-caches")
+        .status();
+    let _ = std::process::Command::new("systemd-resolve")
+        .arg("--flush-caches")
+        .status();
+    let _ = std::process::Command::new("nscd")
+        .args(["-i", "hosts"])
+        .status();
 }
 
 pub fn get_current_state(
@@ -331,8 +344,14 @@ pub fn get_current_state(
 ) -> SiteBlockState {
     let chromium = chromium_policies.unwrap_or_else(|| {
         let mut map = HashMap::new();
-        map.insert("Chrome".to_string(), Path::new("/etc/opt/chrome/policies/managed/com.luis.siteblock.json").exists());
-        map.insert("Brave".to_string(), Path::new("/etc/brave/policies/managed/com.luis.siteblock.json").exists());
+        map.insert(
+            "Chrome".to_string(),
+            Path::new("/etc/opt/chrome/policies/managed/com.luis.siteblock.json").exists(),
+        );
+        map.insert(
+            "Brave".to_string(),
+            Path::new("/etc/brave/policies/managed/com.luis.siteblock.json").exists(),
+        );
         map
     });
 
@@ -449,4 +468,3 @@ mod tests {
         assert!(filters.contains(&"*://www.instagram.com/*".to_string()));
     }
 }
-

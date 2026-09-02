@@ -1,11 +1,11 @@
+use crate::domain::entities::SiteBlockState;
+use crate::presentation::state::AppState;
 use std::sync::Mutex;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{TrayIcon, TrayIconBuilder},
     AppHandle, Emitter, Manager, Wry,
 };
-use crate::domain::entities::SiteBlockState;
-use crate::presentation::state::AppState;
 
 pub const TRAY_ID: &str = "siteblock-tray";
 pub const ITEM_STATUS: &str = "tray_status";
@@ -30,7 +30,10 @@ pub struct TrayViewModel {
 }
 
 impl TrayViewModel {
-    pub fn from_state_view(view: &TrayStateView, last_known_state: Option<&SiteBlockState>) -> Self {
+    pub fn from_state_view(
+        view: &TrayStateView,
+        last_known_state: Option<&SiteBlockState>,
+    ) -> Self {
         match view {
             TrayStateView::Busy => Self {
                 status_text: "Processando…".to_string(),
@@ -118,7 +121,8 @@ impl TrayController {
     pub fn update_state(&self, state: &SiteBlockState) {
         let mut lock = self.last_known_state.lock().unwrap();
         *lock = Some(state.clone());
-        let vm = TrayViewModel::from_state_view(&TrayStateView::Normal(state.clone()), lock.as_ref());
+        let vm =
+            TrayViewModel::from_state_view(&TrayStateView::Normal(state.clone()), lock.as_ref());
         self.apply_view_model(&vm);
     }
 
@@ -136,10 +140,8 @@ impl TrayController {
 }
 
 pub fn setup_tray(app: &AppHandle) -> Result<TrayController, Box<dyn std::error::Error>> {
-    let initial_vm = TrayViewModel::from_state_view(
-        &TrayStateView::Normal(SiteBlockState::empty()),
-        None,
-    );
+    let initial_vm =
+        TrayViewModel::from_state_view(&TrayStateView::Normal(SiteBlockState::empty()), None);
 
     let status_item = MenuItem::with_id(
         app,
@@ -161,7 +163,13 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayController, Box<dyn std::error:
 
     let menu = Menu::with_items(
         app,
-        &[&status_item, &toggle_item, &separator, &open_item, &quit_item],
+        &[
+            &status_item,
+            &toggle_item,
+            &separator,
+            &open_item,
+            &quit_item,
+        ],
     )?;
 
     let icon = app

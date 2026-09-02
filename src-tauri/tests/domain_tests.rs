@@ -1,4 +1,6 @@
-use siteblock_lib::domain::entities::{BrowserIntegration, Schedule, SiteBlockConfig, SiteBlockState};
+use siteblock_lib::domain::entities::{
+    BrowserIntegration, Schedule, SiteBlockConfig, SiteBlockState,
+};
 use siteblock_lib::domain::errors::AppError;
 
 #[test]
@@ -26,7 +28,11 @@ fn test_schedule_validation_invalid_time_format() {
     let invalid_formats = vec!["8:00", "08-00", "24:00", "08:60", "abc:10", "12"];
     for invalid in invalid_formats {
         let schedule = Schedule::new("sched-1", vec![1], invalid, "18:00");
-        assert!(schedule.validate().is_err(), "Deveria falhar para {}", invalid);
+        assert!(
+            schedule.validate().is_err(),
+            "Deveria falhar para {}",
+            invalid
+        );
     }
 }
 
@@ -111,5 +117,7 @@ fn test_app_error_display() {
     assert!(err.to_string().contains("Autorização cancelada"));
 
     let err_val = AppError::ValidationError("Domínio inválido".into());
-    assert!(err_val.to_string().contains("Dados de configuração inválidos"));
+    assert!(err_val
+        .to_string()
+        .contains("Dados de configuração inválidos"));
 }
