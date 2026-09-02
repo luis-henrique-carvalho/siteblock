@@ -184,8 +184,7 @@ pub fn is_hosts_blocking_active() -> bool {
     }
 }
 
-pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Result<()> {
-    let original = fs::read_to_string(HOSTS_PATH).unwrap_or_default();
+pub fn render_hosts_content(original: &str, config: &SiteBlockConfig, enabled: bool) -> String {
     let mut kept = Vec::new();
     let mut in_block = false;
 
@@ -213,12 +212,27 @@ pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Res
         kept.push(END_MARKER.to_string());
     }
 
+    let trimmed = kept.join("\n").trim_end().to_string();
+    if trimmed.is_empty() {
+        String::new()
+    } else {
+        trimmed + "\n"
+    }
+}
+
+pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Result<()> {
+    let original = fs::read_to_string(HOSTS_PATH).unwrap_or_default();
+    let output = render_hosts_content(&original, config, enabled);
     let mode = fs::metadata(HOSTS_PATH)
         .map(|m| m.permissions().mode())
         .unwrap_or(0o644);
 
-    let output = kept.join("\n").trim_end().to_string() + "\n";
     atomic_write(Path::new(HOSTS_PATH), output.as_bytes(), mode)
+}
+
+pub fn build_chromium_policy_content(filters: &[String]) -> String {
+    let body = serde_json::json!({ "URLBlocklist": filters });
+    serde_json::to_string_pretty(&body).unwrap_or_default() + "\n"
 }
 
 pub fn write_chromium_policies(filters: &[String]) -> HashMap<String, bool> {
@@ -234,8 +248,7 @@ pub fn write_chromium_policies(filters: &[String]) -> HashMap<String, bool> {
     ];
 
     let mut results = HashMap::new();
-    let body = serde_json::json!({ "URLBlocklist": filters });
-    let content = serde_json::to_string_pretty(&body).unwrap_or_default() + "\n";
+    let content = build_chromium_policy_content(filters);
 
     for (name, path) in policies {
         let success = atomic_write(path, content.as_bytes(), 0o644).is_ok();
@@ -244,11 +257,37 @@ pub fn write_chromium_policies(filters: &[String]) -> HashMap<String, bool> {
     results
 }
 
+pub fn bytes_sha256(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    format!("{:x}", hasher.finalize())
+}
+
 fn file_sha256(path: &Path) -> Option<String> {
     let bytes = fs::read(path).ok()?;
-    let mut hasher = Sha256::new();
-    hasher.update(&bytes);
-    Some(format!("{:x}", hasher.finalize()))
+    Some(bytes_sha256(&bytes))
+}
+
+pub fn build_firefox_policy_content(filters: &[String]) -> String {
+    let body = serde_json::json!({
+        "policies": {
+            "WebsiteFilter": {
+                "Block": filters
+            }
+        }
+    });
+    serde_json::to_string_pretty(&body).unwrap_or_default() + "\n"
+}
+
+pub fn can_overwrite_firefox_policy(
+    policy_exists: bool,
+    previous_digest: Option<&str>,
+    current_digest: Option<&str>,
+) -> bool {
+    if policy_exists && previous_digest.is_some() && previous_digest != current_digest {
+        return false;
+    }
+    true
 }
 
 pub fn write_firefox_policy(filters: &[String]) -> bool {
@@ -261,19 +300,16 @@ pub fn write_firefox_policy(filters: &[String]) -> bool {
 
     let current_digest = file_sha256(policy_path);
 
-    if policy_path.exists() && previous_digest.is_some() && previous_digest != current_digest {
+    if !can_overwrite_firefox_policy(
+        policy_path.exists(),
+        previous_digest.as_deref(),
+        current_digest.as_deref(),
+    ) {
         log::warn!("Política do Firefox existente não pertence ao SiteBlock. Ignorando escrita.");
         return false;
     }
 
-    let body = serde_json::json!({
-        "policies": {
-            "WebsiteFilter": {
-                "Block": filters
-            }
-        }
-    });
-    let content = serde_json::to_string_pretty(&body).unwrap_or_default() + "\n";
+    let content = build_firefox_policy_content(filters);
 
     if atomic_write(policy_path, content.as_bytes(), 0o644).is_ok() {
         if let Some(digest) = file_sha256(policy_path) {
@@ -282,6 +318,89 @@ pub fn write_firefox_policy(filters: &[String]) -> bool {
         true
     } else {
         false
+    }
+}
+
+pub fn get_admin_capabilities() -> serde_json::Value {
+    serde_json::json!({
+        "session": true,
+        "browserIntegration": true,
+        "integrationVersion": 2
+    })
+}
+
+pub fn handle_admin_action_with<FRead, FApply>(
+    request: &serde_json::Value,
+    mut read_cfg: FRead,
+    mut apply_cfg: FApply,
+) -> serde_json::Value
+where
+    FRead: FnMut() -> SiteBlockConfig,
+    FApply: FnMut(&SiteBlockConfig) -> SiteBlockState,
+{
+    let action = request.get("action").and_then(|v| v.as_str()).unwrap_or("");
+    match action {
+        "status" => {
+            let cfg = read_cfg();
+            let state = get_current_state(&cfg, None, None);
+            serde_json::to_value(state).unwrap_or_else(|e| {
+                serde_json::json!({ "error": format!("{}", e) })
+            })
+        }
+        "capabilities" => get_admin_capabilities(),
+        "set-config" => {
+            if let Some(config_val) = request.get("config") {
+                match serde_json::from_value::<SiteBlockConfig>(config_val.clone()) {
+                    Ok(mut config) => {
+                        config.ensure_migrated();
+                        match config.validate() {
+                            Ok(_) => {
+                                let state = apply_cfg(&config);
+                                serde_json::to_value(state).unwrap_or_else(|e| {
+                                    serde_json::json!({ "error": format!("{}", e) })
+                                })
+                            }
+                            Err(validation_err) => {
+                                serde_json::json!({ "error": format!("{}", validation_err) })
+                            }
+                        }
+                    }
+                    Err(parse_err) => {
+                        serde_json::json!({ "error": format!("Configuração inválida: {}", parse_err) })
+                    }
+                }
+            } else {
+                serde_json::json!({ "error": "Campo 'config' ausente no pedido." })
+            }
+        }
+        _ => {
+            serde_json::json!({ "error": format!("Ação desconhecida: {}", action) })
+        }
+    }
+}
+
+pub fn handle_admin_session_line_with<FRead, FApply>(
+    line: &str,
+    read_cfg: FRead,
+    apply_cfg: FApply,
+) -> String
+where
+    FRead: FnMut() -> SiteBlockConfig,
+    FApply: FnMut(&SiteBlockConfig) -> SiteBlockState,
+{
+    let trimmed = line.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+
+    match serde_json::from_str::<serde_json::Value>(trimmed) {
+        Ok(request) => {
+            let response = handle_admin_action_with(&request, read_cfg, apply_cfg);
+            serde_json::to_string(&response).unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
+        }
+        Err(err) => {
+            format!("{{\"error\":\"JSON inválido: {}\"}}", err)
+        }
     }
 }
 

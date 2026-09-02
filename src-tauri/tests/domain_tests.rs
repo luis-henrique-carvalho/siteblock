@@ -87,9 +87,72 @@ fn test_profile_validation_success() {
 }
 
 #[test]
+fn test_profile_validation_empty_id() {
+    let profile = Profile::new("   ", "Nome", "target", "blue", true, vec![], vec![]);
+    let err = profile.validate().unwrap_err();
+    assert!(err.contains("identificador do perfil não pode ser vazio"));
+}
+
+#[test]
 fn test_profile_validation_empty_name() {
     let profile = Profile::new("p1", "   ", "target", "blue", true, vec![], vec![]);
-    assert!(profile.validate().is_err());
+    let err = profile.validate().unwrap_err();
+    assert!(err.contains("nome do perfil não pode ser vazio"));
+}
+
+#[test]
+fn test_profile_validation_empty_domain() {
+    let profile = Profile::new("p1", "Nome", "target", "blue", true, vec!["   ".into()], vec![]);
+    let err = profile.validate().unwrap_err();
+    assert!(err.contains("O domínio não pode ser vazio"));
+}
+
+#[test]
+fn test_profile_validation_invalid_domain_format() {
+    let profile = Profile::new("p1", "Nome", "target", "blue", true, vec!["invalid domain.com".into()], vec![]);
+    let err = profile.validate().unwrap_err();
+    assert!(err.contains("Formato de domínio inválido"));
+}
+
+#[test]
+fn test_profile_default_presets() {
+    let presets = Profile::default_presets();
+    assert_eq!(presets.len(), 3);
+    assert_eq!(presets[0].id, "focus");
+    assert_eq!(presets[1].id, "study");
+    assert_eq!(presets[2].id, "sleep");
+}
+
+#[test]
+fn test_profile_deserialization_defaults_icon_and_color() {
+    let json_str = r#"{"id":"p-custom","name":"Custom","enabled":true,"domains":[],"schedules":[]}"#;
+    let profile: Profile = serde_json::from_str(json_str).expect("Deveria desserializar com defaults");
+    assert_eq!(profile.icon, "shield");
+    assert_eq!(profile.color, "blue");
+}
+
+#[test]
+fn test_config_ensure_migrated_from_empty_profiles_and_domains() {
+    let mut config = SiteBlockConfig::new(false, vec![]);
+    config.ensure_migrated();
+    assert_eq!(config.profiles.len(), 3);
+    assert_eq!(config.profiles[0].id, "focus");
+}
+
+#[test]
+fn test_state_ensure_migrated_from_empty() {
+    let mut state = SiteBlockState::empty();
+    state.active = true;
+    state.ensure_migrated();
+    assert_eq!(state.profiles.len(), 3);
+    assert_eq!(state.active_profile_ids, vec!["focus".to_string()]);
+}
+
+#[test]
+fn test_state_default_trait() {
+    let state_default = SiteBlockState::default();
+    let state_empty = SiteBlockState::empty();
+    assert_eq!(state_default, state_empty);
 }
 
 #[test]
@@ -137,12 +200,39 @@ fn test_empty_state_defaults() {
 }
 
 #[test]
-fn test_app_error_display() {
-    let err = AppError::AuthorizationDenied("Senha incorreta".into());
-    assert!(err.to_string().contains("Autorização cancelada"));
+fn test_app_error_display_and_from_conversions() {
+    let err_auth = AppError::AuthorizationDenied("Senha incorreta".into());
+    assert!(err_auth.to_string().contains("Autorização cancelada"));
 
     let err_val = AppError::ValidationError("Domínio inválido".into());
     assert!(err_val
         .to_string()
         .contains("Dados de configuração inválidos"));
+
+    let err_helper = AppError::HelperNotInstalled;
+    assert!(err_helper.to_string().contains("helper de administração não está instalado"));
+
+    let err_sess = AppError::SessionUnavailable("pipe quebrado".into());
+    assert!(err_sess.to_string().contains("sessão administrativa está indisponível"));
+
+    let err_resp = AppError::InvalidResponse("resposta truncada".into());
+    assert!(err_resp.to_string().contains("Resposta inválida"));
+
+    let err_inst = AppError::InstallationFailed("disco cheio".into());
+    assert!(err_inst.to_string().contains("Erro durante a instalação"));
+
+    // Conversões From
+    let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "arquivo ausente");
+    let app_io_err: AppError = io_err.into();
+    assert!(matches!(app_io_err, AppError::IoError(_)));
+
+    let json_err = serde_json::from_str::<bool>("not a bool").unwrap_err();
+    let app_json_err: AppError = json_err.into();
+    assert!(matches!(app_json_err, AppError::SerializationError(_)));
+
+    let app_str_err: AppError = "erro de texto".into();
+    assert_eq!(app_str_err.to_string(), "erro de texto");
+
+    let app_string_err: AppError = String::from("outro erro").into();
+    assert_eq!(app_string_err.to_string(), "outro erro");
 }
