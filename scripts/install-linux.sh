@@ -2,12 +2,22 @@
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+ADMIN_BIN=$(find "$REPO_ROOT/src-tauri/target" -name "siteblock-admin" -type f 2>/dev/null | head -n 1)
+BRIDGE_BIN=$(find "$REPO_ROOT/src-tauri/target" -name "siteblock-browser-bridge" -type f 2>/dev/null | head -n 1)
+
+if [ -z "$ADMIN_BIN" ] || [ -z "$BRIDGE_BIN" ]; then
+  echo "Binários Rust não encontrados em target. Execute 'cargo build --bins' em src-tauri primeiro." >&2
+  exit 1
+fi
+
 install -d -m 0755 /usr/local/lib/siteblock /usr/local/share/siteblock/extensions/siteblock /etc/siteblock /var/lib/siteblock
 install -d -m 1777 /run/siteblock
-install -o root -g root -m 0755 "$SCRIPT_DIR/siteblock-admin" /usr/local/lib/siteblock/siteblock-admin
-install -o root -g root -m 0755 "$SCRIPT_DIR/siteblock-browser-bridge" /usr/local/lib/siteblock/siteblock-browser-bridge
+install -o root -g root -m 0755 "$ADMIN_BIN" /usr/local/lib/siteblock/siteblock-admin
+install -o root -g root -m 0755 "$BRIDGE_BIN" /usr/local/lib/siteblock/siteblock-browser-bridge
 install -o root -g root -m 0755 "$SCRIPT_DIR/siteblock-browser-bridge-chromium" /usr/local/lib/siteblock/siteblock-browser-bridge-chromium
 install -o root -g root -m 0755 "$SCRIPT_DIR/siteblock-browser-bridge-firefox" /usr/local/lib/siteblock/siteblock-browser-bridge-firefox
+
 install -o root -g root -m 0644 "$SCRIPT_DIR/siteblock-reconcile.service" /etc/systemd/system/siteblock-reconcile.service
 install -o root -g root -m 0644 "$SCRIPT_DIR/siteblock-reconcile.timer" /etc/systemd/system/siteblock-reconcile.timer
 install -o root -g root -m 0644 "$SCRIPT_DIR/com.luis.siteblock.policy" /usr/share/polkit-1/actions/com.luis.siteblock.policy

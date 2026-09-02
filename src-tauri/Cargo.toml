@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
+default-run = "siteblock"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -25,4 +27,19 @@ log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+sha2 = "0.10"
+
+[[bin]]
+name = "siteblock"
+path = "src/main.rs"
+
+[[bin]]
+name = "siteblock-admin"
+path = "src/bin/admin.rs"
+
+[[bin]]
+name = "siteblock-browser-bridge"
+path = "src/bin/bridge.rs"
+
 
