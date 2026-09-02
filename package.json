@@ -13,6 +13,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:backend": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "test:coverage:backend": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
+    "test:coverage:all": "pnpm run test:coverage && pnpm run test:coverage:backend",
     "tauri": "tauri"
   },
   "dependencies": {
