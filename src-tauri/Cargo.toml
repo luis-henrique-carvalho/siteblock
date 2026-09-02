@@ -38,8 +38,4 @@ path = "src/main.rs"
 name = "siteblock-admin"
 path = "src/bin/admin.rs"
 
-[[bin]]
-name = "siteblock-browser-bridge"
-path = "src/bin/bridge.rs"
-
 

@@ -21,9 +21,7 @@ const mockStatus = {
       name: "Google Chrome",
       detected: true,
       policyReady: true,
-      extensionRegistered: true,
-      extensionConnected: true,
-      mode: "Extension",
+      mode: "Política gerenciada",
     },
   ],
 };

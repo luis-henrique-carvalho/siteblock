@@ -6,15 +6,14 @@ interface BrowserItemProps {
 
 export function BrowserItem({ browser }: BrowserItemProps) {
   const getStatusText = () => {
-    if (browser.extensionConnected) return "Conectado — regras imediatas";
-    if (browser.extensionRegistered) return "Extensão instalada";
-    if (browser.policyReady) return browser.mode;
-    return "Aguardando integração";
+    if (!browser.detected) return "Não instalado";
+    if (browser.policyReady) return "Política ativa";
+    return "Aguardando política";
   };
 
   return (
     <div className="browser-item">
-      <span className={`browser-dot ${browser.detected ? "ready" : ""}`} aria-hidden="true" />
+      <span className={`browser-dot ${browser.detected && browser.policyReady ? "ready" : ""}`} aria-hidden="true" />
       <div>
         <strong>{browser.name}</strong>
         <small>{getStatusText()}</small>

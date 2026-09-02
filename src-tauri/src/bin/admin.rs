@@ -104,7 +104,7 @@ fn main() {
             }
             let stdin = io::stdin();
             let mut buffer = String::new();
-            if let Ok(_) = stdin.lock().read_to_string(&mut buffer) {
+            if stdin.lock().read_to_string(&mut buffer).is_ok() {
                 match serde_json::from_str::<SiteBlockConfig>(&buffer) {
                     Ok(config) => {
                         if let Err(err) = config.validate() {

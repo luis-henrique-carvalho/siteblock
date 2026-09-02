@@ -1,7 +1,0 @@
-{
-  "name": "com.luis.siteblock",
-  "description": "Bridge local do SiteBlock",
-  "path": "/usr/local/lib/siteblock/siteblock-browser-bridge-firefox",
-  "type": "stdio",
-  "allowed_extensions": ["siteblock@luis.app"]
-}

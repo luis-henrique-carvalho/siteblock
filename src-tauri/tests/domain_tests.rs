@@ -80,9 +80,7 @@ fn test_state_json_serialization_camel_case() {
             name: "Chrome".into(),
             detected: true,
             policy_ready: true,
-            extension_registered: true,
-            extension_connected: true,
-            mode: "native".into(),
+            mode: "Política gerenciada".into(),
         }],
     };
 
@@ -90,7 +88,7 @@ fn test_state_json_serialization_camel_case() {
     assert!(serialized.contains("\"helperInstalled\":true"));
     assert!(serialized.contains("\"sessionSupported\":true"));
     assert!(serialized.contains("\"browserIntegrations\":["));
-    assert!(serialized.contains("\"extensionRegistered\":true"));
+    assert!(serialized.contains("\"policyReady\":true"));
 
     let deserialized: SiteBlockState = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, state);

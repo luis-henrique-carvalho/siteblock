@@ -4,8 +4,6 @@ export interface BrowserIntegration {
   name: string;
   detected: boolean;
   policyReady: boolean;
-  extensionRegistered: boolean;
-  extensionConnected: boolean;
   mode: string;
 }
 

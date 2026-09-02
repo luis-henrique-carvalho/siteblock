@@ -94,9 +94,6 @@ pub struct BrowserIntegration {
     pub name: String,
     pub detected: bool,
     pub policy_ready: bool,
-    #[serde(default)]
-    pub extension_registered: bool,
-    pub extension_connected: bool,
     pub mode: String,
 }
 

@@ -28,11 +28,10 @@ O serviço do sistema é separado do aplicativo: a interface roda como seu usuá
 
 ## Navegadores
 
-- **Chrome e Brave:** o helper cria uma política gerenciada em `/etc/opt/chrome/policies/managed/` e `/etc/brave/policies/managed/`. A política acompanha cada alteração de lista sem reiniciar o navegador.
-- **Firefox:** o helper usa `WebsiteFilter` como camada do sistema, sem sobrescrever um arquivo de política já administrado por outra ferramenta.
-- **Extensão SiteBlock:** a instalação registra automaticamente uma extensão CRX local para Chrome e Brave. No primeiro uso, reinicie cada navegador uma única vez para que ele carregue a extensão. Depois disso, ela lê apenas o estado efetivo em `/var/lib/siteblock/effective-state.json`, atualiza regras DNR e troca abas já abertas por uma página de bloqueio.
-
-Para uma distribuição pública, a extensão também deve ser publicada e assinada na Chrome Web Store e no AMO. A versão local já contém o CRX para Chrome e Brave; Firefox continua com a política `WebsiteFilter` até a publicação do XPI assinado.
+O SiteBlock utiliza as políticas corporativas gerenciadas dos navegadores em conjunto com o `/etc/hosts`:
+- **Chrome e Brave:** o helper cria uma política gerenciada em `/etc/opt/chrome/policies/managed/` e `/etc/brave/policies/managed/` com a regra `URLBlocklist`. O bloqueio é instantâneo e não depende de reiniciar o navegador nem de cache DNS.
+- **Firefox:** o helper usa `WebsiteFilter` gerenciado em `/etc/firefox/policies/policies.json`, preservando a integridade caso outra ferramenta já utilize o arquivo.
+- **Outros aplicativos / Sistema operacional:** o arquivo `/etc/hosts` redireciona todos os domínios configurados para `0.0.0.0` e `::1`, cobrindo qualquer outro cliente ou navegador no Linux.
 
 ## Comportamento do agendamento
 

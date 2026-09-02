@@ -19,11 +19,8 @@ pub const RUNTIME_DIR: &str = "/var/lib/siteblock";
 pub const EFFECTIVE_STATE_PATH: &str = "/var/lib/siteblock/effective-state.json";
 pub const FIREFOX_OWNERSHIP_PATH: &str = "/etc/siteblock/firefox-policy.sha256";
 pub const FIREFOX_POLICY_PATH: &str = "/etc/firefox/policies/policies.json";
-pub const CLIENTS_PATH: &str = "/run/siteblock/browser-clients.json";
-
 pub const BEGIN_MARKER: &str = "# BEGIN SITEBLOCK MANAGED";
 pub const END_MARKER: &str = "# END SITEBLOCK MANAGED";
-pub const CHROMIUM_EXTENSION_ID: &str = "ejhdjlpfeejbkjmmdnhcgnpjlcllldko";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EffectiveState {
@@ -234,34 +231,6 @@ pub fn write_firefox_policy(filters: &[String]) -> bool {
     }
 }
 
-pub fn read_browser_clients() -> HashMap<String, u64> {
-    let path = Path::new(CLIENTS_PATH);
-    let content = match fs::read_to_string(path) {
-        Ok(c) => c,
-        Err(_) => return HashMap::new(),
-    };
-
-    let raw: HashMap<String, serde_json::Value> = match serde_json::from_str(&content) {
-        Ok(v) => v,
-        Err(_) => return HashMap::new(),
-    };
-
-    let now = Utc::now().timestamp() as u64;
-    let mut result = HashMap::new();
-
-    for (k, v) in raw {
-        if k == "updatedAt" {
-            continue;
-        }
-        if let Some(ts) = v.as_u64() {
-            if now.saturating_sub(ts) < 15 {
-                result.insert(k, ts);
-            }
-        }
-    }
-    result
-}
-
 fn command_exists(names: &[&str]) -> bool {
     if let Ok(path_var) = std::env::var("PATH") {
         for dir in path_var.split(':') {
@@ -277,52 +246,28 @@ fn command_exists(names: &[&str]) -> bool {
 }
 
 pub fn get_browser_integrations(chromium: &HashMap<String, bool>, firefox_policy: bool) -> Vec<BrowserIntegration> {
-    let clients = read_browser_clients();
-
     let chrome_detected = command_exists(&["google-chrome", "google-chrome-stable"]);
     let brave_detected = command_exists(&["brave-browser", "brave"]);
     let firefox_detected = command_exists(&["firefox"]);
-
-    let chrome_ext = Path::new(&format!("/opt/google/chrome/extensions/{}.json", CHROMIUM_EXTENSION_ID)).exists();
-    let brave_ext = Path::new(&format!("/opt/brave.com/brave/extensions/{}.json", CHROMIUM_EXTENSION_ID)).exists()
-        || Path::new(&format!("/usr/share/brave/extensions/{}.json", CHROMIUM_EXTENSION_ID)).exists();
 
     vec![
         BrowserIntegration {
             name: "Chrome".to_string(),
             detected: chrome_detected,
             policy_ready: *chromium.get("Chrome").unwrap_or(&false),
-            extension_registered: chrome_ext,
-            extension_connected: clients.contains_key("chromium"),
-            mode: if clients.contains_key("chromium") {
-                "Regras dinâmicas".to_string()
-            } else {
-                "Política do navegador".to_string()
-            },
+            mode: "Política gerenciada".to_string(),
         },
         BrowserIntegration {
             name: "Brave".to_string(),
             detected: brave_detected,
             policy_ready: *chromium.get("Brave").unwrap_or(&false),
-            extension_registered: brave_ext,
-            extension_connected: clients.contains_key("chromium"),
-            mode: if clients.contains_key("chromium") {
-                "Regras dinâmicas".to_string()
-            } else {
-                "Política do navegador".to_string()
-            },
+            mode: "Política gerenciada".to_string(),
         },
         BrowserIntegration {
             name: "Firefox".to_string(),
             detected: firefox_detected,
             policy_ready: firefox_policy,
-            extension_registered: false,
-            extension_connected: clients.contains_key("firefox"),
-            mode: if clients.contains_key("firefox") {
-                "Regras dinâmicas".to_string()
-            } else {
-                "Política do navegador".to_string()
-            },
+            mode: "Política gerenciada".to_string(),
         },
     ]
 }
