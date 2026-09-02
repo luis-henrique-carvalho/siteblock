@@ -4,7 +4,9 @@ use chrono::{DateTime, Datelike, Local, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::domain::entities::{BrowserIntegration, Schedule, SiteBlockConfig, SiteBlockState};
+use crate::domain::entities::{
+    BrowserIntegration, Profile, Schedule, SiteBlockConfig, SiteBlockState,
+};
 
 pub const BASE_DIR: &str = "/etc/siteblock";
 pub const CONFIG_PATH: &str = "/etc/siteblock/config.json";
@@ -41,9 +43,56 @@ pub fn domain_hosts(domain: &str) -> Vec<String> {
     hosts
 }
 
+pub fn is_profile_active(profile: &Profile, now: DateTime<Local>) -> bool {
+    if !profile.enabled || profile.domains.is_empty() {
+        return false;
+    }
+    if profile.schedules.is_empty() {
+        return true;
+    }
+    profile.schedules.iter().any(|s| applies_now(s, now))
+}
+
+pub fn get_active_profiles<'a>(
+    config: &'a SiteBlockConfig,
+    now: DateTime<Local>,
+) -> Vec<&'a Profile> {
+    if !config.enabled {
+        return Vec::new();
+    }
+    config
+        .profiles
+        .iter()
+        .filter(|p| is_profile_active(p, now))
+        .collect()
+}
+
+pub fn effective_blocked_domains(config: &SiteBlockConfig, now: DateTime<Local>) -> Vec<String> {
+    if !config.enabled {
+        return Vec::new();
+    }
+    if !config.profiles.is_empty() {
+        let mut domains = Vec::new();
+        for profile in get_active_profiles(config, now) {
+            for d in &profile.domains {
+                if !domains.contains(d) {
+                    domains.push(d.clone());
+                }
+            }
+        }
+        domains
+    } else if should_block(config, now) {
+        config.domains.clone()
+    } else {
+        Vec::new()
+    }
+}
+
 pub fn blocked_hosts(config: &SiteBlockConfig) -> Vec<String> {
+    let now = Local::now();
+    let domains_to_block = effective_blocked_domains(config, now);
     let mut result = Vec::new();
-    for domain in &config.domains {
+    for domain in &domains_to_block {
         for host in domain_hosts(domain) {
             if !result.contains(&host) {
                 result.push(host);
@@ -98,13 +147,20 @@ pub fn applies_now(schedule: &Schedule, now: DateTime<Local>) -> bool {
 }
 
 pub fn should_block(config: &SiteBlockConfig, now: DateTime<Local>) -> bool {
-    if !config.enabled || config.domains.is_empty() {
+    if !config.enabled {
         return false;
     }
-    if config.schedules.is_empty() {
-        return true;
+    if !config.profiles.is_empty() {
+        config.profiles.iter().any(|p| is_profile_active(p, now))
+    } else {
+        if config.domains.is_empty() {
+            return false;
+        }
+        if config.schedules.is_empty() {
+            return true;
+        }
+        config.schedules.iter().any(|s| applies_now(s, now))
     }
-    config.schedules.iter().any(|s| applies_now(s, now))
 }
 
 pub fn atomic_write(path: &Path, content: &[u8], mode: u32) -> std::io::Result<()> {
@@ -150,11 +206,9 @@ pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Res
     if enabled {
         kept.push(String::new());
         kept.push(BEGIN_MARKER.to_string());
-        for domain in &config.domains {
-            let aliases = domain_hosts(domain);
-            let joined = aliases.join(" ");
-            kept.push(format!("0.0.0.0 {}", joined));
-            kept.push(format!("::1 {}", joined));
+        for host in blocked_hosts(config) {
+            kept.push(format!("0.0.0.0 {}", host));
+            kept.push(format!("::1 {}", host));
         }
         kept.push(END_MARKER.to_string());
     }
@@ -278,11 +332,12 @@ pub fn get_browser_integrations(
 pub fn read_config() -> SiteBlockConfig {
     let path = Path::new(CONFIG_PATH);
     if let Ok(content) = fs::read_to_string(path) {
-        if let Ok(cfg) = serde_json::from_str::<SiteBlockConfig>(&content) {
+        if let Ok(mut cfg) = serde_json::from_str::<SiteBlockConfig>(&content) {
+            cfg.ensure_migrated();
             return cfg;
         }
     }
-    SiteBlockConfig::new(false, Vec::new(), Vec::new())
+    SiteBlockConfig::new(false, Profile::default_presets())
 }
 
 pub fn write_config_file(config: &SiteBlockConfig) -> std::io::Result<()> {
@@ -365,11 +420,28 @@ pub fn get_current_state(
 
     let revision = effective.map(|e| e.revision).unwrap_or(0);
 
+    let now = Local::now();
+    let active_profiles = get_active_profiles(config, now);
+    let active_profile_ids: Vec<String> = active_profiles.iter().map(|p| p.id.clone()).collect();
+    let effective_domains = effective_blocked_domains(config, now);
+
+    let (legacy_domains, legacy_schedules) = if !config.profiles.is_empty() {
+        (
+            effective_domains.clone(),
+            config.profiles.iter().flat_map(|p| p.schedules.clone()).collect(),
+        )
+    } else {
+        (config.domains.clone(), config.schedules.clone())
+    };
+
     SiteBlockState {
         active: is_hosts_blocking_active(),
         enabled: config.enabled,
-        domains: config.domains.clone(),
-        schedules: config.schedules.clone(),
+        profiles: config.profiles.clone(),
+        active_profile_ids,
+        effective_domains,
+        domains: legacy_domains,
+        schedules: legacy_schedules,
         helper_installed: Path::new("/usr/local/lib/siteblock/siteblock-admin").exists(),
         session_supported: true,
         revision,
@@ -461,10 +533,77 @@ mod tests {
 
     #[test]
     fn test_url_filters() {
-        let cfg = SiteBlockConfig::new(true, vec!["instagram.com".to_string()], vec![]);
+        let profile = Profile::new(
+            "p1",
+            "P1",
+            "shield",
+            "blue",
+            true,
+            vec!["instagram.com".to_string()],
+            vec![],
+        );
+        let cfg = SiteBlockConfig::new(true, vec![profile]);
         let filters = blocked_url_filters(&cfg, true);
         assert!(filters.contains(&"*://instagram.com/*".to_string()));
         assert!(filters.contains(&"*://*.instagram.com/*".to_string()));
         assert!(filters.contains(&"*://www.instagram.com/*".to_string()));
+    }
+
+    #[test]
+    fn test_multiple_active_profiles_union() {
+        let now = Local.with_ymd_and_hms(2026, 8, 31, 10, 0, 0).unwrap(); // Segunda 10h
+        let p_focus = Profile::new(
+            "focus",
+            "Foco",
+            "target",
+            "blue",
+            true,
+            vec!["youtube.com".to_string()],
+            vec![Schedule::new("s1", vec![0], "09:00", "12:00")],
+        );
+        let p_study = Profile::new(
+            "study",
+            "Estudo",
+            "book",
+            "emerald",
+            true,
+            vec!["twitch.tv".to_string()],
+            vec![], // 24/7
+        );
+        let p_sleep = Profile::new(
+            "sleep",
+            "Sono",
+            "moon",
+            "indigo",
+            false, // disabled
+            vec!["netflix.com".to_string()],
+            vec![],
+        );
+
+        let cfg = SiteBlockConfig::new(true, vec![p_focus, p_study, p_sleep]);
+        let active = get_active_profiles(&cfg, now);
+        let ids: Vec<&str> = active.iter().map(|p| p.id.as_str()).collect();
+        assert_eq!(ids, vec!["focus", "study"]);
+
+        let blocked = effective_blocked_domains(&cfg, now);
+        assert!(blocked.contains(&"youtube.com".to_string()));
+        assert!(blocked.contains(&"twitch.tv".to_string()));
+        assert!(!blocked.contains(&"netflix.com".to_string()));
+    }
+
+    #[test]
+    fn test_legacy_config_migration() {
+        let mut cfg = SiteBlockConfig::legacy(
+            true,
+            vec!["reddit.com".to_string()],
+            vec![Schedule::new("s_leg", vec![1], "10:00", "12:00")],
+        );
+        cfg.ensure_migrated();
+        assert_eq!(cfg.profiles.len(), 3);
+        assert_eq!(cfg.profiles[0].id, "focus");
+        assert_eq!(cfg.profiles[0].domains, vec!["reddit.com".to_string()]);
+        assert_eq!(cfg.profiles[0].schedules.len(), 1);
+        assert_eq!(cfg.profiles[1].id, "study");
+        assert_eq!(cfg.profiles[2].id, "sleep");
     }
 }

@@ -37,7 +37,22 @@ describe("TauriSiteBlockApi", () => {
   it("saveConfig calls save_siteblock_config with config payload", async () => {
     const mockStatus = { active: true } as unknown as SiteBlockState;
     mockInvoke.mockResolvedValueOnce(mockStatus);
-    const config = { enabled: true, domains: ["reddit.com"], schedules: [] };
+    const config = {
+      enabled: true,
+      profiles: [
+        {
+          id: "focus",
+          name: "Foco",
+          icon: "target",
+          color: "blue",
+          enabled: true,
+          domains: ["reddit.com"],
+          schedules: [],
+        },
+      ],
+      domains: ["reddit.com"],
+      schedules: [],
+    };
 
     const result = await api.saveConfig(config);
     expect(mockInvoke).toHaveBeenCalledWith("save_siteblock_config", { config });

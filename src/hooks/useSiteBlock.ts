@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { INITIAL_EMPTY_STATE } from "../constants/config";
 import { siteblockApi, type ISiteBlockApi } from "../services/siteblockApi";
 import type { Schedule } from "../types/schedule";
-import type { SiteBlockState } from "../types/siteblock";
+import type { Profile, SiteBlockState } from "../types/siteblock";
 import { validateNewDomain } from "../utils/domainValidator";
 import { formatSystemError } from "../utils/errorFormatter";
 import { logger } from "../utils/logger";
@@ -16,6 +16,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
   const { t } = useLanguage();
   const translation = useRef(t);
   const [state, setState] = useState<SiteBlockState | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [busy, setBusy] = useState<boolean>(false);
   const [integrationRequired, setIntegrationRequired] = useState<boolean>(false);
@@ -23,6 +24,15 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
   useEffect(() => {
     translation.current = t;
   }, [t]);
+
+  // Se o perfil selecionado não existir mais ou não estiver definido, seleciona o primeiro disponível
+  useEffect(() => {
+    if (state?.profiles && state.profiles.length > 0) {
+      if (!selectedProfileId || !state.profiles.some((p) => p.id === selectedProfileId)) {
+        setSelectedProfileId(state.profiles[0].id);
+      }
+    }
+  }, [state?.profiles, selectedProfileId]);
 
   useEffect(() => {
     let mounted = true;
@@ -50,6 +60,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
           logger.info("Hook", "Estado carregado com sucesso", {
             active: nextState.active,
             enabled: nextState.enabled,
+            profilesCount: nextState.profiles?.length ?? 0,
             helperInstalled: nextState.helperInstalled,
           });
         }
@@ -83,6 +94,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
         logger.info("Hook", "Estado sincronizado via evento externo", {
           active: newState.active,
           enabled: newState.enabled,
+          profilesCount: newState.profiles?.length ?? 0,
         });
         setState(newState);
       }),
@@ -100,18 +112,25 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     };
   }, [api]);
 
+  const selectedProfile = useMemo(() => {
+    if (!state?.profiles || state.profiles.length === 0) return null;
+    return state.profiles.find((p) => p.id === selectedProfileId) ?? state.profiles[0];
+  }, [state?.profiles, selectedProfileId]);
+
   const commit = useCallback(
     async (next: SiteBlockState, successMessage: string) => {
       setBusy(true);
       setMessage("");
       logger.info("Hook", "Salvando configuração...", {
         enabled: next.enabled,
+        profilesCount: next.profiles?.length ?? 0,
         domains: next.domains,
-        schedulesCount: next.schedules.length,
+        schedulesCount: next.schedules?.length ?? 0,
       });
       try {
         const saved = await api.saveConfig({
           enabled: next.enabled,
+          profiles: next.profiles,
           domains: next.domains,
           schedules: next.schedules,
         });
@@ -156,43 +175,188 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     }
   }, [api, t]);
 
+  const selectProfile = useCallback((id: string) => {
+    setSelectedProfileId(id);
+  }, []);
+
+  const toggleProfileEnabled = useCallback(
+    async (id: string) => {
+      if (!state) return;
+      const target = state.profiles.find((p) => p.id === id);
+      if (!target) return;
+      const nextEnabled = !target.enabled;
+      const updatedProfiles = state.profiles.map((p) =>
+        p.id === id ? { ...p, enabled: nextEnabled } : p,
+      );
+      logger.info("Hook", `Alternando perfil '${target.name}' para enabled=${nextEnabled}`);
+      await commit(
+        { ...state, profiles: updatedProfiles },
+        t("message.profileUpdated", { name: target.name }),
+      );
+    },
+    [state, commit, t],
+  );
+
+  const createProfile = useCallback(
+    async (name: string, icon = "target", color = "blue") => {
+      if (!state) return;
+      const newId = `profile-${Date.now()}`;
+      const newProfile: Profile = {
+        id: newId,
+        name: name.trim(),
+        icon,
+        color,
+        enabled: true,
+        domains: [],
+        schedules: [],
+      };
+      const updatedProfiles = [...state.profiles, newProfile];
+      setSelectedProfileId(newId);
+      logger.info("Hook", `Criando novo perfil '${newProfile.name}' (id=${newId})`);
+      await commit(
+        { ...state, profiles: updatedProfiles },
+        t("message.profileCreated", { name: newProfile.name }),
+      );
+    },
+    [state, commit, t],
+  );
+
+  const updateProfile = useCallback(
+    async (id: string, updates: Partial<Profile>) => {
+      if (!state) return;
+      const target = state.profiles.find((p) => p.id === id);
+      if (!target) return;
+      const updatedProfiles = state.profiles.map((p) =>
+        p.id === id ? { ...p, ...updates } : p,
+      );
+      const name = updates.name?.trim() || target.name;
+      logger.info("Hook", `Atualizando perfil '${name}'`);
+      await commit(
+        { ...state, profiles: updatedProfiles },
+        t("message.profileUpdated", { name }),
+      );
+    },
+    [state, commit, t],
+  );
+
+  const deleteProfile = useCallback(
+    async (id: string) => {
+      if (!state) return;
+      if (state.profiles.length <= 1) {
+        setMessage(t("message.profileCannotDeleteLast"));
+        return;
+      }
+      const updatedProfiles = state.profiles.filter((p) => p.id !== id);
+      if (selectedProfileId === id) {
+        setSelectedProfileId(updatedProfiles[0].id);
+      }
+      logger.info("Hook", `Excluindo perfil id=${id}`);
+      await commit(
+        { ...state, profiles: updatedProfiles },
+        t("message.profileDeleted"),
+      );
+    },
+    [state, selectedProfileId, commit, t],
+  );
+
+  const duplicateProfile = useCallback(
+    async (id: string) => {
+      if (!state) return;
+      const source = state.profiles.find((p) => p.id === id);
+      if (!source) return;
+      const newId = `${id}-copy-${Date.now()}`;
+      const duplicate: Profile = {
+        ...source,
+        id: newId,
+        name: `${source.name} (cópia)`,
+      };
+      const updatedProfiles = [...state.profiles, duplicate];
+      setSelectedProfileId(newId);
+      logger.info("Hook", `Duplicando perfil '${source.name}' para '${duplicate.name}'`);
+      await commit(
+        { ...state, profiles: updatedProfiles },
+        t("message.profileCreated", { name: duplicate.name }),
+      );
+    },
+    [state, commit, t],
+  );
+
   const addDomain = useCallback(
     async (candidate: string): Promise<boolean> => {
       if (!state) return false;
-      const validation = validateNewDomain(candidate, state.domains);
+      const currentDomains = selectedProfile ? selectedProfile.domains : state.domains;
+      const validation = validateNewDomain(candidate, currentDomains);
       if (!validation.valid) {
         if (validation.error) setMessage(validation.error);
         logger.warn("Hook", `Tentativa de adicionar domínio inválido/duplicado: '${candidate}'`);
         return false;
       }
       logger.info("Hook", `Adicionando domínio: '${validation.sanitized}'`);
-      await commit(
-        { ...state, domains: [...state.domains, validation.sanitized] },
-        t("message.domainAdded", { domain: validation.sanitized }),
-      );
+
+      if (selectedProfile) {
+        const updatedProfiles = state.profiles.map((p) =>
+          p.id === selectedProfile.id
+            ? { ...p, domains: [...p.domains, validation.sanitized] }
+            : p,
+        );
+        await commit(
+          { ...state, profiles: updatedProfiles },
+          t("message.domainAdded", { domain: validation.sanitized }),
+        );
+      } else {
+        await commit(
+          { ...state, domains: [...state.domains, validation.sanitized] },
+          t("message.domainAdded", { domain: validation.sanitized }),
+        );
+      }
       return true;
     },
-    [state, commit, t],
+    [state, selectedProfile, commit, t],
   );
 
   const removeDomain = useCallback(
     async (domain: string) => {
       if (!state) return;
       logger.info("Hook", `Removendo domínio: '${domain}'`);
-      await commit(
-        { ...state, domains: state.domains.filter((item) => item !== domain) },
-        t("message.domainRemoved", { domain }),
-      );
+
+      if (selectedProfile) {
+        const updatedProfiles = state.profiles.map((p) =>
+          p.id === selectedProfile.id
+            ? { ...p, domains: p.domains.filter((d) => d !== domain) }
+            : p,
+        );
+        await commit(
+          { ...state, profiles: updatedProfiles },
+          t("message.domainRemoved", { domain }),
+        );
+      } else {
+        await commit(
+          { ...state, domains: state.domains.filter((item) => item !== domain) },
+          t("message.domainRemoved", { domain }),
+        );
+      }
     },
-    [state, commit, t],
+    [state, selectedProfile, commit, t],
   );
 
   const updateLocalSchedules = useCallback(
     (updater: (prev: Schedule[]) => Schedule[]) => {
       if (!state) return;
-      setState((prev) => (prev ? { ...prev, schedules: updater(prev.schedules) } : null));
+      if (selectedProfile) {
+        setState((prev) => {
+          if (!prev) return null;
+          const updatedProfiles = prev.profiles.map((p) =>
+            p.id === selectedProfile.id
+              ? { ...p, schedules: updater(p.schedules) }
+              : p,
+          );
+          return { ...prev, profiles: updatedProfiles };
+        });
+      } else {
+        setState((prev) => (prev ? { ...prev, schedules: updater(prev.schedules) } : null));
+      }
     },
-    [state],
+    [state, selectedProfile],
   );
 
   const saveSchedules = useCallback(async () => {
@@ -202,15 +366,24 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
 
   return {
     state,
+    selectedProfile,
+    selectedProfileId,
     message,
     busy,
     integrationRequired,
     setMessage,
     toggleEnabled,
     installService,
+    selectProfile,
+    toggleProfileEnabled,
+    createProfile,
+    updateProfile,
+    deleteProfile,
+    duplicateProfile,
     addDomain,
     removeDomain,
     updateLocalSchedules,
     saveSchedules,
   };
 }
+

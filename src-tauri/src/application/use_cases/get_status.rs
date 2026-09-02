@@ -22,6 +22,7 @@ impl GetStatusUseCase {
             AppError::InvalidResponse(format!("Falha ao decodificar status: {err}"))
         })?;
 
+        state.ensure_migrated();
         state.session_supported = self.helper.supports_session();
         Ok(state)
     }

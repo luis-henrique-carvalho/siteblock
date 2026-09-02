@@ -5,7 +5,7 @@ use serde_json::json;
 use siteblock_lib::application::use_cases::{
     SaveConfigUseCase, StartSessionUseCase, ToggleBlockingUseCase,
 };
-use siteblock_lib::domain::entities::{Schedule, SiteBlockConfig, SiteBlockState};
+use siteblock_lib::domain::entities::{Profile, Schedule, SiteBlockConfig, SiteBlockState};
 use siteblock_lib::domain::errors::AppError;
 use siteblock_lib::domain::ports::{HelperPort, SessionPort};
 use siteblock_lib::presentation::{TrayStateView, TrayViewModel};
@@ -15,9 +15,26 @@ use std::sync::{
 };
 
 fn create_sample_state(enabled: bool, active: bool, helper_installed: bool) -> SiteBlockState {
+    let focus_profile = Profile::new(
+        "focus",
+        "Foco",
+        "target",
+        "blue",
+        true,
+        vec!["youtube.com".into(), "instagram.com".into()],
+        vec![Schedule::new("s1", vec![1, 2, 3], "08:00", "18:00")],
+    );
+    let active_profile_ids = if active {
+        vec!["focus".to_string()]
+    } else {
+        vec![]
+    };
     SiteBlockState {
         active,
         enabled,
+        profiles: vec![focus_profile],
+        active_profile_ids,
+        effective_domains: vec!["youtube.com".into(), "instagram.com".into()],
         domains: vec!["youtube.com".into(), "instagram.com".into()],
         schedules: vec![Schedule::new("s1", vec![1, 2, 3], "08:00", "18:00")],
         helper_installed,
@@ -58,10 +75,10 @@ fn test_tray_derivation_active() {
     let state = create_sample_state(true, true, true);
     let vm = TrayViewModel::from_state_view(&TrayStateView::Normal(state), None);
 
-    assert_eq!(vm.status_text, "Proteção ativa");
+    assert_eq!(vm.status_text, "Proteção ativa (Foco)");
     assert_eq!(vm.action_text, "Desativar bloqueio");
     assert!(vm.action_enabled);
-    assert_eq!(vm.tooltip, "SiteBlock — Proteção ativa");
+    assert_eq!(vm.tooltip, "SiteBlock — Proteção ativa (Foco)");
 }
 
 #[test]
@@ -147,8 +164,15 @@ fn test_toggle_blocking_inverts_enabled_and_preserves_domains_and_schedules() {
             "action": "set-config",
             "config": SiteBlockConfig::new(
                 true,
-                vec!["youtube.com".into(), "instagram.com".into()],
-                vec![Schedule::new("s1", vec![1, 2, 3], "08:00", "18:00")]
+                vec![Profile::new(
+                    "focus",
+                    "Foco",
+                    "target",
+                    "blue",
+                    true,
+                    vec!["youtube.com".into(), "instagram.com".into()],
+                    vec![Schedule::new("s1", vec![1, 2, 3], "08:00", "18:00")]
+                )]
             )
         })
     );

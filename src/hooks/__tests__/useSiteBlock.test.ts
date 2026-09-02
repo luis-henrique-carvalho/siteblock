@@ -2,11 +2,24 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSiteBlock } from "../useSiteBlock";
 import type { ISiteBlockApi } from "../../services/siteblockApi";
-import type { SiteBlockState } from "../../types/siteblock";
+import type { Profile, SiteBlockState } from "../../types/siteblock";
+
+const mockFocusProfile: Profile = {
+  id: "focus",
+  name: "Foco",
+  icon: "target",
+  color: "blue",
+  enabled: true,
+  domains: ["facebook.com"],
+  schedules: [],
+};
 
 const mockInitialState: SiteBlockState = {
   active: false,
   enabled: false,
+  profiles: [mockFocusProfile],
+  activeProfileIds: ["focus"],
+  effectiveDomains: ["facebook.com"],
   domains: ["facebook.com"],
   schedules: [],
   helperInstalled: true,
@@ -26,6 +39,7 @@ describe("useSiteBlock", () => {
         Promise.resolve({
           ...mockInitialState,
           enabled: config.enabled,
+          profiles: config.profiles,
           domains: config.domains,
           schedules: config.schedules,
         }),
@@ -46,7 +60,7 @@ describe("useSiteBlock", () => {
 
     expect(mockApi.getStatus).toHaveBeenCalled();
     expect(mockApi.startPrivilegedSession).toHaveBeenCalled();
-    expect(result.current.state?.domains).toEqual(["facebook.com"]);
+    expect(result.current.selectedProfile?.domains).toEqual(["facebook.com"]);
   });
 
   it("toggles enabled status via toggleEnabled", async () => {
@@ -62,6 +76,7 @@ describe("useSiteBlock", () => {
 
     expect(mockApi.saveConfig).toHaveBeenCalledWith({
       enabled: true,
+      profiles: [mockFocusProfile],
       domains: ["facebook.com"],
       schedules: [],
     });
@@ -69,7 +84,7 @@ describe("useSiteBlock", () => {
     expect(result.current.message).toBe("Bloqueio ativado.");
   });
 
-  it("adds a valid new domain", async () => {
+  it("adds a valid new domain to selected profile", async () => {
     const { result } = renderHook(() => useSiteBlock({ api: mockApi }));
 
     await waitFor(() => {
@@ -84,7 +99,8 @@ describe("useSiteBlock", () => {
     expect(success).toBe(true);
     expect(mockApi.saveConfig).toHaveBeenCalledWith({
       enabled: false,
-      domains: ["facebook.com", "youtube.com"],
+      profiles: [{ ...mockFocusProfile, domains: ["facebook.com", "youtube.com"] }],
+      domains: ["facebook.com"],
       schedules: [],
     });
     expect(result.current.message).toBe("youtube.com adicionado.");
@@ -107,7 +123,7 @@ describe("useSiteBlock", () => {
     expect(result.current.message).toBe("Informe um domínio válido, como reddit.com.");
   });
 
-  it("removes a domain", async () => {
+  it("removes a domain from selected profile", async () => {
     const { result } = renderHook(() => useSiteBlock({ api: mockApi }));
 
     await waitFor(() => {
@@ -120,7 +136,8 @@ describe("useSiteBlock", () => {
 
     expect(mockApi.saveConfig).toHaveBeenCalledWith({
       enabled: false,
-      domains: [],
+      profiles: [{ ...mockFocusProfile, domains: [] }],
+      domains: ["facebook.com"],
       schedules: [],
     });
     expect(result.current.message).toBe("facebook.com removido.");

@@ -7,11 +7,23 @@ interface ShieldBadgeProps {
   active: boolean;
   enabled: boolean;
   scheduleSummary: string;
+  activeProfilesNames?: string[];
 }
 
-export function ShieldBadge({ active, enabled, scheduleSummary }: ShieldBadgeProps) {
+export function ShieldBadge({
+  active,
+  enabled,
+  scheduleSummary,
+  activeProfilesNames = [],
+}: ShieldBadgeProps) {
   const { t } = useLanguage();
   const stateLabel = active ? t("shield.blocking") : t("shield.allowed");
+
+  const subtitle = !enabled
+    ? t("shield.enableHint")
+    : activeProfilesNames.length > 0
+      ? `Perfis: ${activeProfilesNames.join(", ")}`
+      : scheduleSummary;
 
   return (
     <Card
@@ -49,7 +61,7 @@ export function ShieldBadge({ active, enabled, scheduleSummary }: ShieldBadgePro
           {stateLabel}
         </strong>
         <small className="text-xs text-muted-foreground leading-snug">
-          {enabled ? scheduleSummary : t("shield.enableHint")}
+          {subtitle}
         </small>
       </div>
     </Card>

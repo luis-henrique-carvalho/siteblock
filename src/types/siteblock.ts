@@ -1,5 +1,15 @@
 import type { Schedule } from "./schedule";
 
+export interface Profile {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  enabled: boolean;
+  domains: string[];
+  schedules: Schedule[];
+}
+
 export interface BrowserIntegration {
   name: string;
   detected: boolean;
@@ -10,6 +20,9 @@ export interface BrowserIntegration {
 export interface SiteBlockState {
   active: boolean;
   enabled: boolean;
+  profiles: Profile[];
+  activeProfileIds: string[];
+  effectiveDomains: string[];
   domains: string[];
   schedules: Schedule[];
   helperInstalled: boolean;
@@ -20,6 +33,7 @@ export interface SiteBlockState {
 
 export interface SiteBlockConfigDto {
   enabled: boolean;
-  domains: string[];
-  schedules: Schedule[];
+  profiles: Profile[];
+  domains?: string[];
+  schedules?: Schedule[];
 }

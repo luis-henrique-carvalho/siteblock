@@ -8,6 +8,7 @@ import { SetupBanner } from "./components/setup/SetupBanner";
 import { BrowserStatusList } from "./components/browser/BrowserStatusList";
 import { HeroSection } from "./components/hero/HeroSection";
 import { MasterSwitch } from "./components/controls/MasterSwitch";
+import { ProfileTabs } from "./components/profiles/ProfileTabs";
 import { DomainManager } from "./components/domains/DomainManager";
 import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { LoadingScreen } from "./components/common/LoadingScreen";
@@ -30,20 +31,39 @@ function AppContent() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const {
     state,
+    selectedProfile,
+    selectedProfileId,
     message,
     busy,
     integrationRequired,
     toggleEnabled,
     installService,
+    selectProfile,
+    toggleProfileEnabled,
+    createProfile,
+    updateProfile,
+    deleteProfile,
+    duplicateProfile,
     addDomain,
     removeDomain,
     updateLocalSchedules,
     saveSchedules,
   } = useSiteBlock();
 
+  const activeProfilesNames = useMemo(() => {
+    if (!state?.profiles || !state.activeProfileIds) return [];
+    return state.profiles
+      .filter((p) => state.activeProfileIds.includes(p.id))
+      .map((p) => p.name);
+  }, [state?.profiles, state?.activeProfileIds]);
+
   const scheduleSummary = useMemo(
-    () => getScheduleSummary(state?.schedules.length ?? 0, t),
-    [state?.schedules.length, t],
+    () =>
+      getScheduleSummary(
+        selectedProfile?.schedules.length ?? state?.schedules.length ?? 0,
+        t,
+      ),
+    [selectedProfile?.schedules.length, state?.schedules.length, t],
   );
 
   useEffect(() => {
@@ -76,6 +96,8 @@ function AppContent() {
   }
 
   const isActionsDisabled = busy || !state.helperInstalled;
+  const currentDomains = selectedProfile ? selectedProfile.domains : state.domains;
+  const currentSchedules = selectedProfile ? selectedProfile.schedules : state.schedules;
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors">
@@ -92,6 +114,7 @@ function AppContent() {
           active={state.active}
           enabled={state.enabled}
           scheduleSummary={scheduleSummary}
+          activeProfilesNames={activeProfilesNames}
         />
 
         <MasterSwitch
@@ -100,9 +123,27 @@ function AppContent() {
           onToggle={() => void toggleEnabled()}
         />
 
+        {state.profiles && state.profiles.length > 0 && (
+          <div className="my-4">
+            <ProfileTabs
+              profiles={state.profiles}
+              selectedProfileId={selectedProfileId}
+              activeProfileIds={state.activeProfileIds ?? []}
+              masterEnabled={state.enabled}
+              disabled={isActionsDisabled}
+              onSelectProfile={selectProfile}
+              onToggleProfile={(id) => void toggleProfileEnabled(id)}
+              onCreateProfile={(name, icon, color) => void createProfile(name, icon, color)}
+              onUpdateProfile={(id, updates) => void updateProfile(id, updates)}
+              onDeleteProfile={(id) => void deleteProfile(id)}
+              onDuplicateProfile={(id) => void duplicateProfile(id)}
+            />
+          </div>
+        )}
+
         <div className="content-grid">
           <DomainManager
-            domains={state.domains}
+            domains={currentDomains}
             message={message}
             disabled={isActionsDisabled}
             onAddDomain={addDomain}
@@ -110,7 +151,7 @@ function AppContent() {
           />
 
           <ScheduleManager
-            schedules={state.schedules}
+            schedules={currentSchedules}
             disabled={isActionsDisabled}
             onUpdateSchedules={updateLocalSchedules}
             onSaveSchedules={() => void saveSchedules()}

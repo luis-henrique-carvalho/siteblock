@@ -5,9 +5,15 @@ interface HeroSectionProps {
   active: boolean;
   enabled: boolean;
   scheduleSummary: string;
+  activeProfilesNames?: string[];
 }
 
-export function HeroSection({ active, enabled, scheduleSummary }: HeroSectionProps) {
+export function HeroSection({
+  active,
+  enabled,
+  scheduleSummary,
+  activeProfilesNames = [],
+}: HeroSectionProps) {
   const { t } = useLanguage();
   return (
     <section className="hero my-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -27,7 +33,12 @@ export function HeroSection({ active, enabled, scheduleSummary }: HeroSectionPro
       </div>
 
       <div className="shrink-0">
-        <ShieldBadge active={active} enabled={enabled} scheduleSummary={scheduleSummary} />
+        <ShieldBadge
+          active={active}
+          enabled={enabled}
+          scheduleSummary={scheduleSummary}
+          activeProfilesNames={activeProfilesNames}
+        />
       </div>
     </section>
   );

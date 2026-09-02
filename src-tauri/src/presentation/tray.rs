@@ -70,11 +70,25 @@ impl TrayViewModel {
                         tooltip: "SiteBlock — Bloqueio desativado".to_string(),
                     }
                 } else if state.active {
+                    let active_names: Vec<&str> = state
+                        .profiles
+                        .iter()
+                        .filter(|p| state.active_profile_ids.contains(&p.id))
+                        .map(|p| p.name.as_str())
+                        .collect();
+
+                    let detail = if !active_names.is_empty() {
+                        format!(" ({})", active_names.join(", "))
+                    } else {
+                        String::new()
+                    };
+
+                    let status_text = format!("Proteção ativa{}", detail);
                     Self {
-                        status_text: "Proteção ativa".to_string(),
+                        status_text: status_text.clone(),
                         action_text: "Desativar bloqueio".to_string(),
                         action_enabled: true,
-                        tooltip: "SiteBlock — Proteção ativa".to_string(),
+                        tooltip: format!("SiteBlock — {}", status_text),
                     }
                 } else {
                     Self {

@@ -68,8 +68,12 @@ impl ToggleBlockingUseCase {
         }
 
         let next_enabled = !current_state.enabled;
-        let new_config =
-            SiteBlockConfig::new(next_enabled, current_state.domains, current_state.schedules);
+        let mut new_config = if !current_state.profiles.is_empty() {
+            SiteBlockConfig::new(next_enabled, current_state.profiles)
+        } else {
+            SiteBlockConfig::legacy(next_enabled, current_state.domains, current_state.schedules)
+        };
+        new_config.ensure_migrated();
 
         self.save_config_use_case.execute(new_config)
     }

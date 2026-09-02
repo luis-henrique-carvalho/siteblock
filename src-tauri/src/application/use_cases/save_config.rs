@@ -13,12 +13,15 @@ impl SaveConfigUseCase {
         Self { session }
     }
 
-    pub fn execute(&self, config: SiteBlockConfig) -> AppResult<SiteBlockState> {
+    pub fn execute(&self, mut config: SiteBlockConfig) -> AppResult<SiteBlockState> {
+        config.ensure_migrated();
         config.validate().map_err(AppError::ValidationError)?;
 
-        self.session.send_request(json!({
+        let mut state = self.session.send_request(json!({
             "action": "set-config",
             "config": config
-        }))
+        }))?;
+        state.ensure_migrated();
+        Ok(state)
     }
 }

@@ -39,17 +39,20 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
                     "set-config" => {
                         if let Some(config_val) = request.get("config") {
                             match serde_json::from_value::<SiteBlockConfig>(config_val.clone()) {
-                                Ok(config) => match config.validate() {
-                                    Ok(_) => {
-                                        let _ = write_config_file(&config);
-                                        let state = apply_config(&config);
-                                        serde_json::to_string(&state)
-                                            .unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
+                                Ok(mut config) => {
+                                    config.ensure_migrated();
+                                    match config.validate() {
+                                        Ok(_) => {
+                                            let _ = write_config_file(&config);
+                                            let state = apply_config(&config);
+                                            serde_json::to_string(&state)
+                                                .unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
+                                        }
+                                        Err(validation_err) => {
+                                            format!("{{\"error\":\"{}\"}}", validation_err)
+                                        }
                                     }
-                                    Err(validation_err) => {
-                                        format!("{{\"error\":\"{}\"}}", validation_err)
-                                    }
-                                },
+                                }
                                 Err(parse_err) => {
                                     format!(
                                         "{{\"error\":\"Configuração inválida: {}\"}}",
@@ -111,7 +114,8 @@ fn main() {
             let mut buffer = String::new();
             if stdin.lock().read_to_string(&mut buffer).is_ok() {
                 match serde_json::from_str::<SiteBlockConfig>(&buffer) {
-                    Ok(config) => {
+                    Ok(mut config) => {
+                        config.ensure_migrated();
                         if let Err(err) = config.validate() {
                             eprintln!("Erro de validação: {}", err);
                             std::process::exit(1);

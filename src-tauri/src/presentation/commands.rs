@@ -61,10 +61,10 @@ pub fn save_siteblock_config(
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
     log::info!(
-        "Invocando command: save_siteblock_config (enabled={}, domains={:?}, schedules={})",
+        "Invocando command: save_siteblock_config (enabled={}, profiles={}, legacy_domains={:?})",
         config.enabled,
-        config.domains,
-        config.schedules.len()
+        config.profiles.len(),
+        config.domains
     );
     let start = Instant::now();
     let result = state.save_config_use_case.execute(config).map_err(|err| {

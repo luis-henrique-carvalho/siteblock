@@ -19,6 +19,8 @@ impl StartSessionUseCase {
             return Ok(SiteBlockState::empty());
         }
 
-        self.session.send_request(json!({ "action": "status" }))
+        let mut state = self.session.send_request(json!({ "action": "status" }))?;
+        state.ensure_migrated();
+        Ok(state)
     }
 }

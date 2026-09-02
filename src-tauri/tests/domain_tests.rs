@@ -1,5 +1,5 @@
 use siteblock_lib::domain::entities::{
-    BrowserIntegration, Schedule, SiteBlockConfig, SiteBlockState,
+    BrowserIntegration, Profile, Schedule, SiteBlockConfig, SiteBlockState,
 };
 use siteblock_lib::domain::errors::AppError;
 
@@ -38,7 +38,7 @@ fn test_schedule_validation_invalid_time_format() {
 
 #[test]
 fn test_config_validation_success() {
-    let config = SiteBlockConfig::new(
+    let config = SiteBlockConfig::legacy(
         true,
         vec!["youtube.com".into(), "instagram.com".into()],
         vec![Schedule::new("s1", vec![1, 2], "09:00", "17:00")],
@@ -57,14 +57,14 @@ fn test_config_validation_invalid_domain() {
     ];
 
     for domains in invalid_configs {
-        let config = SiteBlockConfig::new(true, domains, vec![]);
+        let config = SiteBlockConfig::legacy(true, domains, vec![]);
         assert!(config.validate().is_err());
     }
 }
 
 #[test]
 fn test_config_validation_cascades_to_schedule() {
-    let config = SiteBlockConfig::new(
+    let config = SiteBlockConfig::legacy(
         true,
         vec!["youtube.com".into()],
         vec![Schedule::new("s1", vec![1], "25:00", "17:00")],
@@ -73,10 +73,33 @@ fn test_config_validation_cascades_to_schedule() {
 }
 
 #[test]
+fn test_profile_validation_success() {
+    let profile = Profile::new(
+        "p1",
+        "Trabalho",
+        "target",
+        "blue",
+        true,
+        vec!["twitter.com".into()],
+        vec![Schedule::new("s1", vec![1], "09:00", "18:00")],
+    );
+    assert!(profile.validate().is_ok());
+}
+
+#[test]
+fn test_profile_validation_empty_name() {
+    let profile = Profile::new("p1", "   ", "target", "blue", true, vec![], vec![]);
+    assert!(profile.validate().is_err());
+}
+
+#[test]
 fn test_state_json_serialization_camel_case() {
     let state = SiteBlockState {
         active: true,
         enabled: true,
+        profiles: vec![Profile::new("p1", "Foco", "target", "blue", true, vec!["facebook.com".into()], vec![])],
+        active_profile_ids: vec!["p1".into()],
+        effective_domains: vec!["facebook.com".into()],
         domains: vec!["facebook.com".into()],
         schedules: vec![Schedule::new("s1", vec![1], "09:00", "12:00")],
         helper_installed: true,
@@ -95,6 +118,7 @@ fn test_state_json_serialization_camel_case() {
     assert!(serialized.contains("\"sessionSupported\":true"));
     assert!(serialized.contains("\"browserIntegrations\":["));
     assert!(serialized.contains("\"policyReady\":true"));
+    assert!(serialized.contains("\"activeProfileIds\":[\"p1\"]"));
 
     let deserialized: SiteBlockState = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, state);

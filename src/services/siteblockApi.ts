@@ -60,8 +60,8 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
     const start = performance.now();
     logger.info("API", "Invocando save_siteblock_config", {
       enabled: config.enabled,
-      domainsCount: config.domains.length,
-      schedulesCount: config.schedules.length,
+      profilesCount: config.profiles?.length ?? 0,
+      domainsCount: config.domains?.length ?? 0,
     });
     try {
       const state = await invoke<SiteBlockState>("save_siteblock_config", { config });

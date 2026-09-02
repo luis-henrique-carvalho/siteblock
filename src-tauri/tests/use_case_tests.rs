@@ -10,16 +10,21 @@ use siteblock_lib::domain::errors::AppError;
 use std::sync::Arc;
 
 fn create_sample_state(active: bool) -> SiteBlockState {
-    SiteBlockState {
+    let mut state = SiteBlockState {
         active,
         enabled: true,
+        profiles: vec![],
+        active_profile_ids: vec![],
+        effective_domains: vec!["tiktok.com".into()],
         domains: vec!["tiktok.com".into()],
         schedules: vec![Schedule::new("s1", vec![1], "10:00", "12:00")],
         helper_installed: true,
         session_supported: true,
         revision: 1,
         browser_integrations: vec![],
-    }
+    };
+    state.ensure_migrated();
+    state
 }
 
 #[test]
@@ -89,19 +94,22 @@ fn test_save_config_with_valid_config() {
     let mock_session = Arc::new(MockSessionPort::new(Ok(expected_state.clone())));
     let use_case = SaveConfigUseCase::new(mock_session.clone());
 
-    let config = SiteBlockConfig::new(
+    let config = SiteBlockConfig::legacy(
         true,
         vec!["reddit.com".into()],
         vec![Schedule::new("s1", vec![1], "10:00", "12:00")],
     );
 
+    let mut expected_config = config.clone();
+    expected_config.ensure_migrated();
+
     let result = use_case
-        .execute(config.clone())
+        .execute(config)
         .expect("Deveria salvar configuração");
     assert_eq!(result, expected_state);
     assert_eq!(
         mock_session.last_request(),
-        Some(json!({ "action": "set-config", "config": config }))
+        Some(json!({ "action": "set-config", "config": expected_config }))
     );
 }
 
@@ -110,7 +118,7 @@ fn test_save_config_with_invalid_domain_fails_without_calling_session() {
     let mock_session = Arc::new(MockSessionPort::new(Ok(create_sample_state(true))));
     let use_case = SaveConfigUseCase::new(mock_session.clone());
 
-    let invalid_config = SiteBlockConfig::new(true, vec!["https://invalid.com".into()], vec![]);
+    let invalid_config = SiteBlockConfig::legacy(true, vec!["https://invalid.com".into()], vec![]);
 
     let result = use_case.execute(invalid_config);
     assert!(matches!(result, Err(AppError::ValidationError(_))));
