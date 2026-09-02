@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { SiteBlockConfigDto, SiteBlockState } from "../types/siteblock";
 import { logger } from "../utils/logger";
 
@@ -7,6 +8,7 @@ export interface ISiteBlockApi {
   startPrivilegedSession(): Promise<SiteBlockState>;
   saveConfig(config: SiteBlockConfigDto): Promise<SiteBlockState>;
   installService(): Promise<SiteBlockState>;
+  onStateChanged?(callback: (state: SiteBlockState) => void): Promise<() => void> | (() => void);
 }
 
 export class TauriSiteBlockApi implements ISiteBlockApi {
@@ -96,6 +98,15 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
       );
       throw error;
     }
+  }
+
+  async onStateChanged(callback: (state: SiteBlockState) => void): Promise<() => void> {
+    logger.debug("API", "Configurando listener para siteblock://state-changed");
+    const unlisten = await listen<SiteBlockState>("siteblock://state-changed", (event) => {
+      logger.debug("API", "Evento siteblock://state-changed recebido", event.payload);
+      callback(event.payload);
+    });
+    return unlisten;
   }
 }
 

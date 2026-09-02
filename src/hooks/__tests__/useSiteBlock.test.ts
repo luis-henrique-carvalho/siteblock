@@ -125,4 +125,52 @@ describe("useSiteBlock", () => {
     });
     expect(result.current.message).toBe("facebook.com removido.");
   });
+
+  it("updates state when onStateChanged event is received", async () => {
+    let listener: ((state: SiteBlockState) => void) | null = null;
+    const mockUnlisten = vi.fn();
+    mockApi.onStateChanged = vi.fn((cb) => {
+      listener = cb;
+      return mockUnlisten;
+    });
+
+    const { result } = renderHook(() => useSiteBlock({ api: mockApi }));
+
+    await waitFor(() => {
+      expect(result.current.state).not.toBeNull();
+    });
+
+    expect(mockApi.onStateChanged).toHaveBeenCalled();
+    expect(listener).not.toBeNull();
+
+    const updatedState: SiteBlockState = {
+      ...mockInitialState,
+      enabled: true,
+      active: true,
+      revision: 2,
+    };
+
+    act(() => {
+      listener!(updatedState);
+    });
+
+    expect(result.current.state?.enabled).toBe(true);
+    expect(result.current.state?.active).toBe(true);
+    expect(result.current.state?.revision).toBe(2);
+  });
+
+  it("removes onStateChanged listener on unmount", async () => {
+    const mockUnlisten = vi.fn();
+    mockApi.onStateChanged = vi.fn(() => mockUnlisten);
+
+    const { unmount } = renderHook(() => useSiteBlock({ api: mockApi }));
+
+    await waitFor(() => {
+      expect(mockApi.onStateChanged).toHaveBeenCalled();
+    });
+
+    unmount();
+
+    expect(mockUnlisten).toHaveBeenCalled();
+  });
 });

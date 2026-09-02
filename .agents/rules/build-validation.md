@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 ## Validação Contínua de Build e Testes
 
 Sempre que qualquer alteração de código for realizada (Rust ou TypeScript/React):

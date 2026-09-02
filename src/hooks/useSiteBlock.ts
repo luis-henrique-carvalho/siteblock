@@ -64,6 +64,35 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     };
   }, [api]);
 
+  useEffect(() => {
+    if (!api.onStateChanged) return;
+    let mounted = true;
+    let cleanupFn: (() => void) | null = null;
+
+    logger.info("Hook", "Registrando listener para siteblock://state-changed");
+    void Promise.resolve(
+      api.onStateChanged((newState) => {
+        if (!mounted) return;
+        logger.info("Hook", "Estado sincronizado via evento externo", {
+          active: newState.active,
+          enabled: newState.enabled,
+        });
+        setState(newState);
+      }),
+    ).then((unlisten) => {
+      if (!mounted) {
+        if (typeof unlisten === "function") unlisten();
+      } else {
+        cleanupFn = unlisten;
+      }
+    });
+
+    return () => {
+      mounted = false;
+      if (cleanupFn) cleanupFn();
+    };
+  }, [api]);
+
   const commit = useCallback(
     async (next: SiteBlockState, successMessage: string) => {
       setBusy(true);

@@ -67,10 +67,12 @@ impl SessionPort for MockSessionPort {
     }
 }
 
+#[allow(dead_code)]
 pub struct MockInstallerPort {
     pub should_fail: bool,
 }
 
+#[allow(dead_code)]
 impl MockInstallerPort {
     pub fn success() -> Self {
         Self { should_fail: false }

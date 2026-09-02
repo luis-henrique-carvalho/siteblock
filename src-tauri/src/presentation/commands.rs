@@ -1,9 +1,18 @@
 use std::time::Instant;
+use tauri::{AppHandle, Manager};
 use crate::domain::entities::{SiteBlockConfig, SiteBlockState};
 use crate::presentation::state::AppState;
+use crate::presentation::TrayController;
+
+fn sync_tray(app: &AppHandle, state: &SiteBlockState) {
+    if let Some(tray) = app.try_state::<TrayController>() {
+        tray.update_state(state);
+    }
+}
 
 #[tauri::command]
 pub fn get_siteblock_status(
+    app: AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
     log::debug!("Invocando command: get_siteblock_status");
@@ -16,6 +25,7 @@ pub fn get_siteblock_status(
             err.to_string()
         });
     if let Ok(ref s) = result {
+        sync_tray(&app, s);
         log::debug!(
             "get_siteblock_status concluído em {:?} (active={}, enabled={})",
             start.elapsed(),
@@ -28,6 +38,7 @@ pub fn get_siteblock_status(
 
 #[tauri::command]
 pub fn start_privileged_session(
+    app: AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
     log::info!("Invocando command: start_privileged_session");
@@ -39,7 +50,8 @@ pub fn start_privileged_session(
             log::warn!("Erro em start_privileged_session: {err}");
             err.to_string()
         });
-    if result.is_ok() {
+    if let Ok(ref s) = result {
+        sync_tray(&app, s);
         log::info!("start_privileged_session concluído com sucesso em {:?}", start.elapsed());
     }
     result
@@ -47,6 +59,7 @@ pub fn start_privileged_session(
 
 #[tauri::command]
 pub fn save_siteblock_config(
+    app: AppHandle,
     config: SiteBlockConfig,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
@@ -65,6 +78,7 @@ pub fn save_siteblock_config(
             err.to_string()
         });
     if let Ok(ref s) = result {
+        sync_tray(&app, s);
         log::info!(
             "save_siteblock_config concluído em {:?} (active={}, revision={})",
             start.elapsed(),
@@ -77,6 +91,7 @@ pub fn save_siteblock_config(
 
 #[tauri::command]
 pub fn install_siteblock_service(
+    app: AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
     log::info!("Invocando command: install_siteblock_service");
@@ -88,9 +103,11 @@ pub fn install_siteblock_service(
             log::error!("Erro em install_siteblock_service: {err}");
             err.to_string()
         });
-    if result.is_ok() {
+    if let Ok(ref s) = result {
+        sync_tray(&app, s);
         log::info!("install_siteblock_service concluído com sucesso em {:?}", start.elapsed());
     }
     result
 }
+
 
