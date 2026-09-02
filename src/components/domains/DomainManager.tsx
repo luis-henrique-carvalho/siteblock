@@ -1,5 +1,9 @@
 import { DomainForm } from "./DomainForm";
 import { DomainList } from "./DomainList";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ListFilter, AlertCircle, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DomainManagerProps {
   domains: string[];
@@ -19,30 +23,54 @@ export function DomainManager({
   const isError = message ? message.startsWith("Erro:") : false;
 
   return (
-    <section className="panel domains-panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">LISTA DE BLOQUEIO</p>
-          <h2>{domains.length} destinos</h2>
+    <Card className="panel domains-panel border-border/70 bg-card/60 shadow-xs flex flex-col">
+      <CardHeader className="pb-4">
+        <div className="panel-heading flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-mono font-semibold tracking-wider text-primary uppercase">
+              <ListFilter className="size-3.5" aria-hidden="true" />
+              <p className="eyebrow">LISTA DE BLOQUEIO</p>
+            </div>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">
+              {domains.length} destinos
+            </h2>
+          </div>
+
+          <Badge
+            variant="outline"
+            className="counter text-xs font-mono px-2.5 py-1 border-border/80 text-foreground font-bold tracking-wider"
+            aria-label={`Total: ${domains.length} domínios`}
+          >
+            {domains.length.toString().padStart(2, "0")}
+          </Badge>
         </div>
-        <span className="counter" aria-label={`Total: ${domains.length} domínios`}>
-          {domains.length.toString().padStart(2, "0")}
-        </span>
-      </div>
+      </CardHeader>
 
-      <DomainForm disabled={disabled} onAddDomain={onAddDomain} />
+      <CardContent className="flex-1 flex flex-col pt-0">
+        <DomainForm disabled={disabled} onAddDomain={onAddDomain} />
 
-      {message && (
-        <p
-          className={isError ? "inline-message error" : "inline-message"}
-          role={isError ? "alert" : "status"}
-          aria-live="polite"
-        >
-          {message}
-        </p>
-      )}
+        {message && (
+          <div
+            className={cn(
+              "inline-message mt-3 flex items-center gap-2 text-xs px-3 py-2 rounded-md font-mono tracking-tight transition-colors border",
+              isError
+                ? "error border-destructive/40 bg-destructive/10 text-destructive"
+                : "border-primary/40 bg-primary/10 text-primary",
+            )}
+            role={isError ? "alert" : "status"}
+            aria-live="polite"
+          >
+            {isError ? (
+              <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
+            ) : (
+              <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
+            )}
+            <span>{message}</span>
+          </div>
+        )}
 
-      <DomainList domains={domains} disabled={disabled} onRemoveDomain={onRemoveDomain} />
-    </section>
+        <DomainList domains={domains} disabled={disabled} onRemoveDomain={onRemoveDomain} />
+      </CardContent>
+    </Card>
   );
 }

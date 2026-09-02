@@ -1,6 +1,9 @@
 import type { Schedule, SchedulePatch } from "../../types/schedule";
 import { ScheduleCard } from "./ScheduleCard";
 import { createEmptySchedule } from "../../utils/scheduleHelpers";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar, Plus, Save } from "lucide-react";
 
 interface ScheduleManagerProps {
   schedules: Schedule[];
@@ -30,41 +33,62 @@ export function ScheduleManager({
   };
 
   return (
-    <section className="panel schedule-panel">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">JANELAS DE FOCO</p>
-          <h2>Agenda semanal</h2>
+    <Card className="panel schedule-panel border-border/70 bg-card/60 shadow-xs flex flex-col">
+      <CardHeader className="pb-4">
+        <div className="panel-heading flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-mono font-semibold tracking-wider text-primary uppercase">
+              <Calendar className="size-3.5" aria-hidden="true" />
+              <p className="eyebrow">JANELAS DE FOCO</p>
+            </div>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">Agenda semanal</h2>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-button gap-1.5 font-semibold text-xs border-border/80 hover:bg-muted"
+            onClick={handleAddSchedule}
+            disabled={disabled}
+          >
+            <Plus className="size-3.5" aria-hidden="true" />+ Novo período
+          </Button>
         </div>
-        <button
+      </CardHeader>
+
+      <CardContent className="flex-1 flex flex-col pt-0">
+        <div className="schedule-list space-y-3 max-h-[360px] overflow-y-auto pr-1">
+          {schedules.length === 0 && (
+            <div className="empty-state flex flex-col items-center justify-center gap-2 py-8 text-center text-xs text-muted-foreground border border-dashed border-border/80 rounded-lg">
+              <Calendar className="size-6 text-muted-foreground/60" aria-hidden="true" />
+              <p>Sem períodos automáticos. A chave mestra controla tudo.</p>
+            </div>
+          )}
+          {schedules.map((schedule, index) => (
+            <ScheduleCard
+              key={schedule.id}
+              schedule={schedule}
+              index={index}
+              disabled={disabled}
+              onUpdate={handleUpdateSchedule}
+              onRemove={handleRemoveSchedule}
+            />
+          ))}
+        </div>
+      </CardContent>
+
+      <CardFooter className="pt-2 border-t border-border/40">
+        <Button
           type="button"
-          className="text-button"
-          onClick={handleAddSchedule}
+          className="save-button w-full gap-2 font-semibold tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+          onClick={onSaveSchedules}
           disabled={disabled}
         >
-          + Novo período
-        </button>
-      </div>
-
-      <div className="schedule-list">
-        {schedules.length === 0 && (
-          <p className="empty-state">Sem períodos automáticos. A chave mestra controla tudo.</p>
-        )}
-        {schedules.map((schedule, index) => (
-          <ScheduleCard
-            key={schedule.id}
-            schedule={schedule}
-            index={index}
-            disabled={disabled}
-            onUpdate={handleUpdateSchedule}
-            onRemove={handleRemoveSchedule}
-          />
-        ))}
-      </div>
-
-      <button type="button" className="save-button" onClick={onSaveSchedules} disabled={disabled}>
-        Salvar agenda
-      </button>
-    </section>
+          <Save className="size-4" aria-hidden="true" />
+          Salvar agenda
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

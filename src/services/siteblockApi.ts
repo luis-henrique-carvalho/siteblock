@@ -15,13 +15,21 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
     logger.debug("API", "Invocando get_siteblock_status");
     try {
       const state = await invoke<SiteBlockState>("get_siteblock_status");
-      logger.debug("API", `get_siteblock_status retornou em ${(performance.now() - start).toFixed(1)}ms`, {
-        active: state.active,
-        enabled: state.enabled,
-      });
+      logger.debug(
+        "API",
+        `get_siteblock_status retornou em ${(performance.now() - start).toFixed(1)}ms`,
+        {
+          active: state.active,
+          enabled: state.enabled,
+        },
+      );
       return state;
     } catch (error) {
-      logger.error("API", `Falha em get_siteblock_status após ${(performance.now() - start).toFixed(1)}ms`, error);
+      logger.error(
+        "API",
+        `Falha em get_siteblock_status após ${(performance.now() - start).toFixed(1)}ms`,
+        error,
+      );
       throw error;
     }
   }
@@ -31,10 +39,17 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
     logger.info("API", "Invocando start_privileged_session");
     try {
       const state = await invoke<SiteBlockState>("start_privileged_session");
-      logger.info("API", `start_privileged_session concluído em ${(performance.now() - start).toFixed(1)}ms`);
+      logger.info(
+        "API",
+        `start_privileged_session concluído em ${(performance.now() - start).toFixed(1)}ms`,
+      );
       return state;
     } catch (error) {
-      logger.warn("API", `start_privileged_session falhou após ${(performance.now() - start).toFixed(1)}ms`, error);
+      logger.warn(
+        "API",
+        `start_privileged_session falhou após ${(performance.now() - start).toFixed(1)}ms`,
+        error,
+      );
       throw error;
     }
   }
@@ -48,10 +63,17 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
     });
     try {
       const state = await invoke<SiteBlockState>("save_siteblock_config", { config });
-      logger.info("API", `save_siteblock_config concluído em ${(performance.now() - start).toFixed(1)}ms (revision: ${state.revision})`);
+      logger.info(
+        "API",
+        `save_siteblock_config concluído em ${(performance.now() - start).toFixed(1)}ms (revision: ${state.revision})`,
+      );
       return state;
     } catch (error) {
-      logger.error("API", `save_siteblock_config falhou após ${(performance.now() - start).toFixed(1)}ms`, error);
+      logger.error(
+        "API",
+        `save_siteblock_config falhou após ${(performance.now() - start).toFixed(1)}ms`,
+        error,
+      );
       throw error;
     }
   }
@@ -61,10 +83,17 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
     logger.info("API", "Invocando install_siteblock_service");
     try {
       const state = await invoke<SiteBlockState>("install_siteblock_service");
-      logger.info("API", `install_siteblock_service concluído em ${(performance.now() - start).toFixed(1)}ms`);
+      logger.info(
+        "API",
+        `install_siteblock_service concluído em ${(performance.now() - start).toFixed(1)}ms`,
+      );
       return state;
     } catch (error) {
-      logger.error("API", `install_siteblock_service falhou após ${(performance.now() - start).toFixed(1)}ms`, error);
+      logger.error(
+        "API",
+        `install_siteblock_service falhou após ${(performance.now() - start).toFixed(1)}ms`,
+        error,
+      );
       throw error;
     }
   }

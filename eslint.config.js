@@ -23,5 +23,12 @@ export default tseslint.config(
       globals: globals.browser,
     },
   },
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}", "src/hooks/use-mobile.ts"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
   prettier,
 );

@@ -29,6 +29,7 @@ O serviço do sistema é separado do aplicativo: a interface roda como seu usuá
 ## Navegadores
 
 O SiteBlock utiliza as políticas corporativas gerenciadas dos navegadores em conjunto com o `/etc/hosts`:
+
 - **Chrome e Brave:** o helper cria uma política gerenciada em `/etc/opt/chrome/policies/managed/` e `/etc/brave/policies/managed/` com a regra `URLBlocklist`. O bloqueio é instantâneo e não depende de reiniciar o navegador nem de cache DNS.
 - **Firefox:** o helper usa `WebsiteFilter` gerenciado em `/etc/firefox/policies/policies.json`, preservando a integridade caso outra ferramenta já utilize o arquivo.
 - **Outros aplicativos / Sistema operacional:** o arquivo `/etc/hosts` redireciona todos os domínios configurados para `0.0.0.0` e `::1`, cobrindo qualquer outro cliente ou navegador no Linux.

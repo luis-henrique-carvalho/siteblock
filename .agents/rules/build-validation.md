@@ -1,6 +1,7 @@
 ## Validação Contínua de Build e Testes
 
 Sempre que qualquer alteração de código for realizada (Rust ou TypeScript/React):
+
 1. **Verificação de Compilação Rust:**
    - Execute `cargo check` ou `cargo test` no diretório `src-tauri` para garantir que todos os binários (`siteblock`, `siteblock-admin`, `siteblock-browser-bridge`) e a biblioteca (`siteblock_lib`) estejam compilando sem erros ou warnings bloqueantes.
 2. **Verificação de Compilação do Frontend:**

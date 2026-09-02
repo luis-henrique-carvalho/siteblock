@@ -38,46 +38,48 @@ export function App() {
   const isActionsDisabled = busy || !state.helperInstalled;
 
   return (
-    <main className="app-shell">
-      <TopBar active={state.active} />
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors">
+      <main className="app-shell animate-in fade-in duration-300">
+        <TopBar active={state.active} />
 
-      {(!state.helperInstalled || integrationRequired) && (
-        <SetupBanner onInstall={() => void installService()} busy={busy} />
-      )}
+        {(!state.helperInstalled || integrationRequired) && (
+          <SetupBanner onInstall={() => void installService()} busy={busy} />
+        )}
 
-      {state.helperInstalled && <BrowserStatusList integrations={state.browserIntegrations} />}
+        {state.helperInstalled && <BrowserStatusList integrations={state.browserIntegrations} />}
 
-      <HeroSection
-        active={state.active}
-        enabled={state.enabled}
-        scheduleSummary={scheduleSummary}
-      />
-
-      <MasterSwitch
-        enabled={state.enabled}
-        disabled={isActionsDisabled}
-        onToggle={() => void toggleEnabled()}
-      />
-
-      <div className="content-grid">
-        <DomainManager
-          domains={state.domains}
-          message={message}
-          disabled={isActionsDisabled}
-          onAddDomain={addDomain}
-          onRemoveDomain={(d) => void removeDomain(d)}
+        <HeroSection
+          active={state.active}
+          enabled={state.enabled}
+          scheduleSummary={scheduleSummary}
         />
 
-        <ScheduleManager
-          schedules={state.schedules}
+        <MasterSwitch
+          enabled={state.enabled}
           disabled={isActionsDisabled}
-          onUpdateSchedules={updateLocalSchedules}
-          onSaveSchedules={() => void saveSchedules()}
+          onToggle={() => void toggleEnabled()}
         />
-      </div>
 
-      <Footer message={message} />
-    </main>
+        <div className="content-grid">
+          <DomainManager
+            domains={state.domains}
+            message={message}
+            disabled={isActionsDisabled}
+            onAddDomain={addDomain}
+            onRemoveDomain={(d) => void removeDomain(d)}
+          />
+
+          <ScheduleManager
+            schedules={state.schedules}
+            disabled={isActionsDisabled}
+            onUpdateSchedules={updateLocalSchedules}
+            onSaveSchedules={() => void saveSchedules()}
+          />
+        </div>
+
+        <Footer message={message} />
+      </main>
+    </div>
   );
 }
 
