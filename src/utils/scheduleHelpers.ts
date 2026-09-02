@@ -1,5 +1,6 @@
 import { DEFAULT_END_TIME, DEFAULT_SCHEDULE_DAYS, DEFAULT_START_TIME } from "../constants/weekdays";
 import type { Schedule } from "../types/schedule";
+import { translate, type Translate } from "../i18n";
 
 /**
  * Creates a default new schedule rule.
@@ -29,10 +30,14 @@ export function toggleScheduleDay(days: number[], day: number): number[] {
 /**
  * Formats a human-readable summary of configured schedule rules.
  */
-export function getScheduleSummary(schedulesCount: number): string {
+export function getScheduleSummary(
+  schedulesCount: number,
+  t: Translate = (key, values) => translate("pt-BR", key, values),
+): string {
   if (schedulesCount === 0) {
-    return "Sem horários: o bloqueio depende apenas do botão acima.";
+    return t("schedule.summaryNone");
   }
-  const plural = schedulesCount > 1;
-  return `${schedulesCount} período${plural ? "s" : ""} configurado${plural ? "s" : ""}.`;
+  return schedulesCount === 1
+    ? t("schedule.summaryOne")
+    : t("schedule.summaryMany", { count: schedulesCount });
 }

@@ -10,9 +10,20 @@ import { MasterSwitch } from "./components/controls/MasterSwitch";
 import { DomainManager } from "./components/domains/DomainManager";
 import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { LoadingScreen } from "./components/common/LoadingScreen";
+import { PreferencesPanel } from "./components/preferences/PreferencesPanel";
+import { LanguageProvider, useLanguage } from "./i18n";
 import "./App.css";
 
 export function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
+  );
+}
+
+function AppContent() {
+  const { t } = useLanguage();
   const {
     state,
     message,
@@ -27,8 +38,8 @@ export function App() {
   } = useSiteBlock();
 
   const scheduleSummary = useMemo(
-    () => getScheduleSummary(state?.schedules.length ?? 0),
-    [state?.schedules.length],
+    () => getScheduleSummary(state?.schedules.length ?? 0, t),
+    [state?.schedules.length, t],
   );
 
   if (!state) {
@@ -76,6 +87,8 @@ export function App() {
             onSaveSchedules={() => void saveSchedules()}
           />
         </div>
+
+        <PreferencesPanel />
 
         <Footer message={message} />
       </main>

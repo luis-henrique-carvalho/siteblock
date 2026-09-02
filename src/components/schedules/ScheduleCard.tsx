@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
+import { useLanguage } from "../../i18n";
 
 interface ScheduleCardProps {
   schedule: Schedule;
@@ -16,6 +17,7 @@ interface ScheduleCardProps {
 }
 
 export function ScheduleCard({ schedule, index, disabled, onUpdate, onRemove }: ScheduleCardProps) {
+  const { t } = useLanguage();
   const handleToggleDay = (dayIndex: number) => {
     const updatedDays = toggleScheduleDay(schedule.days, dayIndex);
     onUpdate(schedule.id, { days: updatedDays });
@@ -24,14 +26,14 @@ export function ScheduleCard({ schedule, index, disabled, onUpdate, onRemove }: 
   return (
     <Card
       className="schedule-rule p-4 border-border/70 bg-card/50 shadow-2xs flex flex-col gap-3.5"
-      aria-label={`Período ${index + 1}`}
+      aria-label={t("schedule.periodLabel", { number: index + 1 })}
     >
       <div className="rule-top flex items-center justify-between gap-2">
         <Badge
           variant="outline"
           className="font-mono text-[11px] font-bold tracking-wider text-foreground border-border/80 px-2 py-0.5"
         >
-          <span>PERÍODO {String(index + 1).padStart(2, "0")}</span>
+          <span>{t("schedule.period", { number: String(index + 1).padStart(2, "0") })}</span>
         </Badge>
 
         <Button
@@ -41,10 +43,10 @@ export function ScheduleCard({ schedule, index, disabled, onUpdate, onRemove }: 
           className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs gap-1 font-medium"
           onClick={() => onRemove(schedule.id)}
           disabled={disabled}
-          aria-label={`Remover período ${index + 1}`}
+          aria-label={t("schedule.removeLabel", { number: index + 1 })}
         >
           <Trash2 className="size-3" aria-hidden="true" />
-          Remover
+          {t("schedule.remove")}
         </Button>
       </div>
 

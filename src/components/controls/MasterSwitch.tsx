@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Power, ShieldCheck, ShieldBan } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "../../i18n";
 
 interface MasterSwitchProps {
   enabled: boolean;
@@ -11,6 +12,7 @@ interface MasterSwitchProps {
 }
 
 export function MasterSwitch({ enabled, disabled, onToggle }: MasterSwitchProps) {
+  const { t } = useLanguage();
   return (
     <Card
       className={cn(
@@ -24,15 +26,15 @@ export function MasterSwitch({ enabled, disabled, onToggle }: MasterSwitchProps)
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-xs font-mono font-semibold tracking-wider text-primary uppercase">
             <Power className="size-3.5" aria-hidden="true" />
-            <span>CHAVE MESTRA</span>
+            <span>{t("master.eyebrow")}</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-            {enabled ? "Proteção habilitada" : "Proteção em pausa"}
+            {enabled ? t("master.enabled") : t("master.disabled")}
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             {enabled
-              ? "As regras e horários abaixo estão valendo."
-              : "Nenhum site será bloqueado até você reativar."}
+              ? t("master.enabledHint")
+              : t("master.disabledHint")}
           </p>
         </div>
 
@@ -43,7 +45,7 @@ export function MasterSwitch({ enabled, disabled, onToggle }: MasterSwitchProps)
               checked={enabled}
               disabled={disabled}
               onCheckedChange={onToggle}
-              aria-label="Alternar proteção mestre"
+              aria-label={t("master.switchLabel")}
             />
           </div>
 
@@ -73,7 +75,7 @@ export function MasterSwitch({ enabled, disabled, onToggle }: MasterSwitchProps)
               )}
               aria-hidden="true"
             />
-            {enabled ? "Desativar" : "Ativar"}
+            {enabled ? t("master.disable") : t("master.enable")}
           </Button>
         </div>
       </div>

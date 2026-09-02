@@ -2,16 +2,18 @@ import type { BrowserIntegration } from "../../types/siteblock";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle, CircleDashed } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "../../i18n";
 
 interface BrowserItemProps {
   browser: BrowserIntegration;
 }
 
 export function BrowserItem({ browser }: BrowserItemProps) {
+  const { t } = useLanguage();
   const getStatusText = () => {
-    if (!browser.detected) return "Não instalado";
-    if (browser.policyReady) return "Política ativa";
-    return "Aguardando política";
+    if (!browser.detected) return t("browser.notInstalled");
+    if (browser.policyReady) return t("browser.active");
+    return t("browser.waiting");
   };
 
   const isReady = browser.detected && browser.policyReady;

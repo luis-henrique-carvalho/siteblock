@@ -1,6 +1,10 @@
-import { WEEKDAYS } from "../../constants/weekdays";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage, type TranslationKey } from "../../i18n";
+
+const weekdayKeys: TranslationKey[] = [
+  "weekday.mon", "weekday.tue", "weekday.wed", "weekday.thu", "weekday.fri", "weekday.sat", "weekday.sun",
+];
 
 interface DayPickerProps {
   selectedDays: number[];
@@ -9,9 +13,11 @@ interface DayPickerProps {
 }
 
 export function DayPicker({ selectedDays, disabled = false, onToggleDay }: DayPickerProps) {
+  const { t } = useLanguage();
   return (
-    <div className="days flex flex-wrap gap-1.5" role="group" aria-label="Dias da semana">
-      {WEEKDAYS.map((dayName, index) => {
+    <div className="days flex flex-wrap gap-1.5" role="group" aria-label={t("schedule.weekdays")}>
+      {weekdayKeys.map((dayKey, index) => {
+        const dayName = t(dayKey);
         const isSelected = selectedDays.includes(index);
         return (
           <Button

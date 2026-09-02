@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Globe } from "lucide-react";
+import { useLanguage } from "../../i18n";
 
 interface DomainItemProps {
   domain: string;
@@ -10,6 +11,7 @@ interface DomainItemProps {
 }
 
 export function DomainItem({ domain, index, disabled, onRemove }: DomainItemProps) {
+  const { t } = useLanguage();
   return (
     <li className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg border border-border/60 bg-card/40 hover:bg-muted/40 transition-colors">
       <div className="flex items-center gap-3 min-w-0">
@@ -30,7 +32,7 @@ export function DomainItem({ domain, index, disabled, onRemove }: DomainItemProp
         variant="ghost"
         size="icon-xs"
         className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 transition-colors"
-        aria-label={`Remover ${domain}`}
+        aria-label={t("domains.remove", { domain })}
         onClick={() => onRemove(domain)}
         disabled={disabled}
       >

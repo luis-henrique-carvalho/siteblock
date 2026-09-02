@@ -1,12 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { SignalDot } from "../common/SignalDot";
 import { ShieldCheck, ShieldAlert } from "lucide-react";
+import { useLanguage } from "../../i18n";
 
 interface TopBarProps {
   active: boolean;
 }
 
 export function TopBar({ active }: TopBarProps) {
+  const { t } = useLanguage();
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-5 mb-6">
       <div className="flex items-center gap-3">
@@ -37,7 +39,7 @@ export function TopBar({ active }: TopBarProps) {
           ) : (
             <ShieldAlert className="size-3.5 text-muted-foreground" aria-hidden="true" />
           )}
-          Sistema {active ? "em proteção" : "em pausa"}
+          {active ? t("status.protected") : t("status.paused")}
         </span>
       </Badge>
     </header>

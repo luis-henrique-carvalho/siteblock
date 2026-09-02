@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useLanguage } from "../../i18n";
 
 interface DomainFormProps {
   disabled: boolean;
@@ -9,6 +10,7 @@ interface DomainFormProps {
 }
 
 export function DomainForm({ disabled, onAddDomain }: DomainFormProps) {
+  const { t } = useLanguage();
   const [newDomain, setNewDomain] = useState("");
 
   const handleSubmit = async (event: FormEvent) => {
@@ -27,14 +29,14 @@ export function DomainForm({ disabled, onAddDomain }: DomainFormProps) {
         type="text"
         value={newDomain}
         onChange={(e) => setNewDomain(e.target.value)}
-        placeholder="ex.: reddit.com"
-        aria-label="Novo domínio"
+        placeholder={t("domains.placeholder")}
+        aria-label={t("domains.new")}
         disabled={disabled}
         className="h-9 text-sm"
       />
       <Button type="submit" disabled={disabled} className="h-9 gap-1.5 px-4 font-semibold shrink-0">
         <Plus className="size-4" aria-hidden="true" />
-        Adicionar
+        {t("domains.add")}
       </Button>
     </form>
   );

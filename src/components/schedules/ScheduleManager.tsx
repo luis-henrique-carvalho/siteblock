@@ -4,6 +4,7 @@ import { createEmptySchedule } from "../../utils/scheduleHelpers";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Plus, Save } from "lucide-react";
+import { useLanguage } from "../../i18n";
 
 interface ScheduleManagerProps {
   schedules: Schedule[];
@@ -18,6 +19,7 @@ export function ScheduleManager({
   onUpdateSchedules,
   onSaveSchedules,
 }: ScheduleManagerProps) {
+  const { t } = useLanguage();
   const handleAddSchedule = () => {
     onUpdateSchedules((prev) => [...prev, createEmptySchedule()]);
   };
@@ -39,9 +41,9 @@ export function ScheduleManager({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono font-semibold tracking-wider text-primary uppercase">
               <Calendar className="size-3.5" aria-hidden="true" />
-              <p className="eyebrow">JANELAS DE FOCO</p>
+              <p className="eyebrow">{t("schedule.eyebrow")}</p>
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">Agenda semanal</h2>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">{t("schedule.title")}</h2>
           </div>
 
           <Button
@@ -52,7 +54,7 @@ export function ScheduleManager({
             onClick={handleAddSchedule}
             disabled={disabled}
           >
-            <Plus className="size-3.5" aria-hidden="true" />+ Novo período
+            <Plus className="size-3.5" aria-hidden="true" />{t("schedule.add")}
           </Button>
         </div>
       </CardHeader>
@@ -62,7 +64,7 @@ export function ScheduleManager({
           {schedules.length === 0 && (
             <div className="empty-state flex flex-col items-center justify-center gap-2 py-8 text-center text-xs text-muted-foreground border border-dashed border-border/80 rounded-lg">
               <Calendar className="size-6 text-muted-foreground/60" aria-hidden="true" />
-              <p>Sem períodos automáticos. A chave mestra controla tudo.</p>
+              <p>{t("schedule.empty")}</p>
             </div>
           )}
           {schedules.map((schedule, index) => (
@@ -86,7 +88,7 @@ export function ScheduleManager({
           disabled={disabled}
         >
           <Save className="size-4" aria-hidden="true" />
-          Salvar agenda
+          {t("schedule.save")}
         </Button>
       </CardFooter>
     </Card>

@@ -1,4 +1,5 @@
 import { ShieldBadge } from "./ShieldBadge";
+import { useLanguage } from "../../i18n";
 
 interface HeroSectionProps {
   active: boolean;
@@ -7,20 +8,21 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ active, enabled, scheduleSummary }: HeroSectionProps) {
+  const { t } = useLanguage();
   return (
     <section className="hero my-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div className="space-y-2 max-w-xl">
         <p className="eyebrow text-xs font-mono font-semibold tracking-wider text-primary uppercase">
-          CONTROLE DE ACESSO
+          {t("hero.eyebrow")}
         </p>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-          Seu foco tem um{" "}
+          {t("hero.titleBefore")} {" "}
           <em className="italic font-serif text-primary underline decoration-primary/40 underline-offset-4">
-            perímetro.
+            {t("hero.titleEmphasis")}
           </em>
         </h1>
         <p className="hero-copy text-sm text-muted-foreground leading-relaxed">
-          Defina os destinos que interrompem seu ritmo e deixe o SiteBlock cuidar do horário.
+          {t("hero.description")}
         </p>
       </div>
 

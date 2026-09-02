@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { INITIAL_EMPTY_STATE } from "../constants/config";
 import { siteblockApi, type ISiteBlockApi } from "../services/siteblockApi";
 import type { Schedule } from "../types/schedule";
@@ -6,16 +6,23 @@ import type { SiteBlockState } from "../types/siteblock";
 import { validateNewDomain } from "../utils/domainValidator";
 import { formatSystemError } from "../utils/errorFormatter";
 import { logger } from "../utils/logger";
+import { useLanguage } from "../i18n";
 
 export interface UseSiteBlockOptions {
   api?: ISiteBlockApi;
 }
 
 export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
+  const { t } = useLanguage();
+  const translation = useRef(t);
   const [state, setState] = useState<SiteBlockState | null>(null);
   const [message, setMessage] = useState<string>("");
   const [busy, setBusy] = useState<boolean>(false);
   const [integrationRequired, setIntegrationRequired] = useState<boolean>(false);
+
+  useEffect(() => {
+    translation.current = t;
+  }, [t]);
 
   useEffect(() => {
     let mounted = true;
@@ -30,7 +37,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
         if (nextState.helperInstalled && !nextState.sessionSupported) {
           if (mounted) {
             setIntegrationRequired(true);
-            setMessage("A integração do SiteBlock precisa ser atualizada uma vez.");
+            setMessage(translation.current("message.integrationUpdate"));
             logger.warn("Hook", "Integração precisa ser atualizada (sessionSupported=false)");
           }
           return nextState;
@@ -53,7 +60,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
         setState(initialState ?? INITIAL_EMPTY_STATE);
         if (initialState?.helperInstalled) {
           setIntegrationRequired(true);
-          setMessage("A integração do SiteBlock precisa ser atualizada uma vez.");
+          setMessage(translation.current("message.integrationUpdate"));
         } else {
           setMessage(formatSystemError(error));
         }
@@ -127,9 +134,9 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     logger.info("Hook", `Alternando bloqueio mestre para: ${nextEnabled}`);
     await commit(
       { ...state, enabled: nextEnabled },
-      nextEnabled ? "Bloqueio ativado." : "Bloqueio desativado.",
+      nextEnabled ? t("message.blockingEnabled") : t("message.blockingDisabled"),
     );
-  }, [state, commit]);
+  }, [state, commit, t]);
 
   const installService = useCallback(async () => {
     setBusy(true);
@@ -139,9 +146,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       const next = await api.installService();
       setState(next);
       setIntegrationRequired(false);
-      setMessage(
-        "Integração configurada. Reinicie o Chrome ou Brave uma única vez para carregar a extensão; depois, use somente esta interface.",
-      );
+      setMessage(t("message.integrationConfigured"));
       logger.info("Hook", "Integração configurada com sucesso");
     } catch (error) {
       logger.error("Hook", "Falha na instalação da integração", error);
@@ -149,7 +154,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     } finally {
       setBusy(false);
     }
-  }, [api]);
+  }, [api, t]);
 
   const addDomain = useCallback(
     async (candidate: string): Promise<boolean> => {
@@ -163,11 +168,11 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       logger.info("Hook", `Adicionando domínio: '${validation.sanitized}'`);
       await commit(
         { ...state, domains: [...state.domains, validation.sanitized] },
-        `${validation.sanitized} adicionado.`,
+        t("message.domainAdded", { domain: validation.sanitized }),
       );
       return true;
     },
-    [state, commit],
+    [state, commit, t],
   );
 
   const removeDomain = useCallback(
@@ -176,10 +181,10 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       logger.info("Hook", `Removendo domínio: '${domain}'`);
       await commit(
         { ...state, domains: state.domains.filter((item) => item !== domain) },
-        `${domain} removido.`,
+        t("message.domainRemoved", { domain }),
       );
     },
-    [state, commit],
+    [state, commit, t],
   );
 
   const updateLocalSchedules = useCallback(
@@ -192,8 +197,8 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
 
   const saveSchedules = useCallback(async () => {
     if (!state) return;
-    await commit(state, "Agenda atualizada.");
-  }, [state, commit]);
+    await commit(state, t("message.scheduleUpdated"));
+  }, [state, commit, t]);
 
   return {
     state,

@@ -1,11 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Info, AlertTriangle } from "lucide-react";
+import { useLanguage } from "../../i18n";
 
 interface FooterProps {
   message?: string;
 }
 
 export function Footer({ message }: FooterProps) {
+  const { t } = useLanguage();
   const isError = message ? message.toLowerCase().includes("erro") : false;
 
   return (
@@ -30,8 +32,7 @@ export function Footer({ message }: FooterProps) {
         </div>
       )}
       <p className="text-xs text-muted-foreground/80 leading-relaxed">
-        Autorização solicitada uma vez por abertura do app, ou ao atualizar a integração. Alterações
-        da lista são aplicadas automaticamente.
+        {t("footer.description")}
       </p>
     </footer>
   );

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { ShieldCheck, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "../../i18n";
 
 interface ShieldBadgeProps {
   active: boolean;
@@ -9,7 +10,8 @@ interface ShieldBadgeProps {
 }
 
 export function ShieldBadge({ active, enabled, scheduleSummary }: ShieldBadgeProps) {
-  const stateLabel = active ? "Bloqueando agora" : "Acesso liberado";
+  const { t } = useLanguage();
+  const stateLabel = active ? t("shield.blocking") : t("shield.allowed");
 
   return (
     <Card
@@ -20,7 +22,7 @@ export function ShieldBadge({ active, enabled, scheduleSummary }: ShieldBadgePro
           : "border-border/70 bg-card/60 text-muted-foreground",
       )}
       role="status"
-      aria-label={`Status do escudo: ${stateLabel}`}
+      aria-label={t("shield.status", { status: stateLabel })}
     >
       <div
         className={cn(
@@ -47,7 +49,7 @@ export function ShieldBadge({ active, enabled, scheduleSummary }: ShieldBadgePro
           {stateLabel}
         </strong>
         <small className="text-xs text-muted-foreground leading-snug">
-          {enabled ? scheduleSummary : "Ative o bloqueio para aplicar as regras."}
+          {enabled ? scheduleSummary : t("shield.enableHint")}
         </small>
       </div>
     </Card>

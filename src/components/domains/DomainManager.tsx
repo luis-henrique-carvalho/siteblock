@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListFilter, AlertCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "../../i18n";
 
 interface DomainManagerProps {
   domains: string[];
@@ -20,6 +21,7 @@ export function DomainManager({
   onAddDomain,
   onRemoveDomain,
 }: DomainManagerProps) {
+  const { t } = useLanguage();
   const isError = message ? message.startsWith("Erro:") : false;
 
   return (
@@ -29,17 +31,17 @@ export function DomainManager({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono font-semibold tracking-wider text-primary uppercase">
               <ListFilter className="size-3.5" aria-hidden="true" />
-              <p className="eyebrow">LISTA DE BLOQUEIO</p>
+              <p className="eyebrow">{t("domains.eyebrow")}</p>
             </div>
             <h2 className="text-xl font-bold tracking-tight text-foreground">
-              {domains.length} destinos
+              {t("domains.destinations", { count: domains.length })}
             </h2>
           </div>
 
           <Badge
             variant="outline"
             className="counter text-xs font-mono px-2.5 py-1 border-border/80 text-foreground font-bold tracking-wider"
-            aria-label={`Total: ${domains.length} domínios`}
+            aria-label={t("domains.total", { count: domains.length })}
           >
             {domains.length.toString().padStart(2, "0")}
           </Badge>
