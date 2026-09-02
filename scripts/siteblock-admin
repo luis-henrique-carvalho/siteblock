@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""Root helper for SiteBlock. It is intentionally small and has no network access."""
+
+from __future__ import annotations
+
+import datetime as dt
+import json
+import os
+import re
+import sys
+import tempfile
+from pathlib import Path
+
+BASE = Path("/etc/siteblock")
+CONFIG = BASE / "config.json"
+HOSTS = Path("/etc/hosts")
+BEGIN = "# BEGIN SITEBLOCK MANAGED"
+END = "# END SITEBLOCK MANAGED"
+DOMAIN_RE = re.compile(r"(?!-)(?:[a-z0-9-]+\.)+[a-z]{2,}$", re.IGNORECASE)
+TIME_RE = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d$")
+RELATED_HOSTS = {
+    "youtube.com": [
+        "m.youtube.com",
+        "music.youtube.com",
+        "youtu.be",
+        "www.youtu.be",
+        "youtube-nocookie.com",
+        "www.youtube-nocookie.com",
+    ],
+}
+
+DEFAULT_CONFIG = {"enabled": False, "domains": [], "schedules": []}
+
+
+def read_config() -> dict:
+    if not CONFIG.exists():
+        return DEFAULT_CONFIG.copy()
+    try:
+        return normalize(json.loads(CONFIG.read_text(encoding="utf-8")))
+    except (OSError, json.JSONDecodeError, ValueError):
+        return DEFAULT_CONFIG.copy()
+
+
+def normalize(value: object) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError("A configuração deve ser um objeto JSON.")
+    domains = value.get("domains", [])
+    schedules = value.get("schedules", [])
+    if not isinstance(domains, list) or not isinstance(schedules, list):
+        raise ValueError("Domínios e horários precisam ser listas.")
+    cleaned_domains = []
+    for domain in domains:
+        if not isinstance(domain, str):
+            raise ValueError("Domínio inválido.")
+        domain = domain.lower().removeprefix("www.").strip()
+        if not DOMAIN_RE.fullmatch(domain):
+            raise ValueError(f"Domínio inválido: {domain}")
+        if domain not in cleaned_domains:
+            cleaned_domains.append(domain)
+    cleaned_schedules = []
+    for schedule in schedules:
+        if not isinstance(schedule, dict):
+            raise ValueError("Período inválido.")
+        ident, days, start, end = schedule.get("id"), schedule.get("days"), schedule.get("start"), schedule.get("end")
+        if not isinstance(ident, str) or not isinstance(days, list) or not isinstance(start, str) or not isinstance(end, str):
+            raise ValueError("Período incompleto.")
+        if not TIME_RE.fullmatch(start) or not TIME_RE.fullmatch(end) or start == end:
+            raise ValueError("Horário inválido.")
+        days = sorted(set(days))
+        if not days or any(not isinstance(day, int) or day < 0 or day > 6 for day in days):
+            raise ValueError("Escolha pelo menos um dia válido.")
+        cleaned_schedules.append({"id": ident[:80], "days": days, "start": start, "end": end})
+    return {"enabled": bool(value.get("enabled", False)), "domains": cleaned_domains, "schedules": cleaned_schedules}
+
+
+def write_config(config: dict) -> None:
+    BASE.mkdir(mode=0o755, parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=BASE, delete=False) as file:
+        json.dump(config, file, ensure_ascii=False, indent=2)
+        file.write("\n")
+        temporary = Path(file.name)
+    temporary.chmod(0o644)
+    temporary.replace(CONFIG)
+
+
+def minute(value: str) -> int:
+    hours, minutes = value.split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+def applies_now(schedule: dict, now: dt.datetime) -> bool:
+    current_day, current_minute = now.weekday(), now.hour * 60 + now.minute
+    start, end = minute(schedule["start"]), minute(schedule["end"])
+    if start < end:
+        return current_day in schedule["days"] and start <= current_minute < end
+    previous_day = (current_day - 1) % 7
+    return (current_day in schedule["days"] and current_minute >= start) or (previous_day in schedule["days"] and current_minute < end)
+
+
+def should_block(config: dict) -> bool:
+    if not config["enabled"] or not config["domains"]:
+        return False
+    return not config["schedules"] or any(applies_now(item, dt.datetime.now()) for item in config["schedules"])
+
+
+def active() -> bool:
+    try:
+        return BEGIN in HOSTS.read_text(encoding="utf-8")
+    except OSError:
+        return False
+
+
+def write_hosts(config: dict, enabled: bool) -> None:
+    original = HOSTS.read_text(encoding="utf-8")
+    kept, in_block = [], False
+    for line in original.splitlines():
+        if line == BEGIN:
+            in_block = True
+            continue
+        if line == END:
+            in_block = False
+            continue
+        if not in_block:
+            kept.append(line)
+    if enabled:
+        kept.extend(["", BEGIN])
+        for domain in config["domains"]:
+            aliases = [domain, f"www.{domain}", *RELATED_HOSTS.get(domain, [])]
+            kept.append(f"0.0.0.0 {' '.join(aliases)}")
+            kept.append(f"::1 {' '.join(aliases)}")
+        kept.append(END)
+    content = "\n".join(kept).rstrip() + "\n"
+    mode = HOSTS.stat().st_mode & 0o777
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=HOSTS.parent, delete=False) as file:
+        file.write(content)
+        temporary = Path(file.name)
+    temporary.chmod(mode)
+    temporary.replace(HOSTS)
+
+
+def state(config: dict) -> dict:
+    return {"active": active(), "enabled": config["enabled"], "domains": config["domains"], "schedules": config["schedules"], "helperInstalled": True}
+
+
+def require_root() -> None:
+    if os.geteuid() != 0:
+        raise PermissionError("Essa ação precisa de autorização administrativa.")
+
+
+def session() -> int:
+    """Serve validated requests on stdin while the desktop app remains open."""
+    require_root()
+    for line in sys.stdin:
+        try:
+            request = json.loads(line)
+            action = request.get("action")
+            if action == "status":
+                response = state(read_config())
+            elif action == "set-config":
+                config = normalize(request.get("config"))
+                write_config(config)
+                write_hosts(config, should_block(config))
+                response = state(config)
+            else:
+                raise ValueError("Ação inválida.")
+        except (OSError, PermissionError, ValueError, json.JSONDecodeError) as error:
+            response = {"error": str(error)}
+        print(json.dumps(response, ensure_ascii=False), flush=True)
+    return 0
+
+
+def main() -> int:
+    command = sys.argv[1] if len(sys.argv) > 1 else ""
+    if command == "status":
+        print(json.dumps(state(read_config()), ensure_ascii=False))
+        return 0
+    if command == "capabilities":
+        print(json.dumps({"session": True}))
+        return 0
+    if command == "session":
+        return session()
+    if command not in {"set-config", "reconcile"}:
+        print("Uso: siteblock-admin status|set-config|reconcile|session|capabilities", file=sys.stderr)
+        return 2
+    require_root()
+    config = normalize(json.load(sys.stdin)) if command == "set-config" else read_config()
+    if command == "set-config":
+        write_config(config)
+    write_hosts(config, should_block(config))
+    print(json.dumps(state(config), ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (OSError, PermissionError, ValueError, json.JSONDecodeError) as error:
+        print(f"Erro: {error}", file=sys.stderr)
+        raise SystemExit(1)
