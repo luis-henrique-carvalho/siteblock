@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "SiteBlock",
+  "description": "Aplica as regras locais do SiteBlock sem reiniciar o navegador.",
+  "version": "0.1.0",
+  "permissions": ["declarativeNetRequest", "nativeMessaging", "storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "SiteBlock" },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "siteblock@luis.app",
+      "strict_min_version": "133.0"
+    }
+  }
+}

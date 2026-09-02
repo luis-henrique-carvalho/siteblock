@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/local/lib/siteblock/siteblock-browser-bridge firefox

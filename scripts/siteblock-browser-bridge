@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Native-messaging bridge. Runs as the browser user and only reads effective state."""
+
+from __future__ import annotations
+
+import json
+import os
+import struct
+import sys
+import time
+from pathlib import Path
+
+STATE = Path("/var/lib/siteblock/effective-state.json")
+CLIENTS = Path("/run/siteblock/browser-clients.json")
+
+
+def read_message() -> object | None:
+    header = sys.stdin.buffer.read(4)
+    if not header:
+        return None
+    length = struct.unpack("@I", header)[0]
+    payload = sys.stdin.buffer.read(length)
+    return json.loads(payload.decode("utf-8"))
+
+
+def send(message: object) -> None:
+    payload = json.dumps(message, ensure_ascii=False).encode("utf-8")
+    sys.stdout.buffer.write(struct.pack("@I", len(payload)) + payload)
+    sys.stdout.buffer.flush()
+
+
+def state() -> dict:
+    try:
+        value = json.loads(STATE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        value = {"active": False, "domains": [], "revision": 0}
+    return {"active": bool(value.get("active")), "domains": value.get("domains", []), "revision": value.get("revision", 0)}
+
+
+def record_client(kind: str) -> None:
+    CLIENTS.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+    clients = {}
+    try:
+        clients = json.loads(CLIENTS.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        pass
+    timestamp = int(time.time())
+    clients[kind] = timestamp
+    clients["updatedAt"] = timestamp
+    temporary = CLIENTS.with_suffix(".tmp")
+    temporary.write_text(json.dumps(clients), encoding="utf-8")
+    temporary.replace(CLIENTS)
+
+
+def main() -> int:
+    kind = sys.argv[1] if len(sys.argv) > 1 else "chromium"
+    record_client(kind)
+    previous = None
+    while True:
+        incoming = read_message()
+        if incoming is None:
+            return 0
+        next_state = state()
+        if next_state != previous:
+            send(next_state)
+            previous = next_state
+        heartbeat = time.monotonic()
+        while True:
+            time.sleep(0.5)
+            if time.monotonic() - heartbeat >= 5:
+                record_client(kind)
+                heartbeat = time.monotonic()
+            next_state = state()
+            if next_state != previous:
+                send(next_state)
+                previous = next_state
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

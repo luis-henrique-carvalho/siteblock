@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Root helper for SiteBlock. It is intentionally small and has no network access."""
+"""Root helper for SiteBlock. It applies local blocking without network access."""
 
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -14,10 +16,26 @@ from pathlib import Path
 BASE = Path("/etc/siteblock")
 CONFIG = BASE / "config.json"
 HOSTS = Path("/etc/hosts")
+RUNTIME = Path("/var/lib/siteblock")
+EFFECTIVE_STATE = RUNTIME / "effective-state.json"
+FIREFOX_OWNERSHIP = BASE / "firefox-policy.sha256"
+FIREFOX_POLICY = Path("/etc/firefox/policies/policies.json")
 BEGIN = "# BEGIN SITEBLOCK MANAGED"
 END = "# END SITEBLOCK MANAGED"
 DOMAIN_RE = re.compile(r"(?!-)(?:[a-z0-9-]+\.)+[a-z]{2,}$", re.IGNORECASE)
 TIME_RE = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d$")
+CHROMIUM_POLICIES = {
+    "Chrome": Path("/etc/opt/chrome/policies/managed/com.luis.siteblock.json"),
+    "Brave": Path("/etc/brave/policies/managed/com.luis.siteblock.json"),
+}
+CHROMIUM_EXTENSION_ID = "ejhdjlpfeejbkjmmdnhcgnpjlcllldko"
+CHROMIUM_EXTERNAL_REGISTRATIONS = {
+    "Chrome": [Path(f"/opt/google/chrome/extensions/{CHROMIUM_EXTENSION_ID}.json")],
+    "Brave": [
+        Path(f"/opt/brave.com/brave/extensions/{CHROMIUM_EXTENSION_ID}.json"),
+        Path(f"/usr/share/brave/extensions/{CHROMIUM_EXTENSION_ID}.json"),
+    ],
+}
 RELATED_HOSTS = {
     "youtube.com": [
         "m.youtube.com",
@@ -28,16 +46,35 @@ RELATED_HOSTS = {
         "www.youtube-nocookie.com",
     ],
 }
-
 DEFAULT_CONFIG = {"enabled": False, "domains": [], "schedules": []}
+
+
+def read_json(path: Path, fallback: object) -> object:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return fallback
+
+
+def atomic_write(path: Path, content: str, mode: int = 0o644) -> None:
+    path.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as file:
+        file.write(content)
+        temporary = Path(file.name)
+    temporary.chmod(mode)
+    temporary.replace(path)
+
+
+def write_json(path: Path, value: object, mode: int = 0o644) -> None:
+    atomic_write(path, json.dumps(value, ensure_ascii=False, indent=2) + "\n", mode)
 
 
 def read_config() -> dict:
     if not CONFIG.exists():
         return DEFAULT_CONFIG.copy()
     try:
-        return normalize(json.loads(CONFIG.read_text(encoding="utf-8")))
-    except (OSError, json.JSONDecodeError, ValueError):
+        return normalize(read_json(CONFIG, DEFAULT_CONFIG.copy()))
+    except ValueError:
         return DEFAULT_CONFIG.copy()
 
 
@@ -74,13 +111,7 @@ def normalize(value: object) -> dict:
 
 
 def write_config(config: dict) -> None:
-    BASE.mkdir(mode=0o755, parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=BASE, delete=False) as file:
-        json.dump(config, file, ensure_ascii=False, indent=2)
-        file.write("\n")
-        temporary = Path(file.name)
-    temporary.chmod(0o644)
-    temporary.replace(CONFIG)
+    write_json(CONFIG, config)
 
 
 def minute(value: str) -> int:
@@ -101,6 +132,23 @@ def should_block(config: dict) -> bool:
     if not config["enabled"] or not config["domains"]:
         return False
     return not config["schedules"] or any(applies_now(item, dt.datetime.now()) for item in config["schedules"])
+
+
+def domain_hosts(domain: str) -> list[str]:
+    return [domain, f"www.{domain}", *RELATED_HOSTS.get(domain, [])]
+
+
+def blocked_hosts(config: dict) -> list[str]:
+    return list(dict.fromkeys(host for domain in config["domains"] for host in domain_hosts(domain)))
+
+
+def blocked_url_filters(config: dict, enabled: bool) -> list[str]:
+    if not enabled:
+        return []
+    filters = []
+    for host in blocked_hosts(config):
+        filters.extend([f"*://{host}/*", f"*://*.{host}/*"])
+    return list(dict.fromkeys(filters))
 
 
 def active() -> bool:
@@ -125,21 +173,117 @@ def write_hosts(config: dict, enabled: bool) -> None:
     if enabled:
         kept.extend(["", BEGIN])
         for domain in config["domains"]:
-            aliases = [domain, f"www.{domain}", *RELATED_HOSTS.get(domain, [])]
+            aliases = domain_hosts(domain)
             kept.append(f"0.0.0.0 {' '.join(aliases)}")
             kept.append(f"::1 {' '.join(aliases)}")
         kept.append(END)
-    content = "\n".join(kept).rstrip() + "\n"
     mode = HOSTS.stat().st_mode & 0o777
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=HOSTS.parent, delete=False) as file:
-        file.write(content)
-        temporary = Path(file.name)
-    temporary.chmod(mode)
-    temporary.replace(HOSTS)
+    atomic_write(HOSTS, "\n".join(kept).rstrip() + "\n", mode)
 
 
-def state(config: dict) -> dict:
-    return {"active": active(), "enabled": config["enabled"], "domains": config["domains"], "schedules": config["schedules"], "helperInstalled": True}
+def browser_present(commands: tuple[str, ...]) -> bool:
+    return any(shutil.which(command) for command in commands)
+
+
+def write_chromium_policies(filters: list[str]) -> dict[str, bool]:
+    results = {}
+    for browser, path in CHROMIUM_POLICIES.items():
+        write_json(path, {"URLBlocklist": filters})
+        results[browser] = True
+    return results
+
+
+def file_digest(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def write_firefox_policy(filters: list[str]) -> bool:
+    """Own only the policy file we created; never overwrite another administrator's file."""
+    previous_digest = FIREFOX_OWNERSHIP.read_text(encoding="utf-8").strip() if FIREFOX_OWNERSHIP.exists() else None
+    current_digest = file_digest(FIREFOX_POLICY)
+    if FIREFOX_POLICY.exists() and previous_digest != current_digest:
+        return False
+    write_json(FIREFOX_POLICY, {"policies": {"WebsiteFilter": {"Block": filters}}})
+    atomic_write(FIREFOX_OWNERSHIP, file_digest(FIREFOX_POLICY) or "")
+    return True
+
+
+def read_browser_clients() -> dict[str, int]:
+    clients = read_json(Path("/run/siteblock/browser-clients.json"), {})
+    if not isinstance(clients, dict):
+        return {}
+    now = int(dt.datetime.now(dt.timezone.utc).timestamp())
+    return {
+        str(name): int(value)
+        for name, value in clients.items()
+        if name != "updatedAt" and isinstance(value, int) and now - value < 15
+    }
+
+
+def browser_integrations(chromium: dict[str, bool], firefox_policy: bool) -> list[dict]:
+    clients = read_browser_clients()
+    browsers = [
+        ("Chrome", browser_present(("google-chrome", "google-chrome-stable")), chromium.get("Chrome", False), "chromium"),
+        ("Brave", browser_present(("brave-browser", "brave")), chromium.get("Brave", False), "chromium"),
+        ("Firefox", browser_present(("firefox",)), firefox_policy, "firefox"),
+    ]
+    return [
+        {
+            "name": name,
+            "detected": detected,
+            "policyReady": policy_ready,
+            "extensionRegistered": any(path.exists() for path in CHROMIUM_EXTERNAL_REGISTRATIONS.get(name, [])),
+            "extensionConnected": kind in clients,
+            "mode": "Regras dinâmicas" if kind in clients else "Política do navegador",
+        }
+        for name, detected, policy_ready, kind in browsers
+    ]
+
+
+def effective_payload(config: dict, enabled: bool) -> dict:
+    previous = read_json(EFFECTIVE_STATE, {})
+    desired = {"active": enabled, "domains": blocked_hosts(config) if enabled else []}
+    old_desired = {key: previous.get(key) for key in desired} if isinstance(previous, dict) else {}
+    revision = int(previous.get("revision", 0)) if isinstance(previous, dict) else 0
+    if desired != old_desired:
+        revision += 1
+    return {**desired, "revision": revision, "updatedAt": dt.datetime.now(dt.timezone.utc).isoformat()}
+
+
+def write_effective_state(config: dict, enabled: bool) -> dict:
+    payload = effective_payload(config, enabled)
+    write_json(EFFECTIVE_STATE, payload)
+    return payload
+
+
+def state(config: dict, chromium: dict[str, bool] | None = None, firefox_policy: bool | None = None) -> dict:
+    chromium = chromium or {name: path.exists() for name, path in CHROMIUM_POLICIES.items()}
+    if firefox_policy is None:
+        firefox_policy = FIREFOX_POLICY.exists() and FIREFOX_OWNERSHIP.exists()
+    effective = read_json(EFFECTIVE_STATE, {})
+    revision = effective.get("revision", 0) if isinstance(effective, dict) else 0
+    return {
+        "active": active(),
+        "enabled": config["enabled"],
+        "domains": config["domains"],
+        "schedules": config["schedules"],
+        "helperInstalled": True,
+        "revision": revision,
+        "browserIntegrations": browser_integrations(chromium, firefox_policy),
+    }
+
+
+def apply(config: dict) -> dict:
+    enabled = should_block(config)
+    write_hosts(config, enabled)
+    filters = blocked_url_filters(config, enabled)
+    chromium = write_chromium_policies(filters)
+    firefox_policy = write_firefox_policy(filters)
+    write_effective_state(config, enabled)
+    return state(config, chromium, firefox_policy)
 
 
 def require_root() -> None:
@@ -159,8 +303,7 @@ def session() -> int:
             elif action == "set-config":
                 config = normalize(request.get("config"))
                 write_config(config)
-                write_hosts(config, should_block(config))
-                response = state(config)
+                response = apply(config)
             else:
                 raise ValueError("Ação inválida.")
         except (OSError, PermissionError, ValueError, json.JSONDecodeError) as error:
@@ -175,7 +318,7 @@ def main() -> int:
         print(json.dumps(state(read_config()), ensure_ascii=False))
         return 0
     if command == "capabilities":
-        print(json.dumps({"session": True}))
+        print(json.dumps({"session": True, "browserIntegration": True, "integrationVersion": 2}))
         return 0
     if command == "session":
         return session()
@@ -186,8 +329,7 @@ def main() -> int:
     config = normalize(json.load(sys.stdin)) if command == "set-config" else read_config()
     if command == "set-config":
         write_config(config)
-    write_hosts(config, should_block(config))
-    print(json.dumps(state(config), ensure_ascii=False))
+    print(json.dumps(apply(config), ensure_ascii=False))
     return 0
 
 

@@ -1,0 +1,7 @@
+{
+  "name": "com.luis.siteblock",
+  "description": "Bridge local do SiteBlock",
+  "path": "/usr/local/lib/siteblock/siteblock-browser-bridge-chromium",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://ejhdjlpfeejbkjmmdnhcgnpjlcllldko/"]
+}

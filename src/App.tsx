@@ -3,6 +3,14 @@ import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 type Schedule = { id: string; days: number[]; start: string; end: string };
+type BrowserIntegration = {
+  name: string;
+  detected: boolean;
+  policyReady: boolean;
+  extensionRegistered: boolean;
+  extensionConnected: boolean;
+  mode: string;
+};
 type SiteBlockState = {
   active: boolean;
   enabled: boolean;
@@ -10,6 +18,8 @@ type SiteBlockState = {
   schedules: Schedule[];
   helperInstalled: boolean;
   sessionSupported: boolean;
+  revision: number;
+  browserIntegrations: BrowserIntegration[];
 };
 const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 const domainPattern = /^(?!-)(?:[a-z0-9-]+\.)+[a-z]{2,}$/i;
@@ -58,6 +68,8 @@ function App() {
             schedules: [],
             helperInstalled: false,
             sessionSupported: false,
+            revision: 0,
+            browserIntegrations: [],
           },
         );
         if (initialState?.helperInstalled) {
@@ -100,7 +112,9 @@ function App() {
     try {
       setState(await invoke<SiteBlockState>("install_siteblock_service"));
       setIntegrationRequired(false);
-      setMessage("Integração do sistema configurada. Agora use somente esta interface.");
+      setMessage(
+        "Integração configurada. Reinicie o Chrome ou Brave uma única vez para carregar a extensão; depois, use somente esta interface.",
+      );
     } catch (error) {
       setMessage(formatSystemError(error));
     } finally {
@@ -176,12 +190,45 @@ function App() {
         <aside className="setup-warning">
           <div>
             <strong>Configure a integração do sistema.</strong>
-            <span> Você só precisa autorizar uma vez; depois, tudo é feito pelo app.</span>
+            <span> Autorize agora para preparar o bloqueio e os navegadores.</span>
           </div>
           <button className="setup-button" onClick={() => void installService()} disabled={busy}>
             Configurar agora
           </button>
         </aside>
+      )}
+      {state.helperInstalled && (
+        <section className="browser-status" aria-label="Integração com navegadores">
+          <div>
+            <p className="eyebrow">INTEGRAÇÃO CONTÍNUA</p>
+            <p className="browser-copy">
+              A lista é aplicada automaticamente. Chrome e Brave recebem a política no momento da
+              mudança; a extensão elimina também páginas que já estão abertas.
+            </p>
+          </div>
+          <div className="browser-list">
+            {state.browserIntegrations.map((browser) => (
+              <div className="browser-item" key={browser.name}>
+                <span className={`browser-dot ${browser.detected ? "ready" : ""}`} />
+                <div>
+                  <strong>{browser.name}</strong>
+                  <small>
+                    {browser.extensionConnected
+                      ? "Conectado — regras imediatas"
+                      : browser.extensionRegistered
+                        ? "Extensão instalada"
+                        : browser.policyReady
+                          ? browser.mode
+                          : "Aguardando integração"}
+                  </small>
+                </div>
+              </div>
+            ))}
+            {state.browserIntegrations.length === 0 && (
+              <span className="browser-empty">Integração será verificada após a configuração.</span>
+            )}
+          </div>
+        </section>
       )}
       <section className="hero">
         <div>
@@ -346,7 +393,10 @@ function App() {
             {message}
           </p>
         )}
-        <span>Alterações no sistema exigem sua autorização.</span>
+        <span>
+          Autorização solicitada uma vez por abertura do app, ou ao atualizar a integração.
+          Alterações da lista são aplicadas automaticamente.
+        </span>
       </footer>
     </main>
   );

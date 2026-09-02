@@ -106,6 +106,61 @@ footer,
   font-size: 11px;
   font-weight: bold;
 }
+.browser-status {
+  border: 1px solid #3a453a;
+  background: rgba(23, 30, 25, 0.82);
+  margin-top: 16px;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 1.4fr;
+  align-items: center;
+  gap: 24px;
+}
+.browser-copy {
+  color: #aeb8ad;
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+.browser-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.browser-item {
+  min-height: 48px;
+  border-left: 1px solid #465247;
+  padding: 2px 8px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.browser-item strong,
+.browser-item small {
+  display: block;
+}
+.browser-item strong {
+  color: #ece8dd;
+  font-size: 11px;
+}
+.browser-item small,
+.browser-empty {
+  color: #849083;
+  font-size: 9px;
+  line-height: 1.4;
+}
+.browser-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #697369;
+}
+.browser-dot.ready {
+  background: #caff5c;
+  box-shadow: 0 0 8px #caff5c;
+}
 .hero {
   display: grid;
   grid-template-columns: 1.6fr 0.8fr;
@@ -383,7 +438,8 @@ footer {
     width: min(100% - 26px, 1120px);
   }
   .hero,
-  .content-grid {
+  .content-grid,
+  .browser-status {
     grid-template-columns: 1fr;
   }
   .hero {
@@ -396,6 +452,9 @@ footer {
   .status-card {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .browser-list {
+    grid-template-columns: 1fr;
   }
   .topbar {
     align-items: flex-start;
