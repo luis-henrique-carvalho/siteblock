@@ -55,16 +55,40 @@ pub fn start_privileged_session(
 }
 
 #[tauri::command]
+pub fn log_client_message(level: String, category: String, message: String) {
+    match level.to_uppercase().as_str() {
+        "DEBUG" => log::debug!("[UI:{}] {}", category, message),
+        "WARN" => log::warn!("[UI:{}] {}", category, message),
+        "ERROR" => log::error!("[UI:{}] {}", category, message),
+        _ => log::info!("[UI:{}] {}", category, message),
+    }
+}
+
+#[tauri::command]
 pub fn save_siteblock_config(
     app: AppHandle,
     config: SiteBlockConfig,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
+    let profiles_info: Vec<String> = config
+        .profiles
+        .iter()
+        .map(|p| {
+            format!(
+                "{}(ativo={}, domínios={}, agendas={})",
+                p.name,
+                p.enabled,
+                p.domains.len(),
+                p.schedules.len()
+            )
+        })
+        .collect();
+
     log::info!(
-        "Invocando command: save_siteblock_config (enabled={}, profiles={}, legacy_domains={:?})",
+        "[Ação de Configuração] Salvando estado mestre: enabled={} | Perfis [{}]: {}",
         config.enabled,
         config.profiles.len(),
-        config.domains
+        profiles_info.join(", ")
     );
     let start = Instant::now();
     let result = state.save_config_use_case.execute(config).map_err(|err| {
@@ -74,10 +98,11 @@ pub fn save_siteblock_config(
     if let Ok(ref s) = result {
         sync_tray(&app, s);
         log::info!(
-            "save_siteblock_config concluído em {:?} (active={}, revision={})",
-            start.elapsed(),
+            "[Ação Concluída] Proteção ativa={} | Perfis em vigor={:?} | Domínios efetivos={} (em {:?})",
             s.active,
-            s.revision
+            s.active_profile_ids,
+            s.effective_domains.len(),
+            start.elapsed()
         );
     }
     result

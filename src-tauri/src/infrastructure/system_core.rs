@@ -446,6 +446,7 @@ pub fn get_current_state(
         session_supported: true,
         revision,
         browser_integrations: get_browser_integrations(&chromium, ff_policy),
+        helper_outdated: false,
     }
 }
 

@@ -44,19 +44,22 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       .then((nextState) => {
         initialState = nextState;
         logger.debug("Hook", "Status inicial obtido", nextState);
-        if (nextState.helperInstalled && !nextState.sessionSupported) {
+        if (nextState.helperInstalled && (!nextState.sessionSupported || nextState.helperOutdated)) {
           if (mounted) {
             setIntegrationRequired(true);
             setMessage(translation.current("message.integrationUpdate"));
-            logger.warn("Hook", "Integração precisa ser atualizada (sessionSupported=false)");
+            logger.warn("Hook", "Integração precisa ser atualizada (helperOutdated=true)");
           }
-          return nextState;
         }
         return nextState.helperInstalled ? api.startPrivilegedSession() : nextState;
       })
       .then((nextState) => {
         if (mounted) {
           setState(nextState);
+          if (nextState.helperOutdated) {
+            setIntegrationRequired(true);
+            setMessage(translation.current("message.integrationUpdate"));
+          }
           logger.info("Hook", "Estado carregado com sucesso", {
             active: nextState.active,
             enabled: nextState.enabled,
@@ -135,6 +138,9 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
           schedules: next.schedules,
         });
         setState(saved);
+        if (saved.helperOutdated) {
+          setIntegrationRequired(true);
+        }
         setMessage(successMessage);
         logger.info("Hook", "Configuração salva com sucesso", { revision: saved.revision });
       } catch (error) {
@@ -359,10 +365,24 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     [state, selectedProfile],
   );
 
-  const saveSchedules = useCallback(async () => {
-    if (!state) return;
-    await commit(state, t("message.scheduleUpdated"));
-  }, [state, commit, t]);
+  const saveSchedules = useCallback(
+    async (overrideSchedules?: Schedule[]) => {
+      if (!state) return;
+      let nextState = state;
+      if (overrideSchedules && selectedProfile) {
+        const updatedProfiles = state.profiles.map((p) =>
+          p.id === selectedProfile.id ? { ...p, schedules: overrideSchedules } : p,
+        );
+        nextState = { ...state, profiles: updatedProfiles };
+      }
+      logger.info("Hook", "Salvando agenda de horários...", {
+        profile: selectedProfile?.name ?? "Global",
+        schedulesCount: overrideSchedules?.length ?? selectedProfile?.schedules.length ?? 0,
+      });
+      await commit(nextState, t("message.scheduleUpdated"));
+    },
+    [state, selectedProfile, commit, t],
+  );
 
   return {
     state,

@@ -154,7 +154,7 @@ function AppContent() {
             schedules={currentSchedules}
             disabled={isActionsDisabled}
             onUpdateSchedules={updateLocalSchedules}
-            onSaveSchedules={() => void saveSchedules()}
+            onSaveSchedules={(s) => void saveSchedules(s)}
           />
         </div>
 

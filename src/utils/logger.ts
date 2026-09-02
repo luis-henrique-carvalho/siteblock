@@ -1,3 +1,5 @@
+import { invoke } from "@tauri-apps/api/core";
+
 export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
 export interface LogEntry {
@@ -41,6 +43,19 @@ class FrontendLogger {
       case "ERROR":
         console.error(prefix, message, data ?? "");
         break;
+    }
+
+    try {
+      if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
+        const detail = data ? ` | ${JSON.stringify(data)}` : "";
+        invoke("log_client_message", {
+          level,
+          category,
+          message: `${message}${detail}`,
+        }).catch(() => {});
+      }
+    } catch {
+      // Ignora erro fora do ambiente Tauri
     }
   }
 

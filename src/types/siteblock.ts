@@ -29,6 +29,7 @@ export interface SiteBlockState {
   sessionSupported: boolean;
   revision: number;
   browserIntegrations: BrowserIntegration[];
+  helperOutdated?: boolean;
 }
 
 export interface SiteBlockConfigDto {

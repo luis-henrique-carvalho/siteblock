@@ -22,6 +22,7 @@ fn create_sample_state(active: bool) -> SiteBlockState {
         session_supported: true,
         revision: 1,
         browser_integrations: vec![],
+        helper_outdated: false,
     };
     state.ensure_migrated();
     state

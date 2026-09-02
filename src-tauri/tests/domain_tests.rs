@@ -111,6 +111,7 @@ fn test_state_json_serialization_camel_case() {
             policy_ready: true,
             mode: "Política gerenciada".into(),
         }],
+        helper_outdated: false,
     };
 
     let serialized = serde_json::to_string(&state).unwrap();

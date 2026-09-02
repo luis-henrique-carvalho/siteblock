@@ -5,11 +5,28 @@ use siteblock_lib::infrastructure::system_core::{
     apply_config, get_current_state, is_root, read_config, write_config_file,
 };
 
+fn append_audit_log(message: &str) {
+    let log_path = "/var/log/siteblock-admin.log";
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_path)
+    {
+        let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+        let _ = writeln!(file, "[{}] {}", timestamp, message);
+    }
+}
+
 fn run_session() -> Result<(), Box<dyn std::error::Error>> {
     if !is_root() {
         eprintln!("Erro: Essa ação precisa de autorização administrativa.");
         std::process::exit(1);
     }
+
+    append_audit_log(&format!(
+        "Sessão administrativa iniciada (PID: {})",
+        std::process::id()
+    ));
 
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -33,6 +50,10 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
                     "status" => {
                         let cfg = read_config();
                         let state = get_current_state(&cfg, None, None);
+                        append_audit_log(&format!(
+                            "Ação status atendida: active={}, enabled={}",
+                            state.active, state.enabled
+                        ));
                         serde_json::to_string(&state)
                             .unwrap_or_else(|e| format!("{{\"error\":\"{}\"}}", e))
                     }
@@ -43,6 +64,12 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
                                     config.ensure_migrated();
                                     match config.validate() {
                                         Ok(_) => {
+                                            append_audit_log(&format!(
+                                                "Ação set-config: aplicando enabled={}, perfis={}, domínios_legados={}",
+                                                config.enabled,
+                                                config.profiles.len(),
+                                                config.domains.len()
+                                            ));
                                             let _ = write_config_file(&config);
                                             let state = apply_config(&config);
                                             serde_json::to_string(&state)
@@ -137,6 +164,11 @@ fn main() {
                 std::process::exit(1);
             }
             let config = read_config();
+            append_audit_log(&format!(
+                "Reconcile periódico executado: enabled={}, perfis={}",
+                config.enabled,
+                config.profiles.len()
+            ));
             let state = apply_config(&config);
             println!("{}", serde_json::to_string(&state).unwrap_or_default());
         }

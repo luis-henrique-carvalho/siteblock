@@ -4,7 +4,7 @@ pub mod infrastructure;
 pub mod presentation;
 
 use presentation::commands::{
-    get_siteblock_status, install_siteblock_service, save_siteblock_config,
+    get_siteblock_status, install_siteblock_service, log_client_message, save_siteblock_config,
     start_privileged_session,
 };
 use presentation::menu::{build_app_menu, handle_menu_event};
@@ -60,7 +60,8 @@ pub fn run() {
             get_siteblock_status,
             start_privileged_session,
             save_siteblock_config,
-            install_siteblock_service
+            install_siteblock_service,
+            log_client_message
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

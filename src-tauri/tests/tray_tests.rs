@@ -41,6 +41,7 @@ fn create_sample_state(enabled: bool, active: bool, helper_installed: bool) -> S
         session_supported: true,
         revision: 1,
         browser_integrations: vec![],
+        helper_outdated: false,
     }
 }
 

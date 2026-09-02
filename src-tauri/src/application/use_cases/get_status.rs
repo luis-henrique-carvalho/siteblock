@@ -22,7 +22,9 @@ impl GetStatusUseCase {
             AppError::InvalidResponse(format!("Falha ao decodificar status: {err}"))
         })?;
 
+        let is_outdated = !raw_status.contains("\"profiles\"");
         state.ensure_migrated();
+        state.helper_outdated = is_outdated;
         state.session_supported = self.helper.supports_session();
         Ok(state)
     }

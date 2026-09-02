@@ -10,7 +10,7 @@ interface ScheduleManagerProps {
   schedules: Schedule[];
   disabled: boolean;
   onUpdateSchedules: (updater: (prev: Schedule[]) => Schedule[]) => void;
-  onSaveSchedules: () => void;
+  onSaveSchedules: (schedules?: Schedule[]) => void;
 }
 
 export function ScheduleManager({
@@ -30,8 +30,8 @@ export function ScheduleManager({
     );
   };
 
-  const handleRemoveSchedule = (id: string) => {
-    onUpdateSchedules((prev) => prev.filter((rule) => rule.id !== id));
+  const handleRemoveSchedule = (targetIndex: number) => {
+    onUpdateSchedules((prev) => prev.filter((_, i) => i !== targetIndex));
   };
 
   return (
@@ -69,12 +69,12 @@ export function ScheduleManager({
           )}
           {schedules.map((schedule, index) => (
             <ScheduleCard
-              key={schedule.id}
+              key={`${schedule.id}-${index}`}
               schedule={schedule}
               index={index}
               disabled={disabled}
               onUpdate={handleUpdateSchedule}
-              onRemove={handleRemoveSchedule}
+              onRemove={() => handleRemoveSchedule(index)}
             />
           ))}
         </div>
@@ -84,7 +84,7 @@ export function ScheduleManager({
         <Button
           type="button"
           className="save-button w-full gap-2 font-semibold tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-          onClick={onSaveSchedules}
+          onClick={() => onSaveSchedules(schedules)}
           disabled={disabled}
         >
           <Save className="size-4" aria-hidden="true" />

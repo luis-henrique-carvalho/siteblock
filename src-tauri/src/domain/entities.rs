@@ -245,6 +245,11 @@ impl SiteBlockConfig {
     pub fn ensure_migrated(&mut self) {
         if self.profiles.is_empty() {
             if !self.domains.is_empty() || !self.schedules.is_empty() {
+                let mut focus_schedules = std::mem::take(&mut self.schedules);
+                focus_schedules.retain(|s| {
+                    s.id != "sleep-night" && s.id != "study-morning" && s.id != "study-afternoon"
+                });
+
                 let focus_profile = Profile::new(
                     "focus",
                     "Foco",
@@ -252,7 +257,7 @@ impl SiteBlockConfig {
                     "blue",
                     true,
                     std::mem::take(&mut self.domains),
-                    std::mem::take(&mut self.schedules),
+                    focus_schedules,
                 );
                 self.profiles = vec![
                     focus_profile,
@@ -263,6 +268,18 @@ impl SiteBlockConfig {
                 self.profiles = Profile::default_presets();
             }
         }
+
+        // Purgar duplicatas e regras de outros presets que tenham vazado para o perfil focus
+        for profile in &mut self.profiles {
+            if profile.id == "focus" {
+                profile.schedules.retain(|s| {
+                    s.id != "sleep-night" && s.id != "study-morning" && s.id != "study-afternoon"
+                });
+            }
+            let mut seen_ids = std::collections::HashSet::new();
+            profile.schedules.retain(|s| seen_ids.insert(s.id.clone()));
+        }
+
         self.populate_legacy_fields();
     }
 
@@ -317,6 +334,8 @@ pub struct SiteBlockState {
     pub revision: u64,
     #[serde(default)]
     pub browser_integrations: Vec<BrowserIntegration>,
+    #[serde(default)]
+    pub helper_outdated: bool,
 }
 
 impl SiteBlockState {
@@ -333,12 +352,18 @@ impl SiteBlockState {
             session_supported: false,
             revision: 0,
             browser_integrations: Vec::new(),
+            helper_outdated: false,
         }
     }
 
     pub fn ensure_migrated(&mut self) {
         if self.profiles.is_empty() {
             if !self.domains.is_empty() || !self.schedules.is_empty() {
+                let mut focus_schedules = self.schedules.clone();
+                focus_schedules.retain(|s| {
+                    s.id != "sleep-night" && s.id != "study-morning" && s.id != "study-afternoon"
+                });
+
                 let focus_profile = Profile::new(
                     "focus",
                     "Foco",
@@ -346,7 +371,7 @@ impl SiteBlockState {
                     "blue",
                     true,
                     self.domains.clone(),
-                    self.schedules.clone(),
+                    focus_schedules,
                 );
                 self.profiles = vec![
                     focus_profile,
@@ -357,6 +382,18 @@ impl SiteBlockState {
                 self.profiles = Profile::default_presets();
             }
         }
+
+        // Purgar duplicatas e regras de outros presets que tenham vazado para o perfil focus
+        for profile in &mut self.profiles {
+            if profile.id == "focus" {
+                profile.schedules.retain(|s| {
+                    s.id != "sleep-night" && s.id != "study-morning" && s.id != "study-afternoon"
+                });
+            }
+            let mut seen_ids = std::collections::HashSet::new();
+            profile.schedules.retain(|s| seen_ids.insert(s.id.clone()));
+        }
+
         if self.active && self.active_profile_ids.is_empty() {
             self.active_profile_ids = vec!["focus".to_string()];
         }

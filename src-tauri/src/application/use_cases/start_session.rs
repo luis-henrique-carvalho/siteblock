@@ -20,7 +20,9 @@ impl StartSessionUseCase {
         }
 
         let mut state = self.session.send_request(json!({ "action": "status" }))?;
+        let is_outdated = state.profiles.is_empty();
         state.ensure_migrated();
+        state.helper_outdated = is_outdated;
         Ok(state)
     }
 }
