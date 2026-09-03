@@ -30,6 +30,7 @@ fn dummy_state() -> SiteBlockState {
         session_supported: true,
         revision: 1,
         browser_integrations: vec![],
+        enabled_browsers: vec!["Chrome".into(), "Brave".into(), "Firefox".into()],
         helper_outdated: false,
     }
 }
@@ -44,7 +45,7 @@ fn test_get_admin_capabilities_structure() {
     );
     assert_eq!(
         caps.get("integrationVersion").and_then(|v| v.as_u64()),
-        Some(2)
+        Some(3)
     );
 }
 

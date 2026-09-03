@@ -81,7 +81,7 @@ impl HelperPort for SystemHelper {
                         .get("integrationVersion")
                         .and_then(serde_json::Value::as_u64)
                         .unwrap_or_default()
-                        >= 2
+                        >= 3
             })
     }
 

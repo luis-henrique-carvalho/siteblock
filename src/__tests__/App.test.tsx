@@ -20,10 +20,12 @@ const mockStatus = {
   helperInstalled: true,
   sessionSupported: true,
   revision: 1,
+  enabledBrowsers: ["Chrome", "Brave", "Firefox"],
   browserIntegrations: [
     {
       name: "Google Chrome",
       detected: true,
+      enabled: true,
       policyReady: true,
       mode: "Política gerenciada",
     },

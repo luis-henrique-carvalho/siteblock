@@ -9,8 +9,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, BadgeCheck, Languages, MonitorCog } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertCircle, BadgeCheck, Globe, Languages, MonitorCog } from "lucide-react";
 import { LANGUAGES, type Language, useLanguage } from "../../i18n";
+import type { BrowserIntegration } from "../../types/siteblock";
 
 const languageNames: Record<Language, string> = {
   "pt-BR": "Português (Brasil)",
@@ -20,9 +22,18 @@ const languageNames: Record<Language, string> = {
 interface PreferencesPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  browsers?: BrowserIntegration[];
+  disabled?: boolean;
+  onBrowserEnabledChange?: (browser: string, enabled: boolean) => void;
 }
 
-export function PreferencesPanel({ open, onOpenChange }: PreferencesPanelProps) {
+export function PreferencesPanel({
+  open,
+  onOpenChange,
+  browsers = [],
+  disabled = false,
+  onBrowserEnabledChange,
+}: PreferencesPanelProps) {
   const { hasPersistenceError, language, setLanguage, t } = useLanguage();
 
   return (
@@ -89,6 +100,55 @@ export function PreferencesPanel({ open, onOpenChange }: PreferencesPanelProps) 
                 )}
                 {t(hasPersistenceError ? "preferences.saveError" : "preferences.saved")}
               </span>
+            </div>
+          </section>
+
+          <section className="mt-4 rounded-xl border border-border/80 bg-background/45 p-5 shadow-inner shadow-black/5">
+            <div className="flex items-start gap-3.5">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-primary/35 bg-primary/10 text-primary shadow-sm">
+                <Globe className="size-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 pt-0.5">
+                <h3 className="text-base font-semibold tracking-tight text-foreground">
+                  {t("preferences.browsers")}
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {t("preferences.browsersDescription")}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-2 border-t border-border/70 pt-4">
+              {browsers.map((browser) => (
+                <label
+                  key={browser.name}
+                  className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border border-border/70 px-3 py-2.5 transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60"
+                >
+                  <span>
+                    <span className="block text-sm font-medium text-foreground">
+                      {browser.name}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {browser.detected
+                        ? t("preferences.browserDetected")
+                        : t("preferences.browserNotDetected")}
+                    </span>
+                  </span>
+                  <Checkbox
+                    checked={browser.enabled}
+                    disabled={disabled}
+                    aria-label={t("preferences.browserToggle", { browser: browser.name })}
+                    onCheckedChange={(checked) =>
+                      onBrowserEnabledChange?.(browser.name, checked === true)
+                    }
+                  />
+                </label>
+              ))}
+              {browsers.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {t("preferences.browserSetupRequired")}
+                </p>
+              )}
             </div>
           </section>
         </div>

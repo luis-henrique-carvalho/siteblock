@@ -1,13 +1,15 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SignalDot } from "../common/SignalDot";
-import { ShieldCheck, ShieldAlert } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Settings2 } from "lucide-react";
 import { useLanguage } from "../../i18n";
 
 interface TopBarProps {
   active: boolean;
+  onOpenPreferences?: () => void;
 }
 
-export function TopBar({ active }: TopBarProps) {
+export function TopBar({ active, onOpenPreferences }: TopBarProps) {
   const { t } = useLanguage();
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-5 mb-6">
@@ -26,22 +28,37 @@ export function TopBar({ active }: TopBarProps) {
         </div>
       </div>
 
-      <Badge
-        variant="secondary"
-        className="flex items-center gap-2 py-1.5 px-3 rounded-full border border-border/80 bg-secondary/60 text-secondary-foreground text-xs font-medium tracking-wide"
-        role="status"
-        aria-live="polite"
-      >
-        <SignalDot active={active} />
-        <span className="flex items-center gap-1.5">
-          {active ? (
-            <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
-          ) : (
-            <ShieldAlert className="size-3.5 text-muted-foreground" aria-hidden="true" />
-          )}
-          {active ? t("status.protected") : t("status.paused")}
-        </span>
-      </Badge>
+      <div className="flex items-center gap-2.5">
+        <Badge
+          variant="secondary"
+          className="flex items-center gap-2 py-1.5 px-3 rounded-full border border-border/80 bg-secondary/60 text-secondary-foreground text-xs font-medium tracking-wide"
+          role="status"
+          aria-live="polite"
+        >
+          <SignalDot active={active} />
+          <span className="flex items-center gap-1.5">
+            {active ? (
+              <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
+            ) : (
+              <ShieldAlert className="size-3.5 text-muted-foreground" aria-hidden="true" />
+            )}
+            {active ? t("status.protected") : t("status.paused")}
+          </span>
+        </Badge>
+
+        {onOpenPreferences && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenPreferences}
+            className="size-8 rounded-full border border-border/70 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={t("topbar.settingsAria")}
+            title={t("topbar.settings")}
+          >
+            <Settings2 className="size-4" aria-hidden="true" />
+          </Button>
+        )}
+      </div>
     </header>
   );
 }

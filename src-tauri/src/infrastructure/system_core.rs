@@ -235,7 +235,10 @@ pub fn build_chromium_policy_content(filters: &[String]) -> String {
     serde_json::to_string_pretty(&body).unwrap_or_default() + "\n"
 }
 
-pub fn write_chromium_policies(filters: &[String]) -> HashMap<String, bool> {
+pub fn write_chromium_policies(
+    filters: &[String],
+    enabled_browsers: &[String],
+) -> HashMap<String, bool> {
     let policies = [
         (
             "Chrome",
@@ -251,7 +254,13 @@ pub fn write_chromium_policies(filters: &[String]) -> HashMap<String, bool> {
     let content = build_chromium_policy_content(filters);
 
     for (name, path) in policies {
-        let success = atomic_write(path, content.as_bytes(), 0o644).is_ok();
+        let enabled = enabled_browsers.iter().any(|browser| browser == name);
+        let success = if enabled {
+            atomic_write(path, content.as_bytes(), 0o644).is_ok()
+        } else {
+            let _ = fs::remove_file(path);
+            false
+        };
         results.insert(name.to_string(), success);
     }
     results
@@ -321,11 +330,33 @@ pub fn write_firefox_policy(filters: &[String]) -> bool {
     }
 }
 
+pub fn remove_firefox_policy() -> bool {
+    let policy_path = Path::new(FIREFOX_POLICY_PATH);
+    let ownership_path = Path::new(FIREFOX_OWNERSHIP_PATH);
+
+    if !policy_path.exists() {
+        let _ = fs::remove_file(ownership_path);
+        return true;
+    }
+
+    let previous_digest = fs::read_to_string(ownership_path)
+        .map(|digest| digest.trim().to_string())
+        .ok();
+    let current_digest = file_sha256(policy_path);
+
+    if previous_digest.as_deref() != current_digest.as_deref() {
+        log::warn!("Política do Firefox não pertence ao SiteBlock. Ignorando remoção.");
+        return false;
+    }
+
+    fs::remove_file(policy_path).is_ok() && fs::remove_file(ownership_path).is_ok()
+}
+
 pub fn get_admin_capabilities() -> serde_json::Value {
     serde_json::json!({
         "session": true,
         "browserIntegration": true,
-        "integrationVersion": 2
+        "integrationVersion": 3
     })
 }
 
@@ -421,6 +452,7 @@ fn command_exists(names: &[&str]) -> bool {
 pub fn get_browser_integrations(
     chromium: &HashMap<String, bool>,
     firefox_policy: bool,
+    enabled_browsers: &[String],
 ) -> Vec<BrowserIntegration> {
     let chrome_detected = command_exists(&["google-chrome", "google-chrome-stable"]);
     let brave_detected = command_exists(&["brave-browser", "brave"]);
@@ -430,22 +462,36 @@ pub fn get_browser_integrations(
         BrowserIntegration {
             name: "Chrome".to_string(),
             detected: chrome_detected,
-            policy_ready: *chromium.get("Chrome").unwrap_or(&false),
-            mode: "Política gerenciada".to_string(),
+            enabled: enabled_browsers.iter().any(|browser| browser == "Chrome"),
+            policy_ready: enabled_browsers.iter().any(|browser| browser == "Chrome")
+                && *chromium.get("Chrome").unwrap_or(&false),
+            mode: browser_mode("Chrome", enabled_browsers),
         },
         BrowserIntegration {
             name: "Brave".to_string(),
             detected: brave_detected,
-            policy_ready: *chromium.get("Brave").unwrap_or(&false),
-            mode: "Política gerenciada".to_string(),
+            enabled: enabled_browsers.iter().any(|browser| browser == "Brave"),
+            policy_ready: enabled_browsers.iter().any(|browser| browser == "Brave")
+                && *chromium.get("Brave").unwrap_or(&false),
+            mode: browser_mode("Brave", enabled_browsers),
         },
         BrowserIntegration {
             name: "Firefox".to_string(),
             detected: firefox_detected,
-            policy_ready: firefox_policy,
-            mode: "Política gerenciada".to_string(),
+            enabled: enabled_browsers.iter().any(|browser| browser == "Firefox"),
+            policy_ready: enabled_browsers.iter().any(|browser| browser == "Firefox")
+                && firefox_policy,
+            mode: browser_mode("Firefox", enabled_browsers),
         },
     ]
+}
+
+fn browser_mode(name: &str, enabled_browsers: &[String]) -> String {
+    if enabled_browsers.iter().any(|browser| browser == name) {
+        "Política gerenciada".to_string()
+    } else {
+        "Desativado nas configurações".to_string()
+    }
 }
 
 pub fn read_config() -> SiteBlockConfig {
@@ -564,7 +610,12 @@ pub fn get_current_state(
         helper_installed: Path::new("/usr/local/lib/siteblock/siteblock-admin").exists(),
         session_supported: true,
         revision,
-        browser_integrations: get_browser_integrations(&chromium, ff_policy),
+        browser_integrations: get_browser_integrations(
+            &chromium,
+            ff_policy,
+            &config.enabled_browsers,
+        ),
+        enabled_browsers: config.enabled_browsers.clone(),
         helper_outdated: false,
     }
 }
@@ -575,8 +626,12 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
 
     let _ = write_hosts_file(config, enabled);
     let filters = blocked_url_filters(config, enabled);
-    let chromium = write_chromium_policies(&filters);
-    let ff_policy = write_firefox_policy(&filters);
+    let chromium = write_chromium_policies(&filters, &config.enabled_browsers);
+    let ff_policy = if config.enabled_browsers.iter().any(|browser| browser == "Firefox") {
+        write_firefox_policy(&filters)
+    } else {
+        remove_firefox_policy()
+    };
     let _ = write_effective_state(config, enabled);
     flush_dns();
 

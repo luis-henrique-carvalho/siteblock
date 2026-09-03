@@ -13,6 +13,7 @@ export interface Profile {
 export interface BrowserIntegration {
   name: string;
   detected: boolean;
+  enabled: boolean;
   policyReady: boolean;
   mode: string;
 }
@@ -29,12 +30,14 @@ export interface SiteBlockState {
   sessionSupported: boolean;
   revision: number;
   browserIntegrations: BrowserIntegration[];
+  enabledBrowsers: string[];
   helperOutdated?: boolean;
 }
 
 export interface SiteBlockConfigDto {
   enabled: boolean;
   profiles: Profile[];
+  enabledBrowsers: string[];
   domains?: string[];
   schedules?: Schedule[];
 }

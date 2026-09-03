@@ -1,5 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+pub const SUPPORTED_BROWSERS: [&str; 3] = ["Chrome", "Brave", "Firefox"];
+
+pub fn default_enabled_browsers() -> Vec<String> {
+    SUPPORTED_BROWSERS.iter().map(|browser| (*browser).to_string()).collect()
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Schedule {
@@ -198,6 +204,8 @@ impl Profile {
 #[serde(rename_all = "camelCase")]
 pub struct SiteBlockConfig {
     pub enabled: bool,
+    #[serde(default = "default_enabled_browsers")]
+    pub enabled_browsers: Vec<String>,
     #[serde(default)]
     pub profiles: Vec<Profile>,
     #[serde(default)]
@@ -210,6 +218,7 @@ impl SiteBlockConfig {
     pub fn new(enabled: bool, profiles: Vec<Profile>) -> Self {
         let mut cfg = Self {
             enabled,
+            enabled_browsers: default_enabled_browsers(),
             profiles,
             domains: Vec::new(),
             schedules: Vec::new(),
@@ -221,6 +230,7 @@ impl SiteBlockConfig {
     pub fn legacy(enabled: bool, domains: Vec<String>, schedules: Vec<Schedule>) -> Self {
         Self {
             enabled,
+            enabled_browsers: default_enabled_browsers(),
             profiles: Vec::new(),
             domains,
             schedules,
@@ -284,6 +294,13 @@ impl SiteBlockConfig {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        if let Some(browser) = self
+            .enabled_browsers
+            .iter()
+            .find(|browser| !SUPPORTED_BROWSERS.contains(&browser.as_str()))
+        {
+            return Err(format!("Navegador não suportado: '{browser}'."));
+        }
         for profile in &self.profiles {
             profile.validate()?;
         }
@@ -308,6 +325,8 @@ impl SiteBlockConfig {
 pub struct BrowserIntegration {
     pub name: String,
     pub detected: bool,
+    #[serde(default)]
+    pub enabled: bool,
     pub policy_ready: bool,
     pub mode: String,
 }
@@ -334,6 +353,8 @@ pub struct SiteBlockState {
     pub revision: u64,
     #[serde(default)]
     pub browser_integrations: Vec<BrowserIntegration>,
+    #[serde(default = "default_enabled_browsers")]
+    pub enabled_browsers: Vec<String>,
     #[serde(default)]
     pub helper_outdated: bool,
 }
@@ -352,6 +373,7 @@ impl SiteBlockState {
             session_supported: false,
             revision: 0,
             browser_integrations: Vec::new(),
+            enabled_browsers: default_enabled_browsers(),
             helper_outdated: false,
         }
     }
@@ -408,4 +430,3 @@ impl Default for SiteBlockState {
         Self::empty()
     }
 }
-

@@ -171,9 +171,11 @@ fn test_state_json_serialization_camel_case() {
         browser_integrations: vec![BrowserIntegration {
             name: "Chrome".into(),
             detected: true,
+            enabled: true,
             policy_ready: true,
             mode: "Política gerenciada".into(),
         }],
+        enabled_browsers: vec!["Chrome".into()],
         helper_outdated: false,
     };
 
@@ -181,6 +183,7 @@ fn test_state_json_serialization_camel_case() {
     assert!(serialized.contains("\"helperInstalled\":true"));
     assert!(serialized.contains("\"sessionSupported\":true"));
     assert!(serialized.contains("\"browserIntegrations\":["));
+    assert!(serialized.contains("\"enabledBrowsers\":[\"Chrome\"]"));
     assert!(serialized.contains("\"policyReady\":true"));
     assert!(serialized.contains("\"activeProfileIds\":[\"p1\"]"));
 

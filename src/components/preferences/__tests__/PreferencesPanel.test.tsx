@@ -35,7 +35,7 @@ describe("PreferencesPanel", () => {
 
     await user.selectOptions(screen.getByLabelText("Idioma"), "en");
 
-    expect(screen.getByRole("heading", { name: "Application interface" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
     await waitFor(() => expect(storeValues.get("language")).toBe("en"));
   });
 
@@ -49,7 +49,7 @@ describe("PreferencesPanel", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Application interface" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
       expect(storeValues.get("language")).toBe("en");
     });
     expect(window.localStorage.getItem("siteblock.preferences.language")).toBeNull();

@@ -37,6 +37,7 @@ function AppContent() {
     busy,
     integrationRequired,
     toggleEnabled,
+    setBrowserEnabled,
     installService,
     selectProfile,
     toggleProfileEnabled,
@@ -52,17 +53,11 @@ function AppContent() {
 
   const activeProfilesNames = useMemo(() => {
     if (!state?.profiles || !state.activeProfileIds) return [];
-    return state.profiles
-      .filter((p) => state.activeProfileIds.includes(p.id))
-      .map((p) => p.name);
+    return state.profiles.filter((p) => state.activeProfileIds.includes(p.id)).map((p) => p.name);
   }, [state?.profiles, state?.activeProfileIds]);
 
   const scheduleSummary = useMemo(
-    () =>
-      getScheduleSummary(
-        selectedProfile?.schedules.length ?? state?.schedules.length ?? 0,
-        t,
-      ),
+    () => getScheduleSummary(selectedProfile?.schedules.length ?? state?.schedules.length ?? 0, t),
     [selectedProfile?.schedules.length, state?.schedules.length, t],
   );
 
@@ -102,13 +97,14 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors">
       <main className="app-shell animate-in fade-in duration-300">
-        <TopBar active={state.active} />
+        <TopBar
+          active={state.active}
+          onOpenPreferences={() => setPreferencesOpen(true)}
+        />
 
         {(!state.helperInstalled || integrationRequired) && (
           <SetupBanner onInstall={() => void installService()} busy={busy} />
         )}
-
-        {state.helperInstalled && <BrowserStatusList integrations={state.browserIntegrations} />}
 
         <HeroSection
           active={state.active}
@@ -141,6 +137,15 @@ function AppContent() {
           </div>
         )}
 
+        {state.helperInstalled && (
+          <BrowserStatusList
+            integrations={state.browserIntegrations}
+            disabled={isActionsDisabled}
+            onToggleBrowser={(browser, enabled) => void setBrowserEnabled(browser, enabled)}
+            onOpenPreferences={() => setPreferencesOpen(true)}
+          />
+        )}
+
         <div className="content-grid">
           <DomainManager
             domains={currentDomains}
@@ -158,7 +163,13 @@ function AppContent() {
           />
         </div>
 
-        <PreferencesPanel open={preferencesOpen} onOpenChange={setPreferencesOpen} />
+        <PreferencesPanel
+          open={preferencesOpen}
+          onOpenChange={setPreferencesOpen}
+          browsers={state.browserIntegrations}
+          disabled={isActionsDisabled || integrationRequired}
+          onBrowserEnabledChange={(browser, enabled) => void setBrowserEnabled(browser, enabled)}
+        />
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
         <Footer message={message} />

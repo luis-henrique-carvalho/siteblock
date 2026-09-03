@@ -44,7 +44,10 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       .then((nextState) => {
         initialState = nextState;
         logger.debug("Hook", "Status inicial obtido", nextState);
-        if (nextState.helperInstalled && (!nextState.sessionSupported || nextState.helperOutdated)) {
+        if (
+          nextState.helperInstalled &&
+          (!nextState.sessionSupported || nextState.helperOutdated)
+        ) {
           if (mounted) {
             setIntegrationRequired(true);
             setMessage(translation.current("message.integrationUpdate"));
@@ -133,6 +136,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       try {
         const saved = await api.saveConfig({
           enabled: next.enabled,
+          enabledBrowsers: next.enabledBrowsers,
           profiles: next.profiles,
           domains: next.domains,
           schedules: next.schedules,
@@ -162,6 +166,17 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       nextEnabled ? t("message.blockingEnabled") : t("message.blockingDisabled"),
     );
   }, [state, commit, t]);
+
+  const setBrowserEnabled = useCallback(
+    async (browser: string, enabled: boolean) => {
+      if (!state) return;
+      const enabledBrowsers = enabled
+        ? Array.from(new Set([...state.enabledBrowsers, browser]))
+        : state.enabledBrowsers.filter((item) => item !== browser);
+      await commit({ ...state, enabledBrowsers }, t("message.browserSettingsUpdated"));
+    },
+    [state, commit, t],
+  );
 
   const installService = useCallback(async () => {
     setBusy(true);
@@ -232,15 +247,10 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       if (!state) return;
       const target = state.profiles.find((p) => p.id === id);
       if (!target) return;
-      const updatedProfiles = state.profiles.map((p) =>
-        p.id === id ? { ...p, ...updates } : p,
-      );
+      const updatedProfiles = state.profiles.map((p) => (p.id === id ? { ...p, ...updates } : p));
       const name = updates.name?.trim() || target.name;
       logger.info("Hook", `Atualizando perfil '${name}'`);
-      await commit(
-        { ...state, profiles: updatedProfiles },
-        t("message.profileUpdated", { name }),
-      );
+      await commit({ ...state, profiles: updatedProfiles }, t("message.profileUpdated", { name }));
     },
     [state, commit, t],
   );
@@ -257,10 +267,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
         setSelectedProfileId(updatedProfiles[0].id);
       }
       logger.info("Hook", `Excluindo perfil id=${id}`);
-      await commit(
-        { ...state, profiles: updatedProfiles },
-        t("message.profileDeleted"),
-      );
+      await commit({ ...state, profiles: updatedProfiles }, t("message.profileDeleted"));
     },
     [state, selectedProfileId, commit, t],
   );
@@ -301,9 +308,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
 
       if (selectedProfile) {
         const updatedProfiles = state.profiles.map((p) =>
-          p.id === selectedProfile.id
-            ? { ...p, domains: [...p.domains, validation.sanitized] }
-            : p,
+          p.id === selectedProfile.id ? { ...p, domains: [...p.domains, validation.sanitized] } : p,
         );
         await commit(
           { ...state, profiles: updatedProfiles },
@@ -352,9 +357,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
         setState((prev) => {
           if (!prev) return null;
           const updatedProfiles = prev.profiles.map((p) =>
-            p.id === selectedProfile.id
-              ? { ...p, schedules: updater(p.schedules) }
-              : p,
+            p.id === selectedProfile.id ? { ...p, schedules: updater(p.schedules) } : p,
           );
           return { ...prev, profiles: updatedProfiles };
         });
@@ -393,6 +396,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     integrationRequired,
     setMessage,
     toggleEnabled,
+    setBrowserEnabled,
     installService,
     selectProfile,
     toggleProfileEnabled,
@@ -406,4 +410,3 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     saveSchedules,
   };
 }
-

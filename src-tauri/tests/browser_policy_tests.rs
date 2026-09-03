@@ -1,7 +1,8 @@
 use serde_json::Value;
+use std::collections::HashMap;
 use siteblock_lib::infrastructure::system_core::{
     build_chromium_policy_content, build_firefox_policy_content, bytes_sha256,
-    can_overwrite_firefox_policy,
+    can_overwrite_firefox_policy, get_browser_integrations,
 };
 
 #[test]
@@ -94,4 +95,24 @@ fn test_cannot_overwrite_firefox_policy_when_preexisting_external_policy() {
         None,
         Some(external_digest)
     ));
+}
+
+#[test]
+fn test_browser_status_respects_enabled_browser_configuration() {
+    let policies = HashMap::from([
+        ("Chrome".to_string(), true),
+        ("Brave".to_string(), true),
+    ]);
+    let integrations = get_browser_integrations(&policies, true, &["Chrome".to_string()]);
+
+    let chrome = integrations.iter().find(|browser| browser.name == "Chrome").unwrap();
+    let brave = integrations.iter().find(|browser| browser.name == "Brave").unwrap();
+    let firefox = integrations.iter().find(|browser| browser.name == "Firefox").unwrap();
+
+    assert!(chrome.enabled);
+    assert!(chrome.policy_ready || !chrome.detected);
+    assert!(!brave.enabled);
+    assert!(!brave.policy_ready);
+    assert!(!firefox.enabled);
+    assert!(!firefox.policy_ready);
 }

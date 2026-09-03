@@ -26,6 +26,7 @@ const mockInitialState: SiteBlockState = {
   sessionSupported: true,
   revision: 1,
   browserIntegrations: [],
+  enabledBrowsers: ["Chrome", "Brave", "Firefox"],
 };
 
 describe("useSiteBlock", () => {
@@ -76,6 +77,7 @@ describe("useSiteBlock", () => {
 
     expect(mockApi.saveConfig).toHaveBeenCalledWith({
       enabled: true,
+      enabledBrowsers: ["Chrome", "Brave", "Firefox"],
       profiles: [mockFocusProfile],
       domains: ["facebook.com"],
       schedules: [],
@@ -99,6 +101,7 @@ describe("useSiteBlock", () => {
     expect(success).toBe(true);
     expect(mockApi.saveConfig).toHaveBeenCalledWith({
       enabled: false,
+      enabledBrowsers: ["Chrome", "Brave", "Firefox"],
       profiles: [{ ...mockFocusProfile, domains: ["facebook.com", "youtube.com"] }],
       domains: ["facebook.com"],
       schedules: [],
@@ -136,6 +139,7 @@ describe("useSiteBlock", () => {
 
     expect(mockApi.saveConfig).toHaveBeenCalledWith({
       enabled: false,
+      enabledBrowsers: ["Chrome", "Brave", "Firefox"],
       profiles: [{ ...mockFocusProfile, domains: [] }],
       domains: ["facebook.com"],
       schedules: [],
@@ -189,5 +193,21 @@ describe("useSiteBlock", () => {
     unmount();
 
     expect(mockUnlisten).toHaveBeenCalled();
+  });
+
+  it("persists the selected browsers", async () => {
+    const { result } = renderHook(() => useSiteBlock({ api: mockApi }));
+
+    await waitFor(() => {
+      expect(result.current.state).not.toBeNull();
+    });
+
+    await act(async () => {
+      await result.current.setBrowserEnabled("Firefox", false);
+    });
+
+    expect(mockApi.saveConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ enabledBrowsers: ["Chrome", "Brave"] }),
+    );
   });
 });

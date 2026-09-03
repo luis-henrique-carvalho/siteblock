@@ -1,66 +1,108 @@
 import type { BrowserIntegration } from "../../types/siteblock";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, AlertCircle, CircleDashed } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { CircleDashed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../i18n";
+import { BrowserIcon } from "./BrowserIcon";
 
 interface BrowserItemProps {
   browser: BrowserIntegration;
+  disabled?: boolean;
+  onToggle?: (name: string, enabled: boolean) => void;
 }
 
-export function BrowserItem({ browser }: BrowserItemProps) {
+export function BrowserItem({ browser, disabled = false, onToggle }: BrowserItemProps) {
   const { t } = useLanguage();
-  const getStatusText = () => {
-    if (!browser.detected) return t("browser.notInstalled");
-    if (browser.policyReady) return t("browser.active");
+
+  const isInstalled = browser.detected;
+  const isEnabled = browser.enabled;
+  const isReady = isInstalled && isEnabled && browser.policyReady;
+  const isSyncing = isInstalled && isEnabled && !browser.policyReady;
+
+  const getStatusLabel = () => {
+    if (!isInstalled) return t("browser.notInstalled");
+    if (!isEnabled) return t("browser.disabled");
+    if (isReady) return t("browser.active");
     return t("browser.waiting");
   };
 
-  const isReady = browser.detected && browser.policyReady;
-  const isDetected = browser.detected;
-
   return (
-    <div className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border/70 bg-card/60 transition-colors hover:border-border">
-      <div className="flex items-center gap-3">
-        <span
+    <div
+      className={cn(
+        "group relative flex items-center justify-between gap-3 p-3 rounded-xl border transition-all duration-200",
+        isReady
+          ? "border-border/80 bg-card/75 hover:border-emerald-500/30 hover:bg-card/90 shadow-xs"
+          : isEnabled
+            ? "border-border/80 bg-card/70 hover:border-amber-500/30 hover:bg-card/90 shadow-xs"
+            : isInstalled
+              ? "border-border/60 bg-card/45 hover:border-border hover:bg-card/65 shadow-2xs opacity-90 hover:opacity-100"
+              : "border-dashed border-border/50 bg-card/25 opacity-65",
+      )}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div
           className={cn(
-            "browser-dot flex size-2.5 rounded-full transition-colors",
-            isReady
-              ? "ready bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
-              : isDetected
-                ? "bg-amber-500"
-                : "bg-muted-foreground/40",
+            "flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/70 shadow-2xs transition-transform group-hover:scale-105",
+            !isInstalled && "grayscale opacity-60",
           )}
-          aria-hidden="true"
-        />
-        <div className="flex flex-col">
-          <strong className="text-sm font-semibold text-foreground tracking-tight">
+        >
+          <BrowserIcon name={browser.name} className="size-5" />
+        </div>
+
+        <div className="flex flex-col min-w-0">
+          <strong className="text-sm font-semibold tracking-tight text-foreground truncate">
             {browser.name}
           </strong>
-          <small className="text-xs text-muted-foreground">{getStatusText()}</small>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span
+              className={cn(
+                "size-2 rounded-full shrink-0 transition-colors",
+                isReady
+                  ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                  : isSyncing
+                    ? "bg-amber-500 animate-pulse"
+                    : isInstalled
+                      ? "bg-muted-foreground/40"
+                      : "bg-muted-foreground/20",
+              )}
+              aria-hidden="true"
+            />
+            <span
+              className={cn(
+                "text-xs truncate font-medium flex items-center gap-1",
+                isReady
+                  ? "text-emerald-500 dark:text-emerald-400"
+                  : isSyncing
+                    ? "text-amber-500 dark:text-amber-400"
+                    : "text-muted-foreground",
+              )}
+            >
+              {isSyncing && <CircleDashed className="size-3 animate-spin" aria-hidden="true" />}
+              {getStatusLabel()}
+            </span>
+          </div>
         </div>
       </div>
 
-      <Badge
-        variant={isReady ? "default" : isDetected ? "secondary" : "outline"}
-        className={cn(
-          "text-[11px] font-medium gap-1 px-2 py-0.5",
-          isReady
-            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-            : isDetected
-              ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-              : "text-muted-foreground border-border/60",
-        )}
-      >
-        {isReady ? (
-          <CheckCircle2 className="size-3" />
-        ) : isDetected ? (
-          <CircleDashed className="size-3 animate-spin" />
+      <div className="shrink-0 flex items-center pl-1">
+        {isInstalled ? (
+          <Switch
+            size="sm"
+            checked={isEnabled}
+            disabled={disabled}
+            onCheckedChange={(checked) => onToggle?.(browser.name, checked)}
+            aria-label={t("browser.toggleHint", { browser: browser.name })}
+          />
         ) : (
-          <AlertCircle className="size-3" />
+          <Badge
+            variant="outline"
+            className="text-[10px] font-normal text-muted-foreground/70 border-border/70 border-dashed px-1.5 py-0.5"
+          >
+            {t("browser.notInstalled")}
+          </Badge>
         )}
-        {browser.mode || getStatusText()}
-      </Badge>
+      </div>
     </div>
   );
 }

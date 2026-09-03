@@ -39,6 +39,7 @@ describe("TauriSiteBlockApi", () => {
     mockInvoke.mockResolvedValueOnce(mockStatus);
     const config = {
       enabled: true,
+      enabledBrowsers: ["Chrome", "Brave", "Firefox"],
       profiles: [
         {
           id: "focus",

@@ -12,4 +12,5 @@ export const INITIAL_EMPTY_STATE = {
   sessionSupported: false,
   revision: 0,
   browserIntegrations: [],
+  enabledBrowsers: ["Chrome", "Brave", "Firefox"],
 };
