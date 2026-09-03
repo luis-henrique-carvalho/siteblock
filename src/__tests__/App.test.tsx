@@ -83,5 +83,6 @@ describe("App Integration", () => {
         }),
       }),
     );
+    expect(await screen.findByText("twitter.com adicionado.")).toBeInTheDocument();
   });
 });

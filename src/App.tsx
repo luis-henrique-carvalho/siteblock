@@ -17,12 +17,15 @@ import { AboutDialog } from "./components/preferences/AboutDialog";
 import { FocusStatisticsPanel } from "./components/statistics/FocusStatisticsPanel";
 import { siteblockApi } from "./services/siteblockApi";
 import { LanguageProvider, useLanguage } from "./i18n";
+import { Toaster } from "./components/ui/sonner";
+import { toast } from "sonner";
 import "./App.css";
 
 export function App() {
   return (
     <LanguageProvider>
       <AppContent />
+      <Toaster richColors position="bottom-right" />
     </LanguageProvider>
   );
 }
@@ -88,6 +91,28 @@ function AppContent() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!message) return;
+    const lower = message.toLowerCase();
+    const isError =
+      lower.includes("erro") ||
+      lower.includes("falha") ||
+      lower.includes("inválido") ||
+      lower.startsWith("informe") ||
+      lower.includes("não é possível") ||
+      lower.includes("cancelada");
+
+    const isWarning = lower.includes("atualizada") || lower.includes("atenção");
+
+    if (isError) {
+      toast.error(message);
+    } else if (isWarning) {
+      toast.warning(message);
+    } else {
+      toast.success(message);
+    }
+  }, [message]);
+
   if (!state) {
     return <LoadingScreen />;
   }
@@ -148,7 +173,6 @@ function AppContent() {
         <div className="content-grid">
           <DomainManager
             domains={currentDomains}
-            message={message}
             disabled={isActionsDisabled}
             onAddDomain={addDomain}
             onRemoveDomain={(d) => void removeDomain(d)}
@@ -177,7 +201,7 @@ function AppContent() {
         />
         <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
 
-        <Footer message={message} />
+        <Footer />
       </main>
     </div>
   );

@@ -30,13 +30,15 @@ export function useFocusStatistics({
   const reload = useCallback(() => setRefreshVersion((version) => version + 1), []);
 
   useEffect(() => {
-    if (!available || !getFocusStatistics) return;
+    const fetcher = getFocusStatistics;
+    if (!available || !fetcher) return;
 
     let cancelled = false;
 
     async function loadStatistics() {
+      if (!fetcher) return;
       try {
-        const nextStatistics = await getFocusStatistics(query);
+        const nextStatistics = await fetcher(query);
         if (cancelled) return;
         setStatistics(nextStatistics);
         setSettledRequest(requestKey);
