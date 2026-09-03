@@ -318,7 +318,7 @@ const translations = {
     "statistics.emptyTitle": "Your history is getting started",
     "statistics.emptyDescription": "Data will appear here while protection is active.",
     "statistics.dailyProtection": "Protection by day",
-    "statistics.periodRhythm": "Period rhythm",
+    "statistics.periodRhythm": "Rhythm of the period",
     "statistics.mostProtected": "Most protected",
     "statistics.domains": "Domains",
     "statistics.domain": "Domain",
