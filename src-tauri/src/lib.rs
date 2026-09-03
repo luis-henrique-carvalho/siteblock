@@ -4,8 +4,8 @@ pub mod infrastructure;
 pub mod presentation;
 
 use presentation::commands::{
-    get_siteblock_status, install_siteblock_service, log_client_message, save_siteblock_config,
-    start_privileged_session,
+    get_focus_statistics, get_siteblock_status, install_siteblock_service, log_client_message,
+    save_siteblock_config, start_privileged_session,
 };
 use presentation::menu::{build_app_menu, handle_menu_event};
 pub use presentation::AppState;
@@ -57,6 +57,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            get_focus_statistics,
             get_siteblock_status,
             start_privileged_session,
             save_siteblock_config,

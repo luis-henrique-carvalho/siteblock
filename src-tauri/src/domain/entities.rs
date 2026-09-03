@@ -2,8 +2,53 @@ use serde::{Deserialize, Serialize};
 
 pub const SUPPORTED_BROWSERS: [&str; 3] = ["Chrome", "Brave", "Firefox"];
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FocusStatisticsQuery {
+    pub from: String,
+    pub to: String,
+    pub profile_id: Option<String>,
+}
+
+impl FocusStatisticsQuery {
+    pub fn new(from: impl Into<String>, to: impl Into<String>, profile_id: Option<String>) -> Self {
+        Self {
+            from: from.into(),
+            to: to.into(),
+            profile_id,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FocusDaily {
+    pub date: String,
+    pub protected_seconds: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FocusDomainStatistic {
+    pub domain: String,
+    pub protected_seconds: i64,
+    pub completed_sessions: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FocusStatistics {
+    pub protected_seconds: i64,
+    pub completed_sessions: u64,
+    pub daily: Vec<FocusDaily>,
+    pub domains: Vec<FocusDomainStatistic>,
+}
+
 pub fn default_enabled_browsers() -> Vec<String> {
-    SUPPORTED_BROWSERS.iter().map(|browser| (*browser).to_string()).collect()
+    SUPPORTED_BROWSERS
+        .iter()
+        .map(|browser| (*browser).to_string())
+        .collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -152,7 +197,12 @@ impl Profile {
                     "twitter.com".to_string(),
                     "reddit.com".to_string(),
                 ],
-                vec![Schedule::new("focus-work", vec![0, 1, 2, 3, 4], "09:00", "18:00")],
+                vec![Schedule::new(
+                    "focus-work",
+                    vec![0, 1, 2, 3, 4],
+                    "09:00",
+                    "18:00",
+                )],
             ),
             Self::default_study(),
             Self::default_sleep(),
@@ -195,7 +245,12 @@ impl Profile {
                 "tiktok.com".to_string(),
                 "reddit.com".to_string(),
             ],
-            vec![Schedule::new("sleep-night", vec![0, 1, 2, 3, 4, 5, 6], "23:00", "07:00")],
+            vec![Schedule::new(
+                "sleep-night",
+                vec![0, 1, 2, 3, 4, 5, 6],
+                "23:00",
+                "07:00",
+            )],
         )
     }
 }
@@ -248,7 +303,11 @@ impl SiteBlockConfig {
                 }
             }
             self.domains = all_domains;
-            self.schedules = self.profiles.iter().flat_map(|p| p.schedules.clone()).collect();
+            self.schedules = self
+                .profiles
+                .iter()
+                .flat_map(|p| p.schedules.clone())
+                .collect();
         }
     }
 

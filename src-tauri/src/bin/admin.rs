@@ -1,9 +1,9 @@
 use std::io::{self, BufRead, Read, Write};
 
-use siteblock_lib::domain::entities::SiteBlockConfig;
+use siteblock_lib::domain::entities::{FocusStatisticsQuery, SiteBlockConfig};
 use siteblock_lib::infrastructure::system_core::{
     apply_config, get_admin_capabilities, get_current_state, handle_admin_session_line_with,
-    is_root, read_config, write_config_file,
+    is_root, query_focus_statistics, read_config, write_config_file,
 };
 
 fn append_audit_log(message: &str) {
@@ -44,10 +44,29 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
             continue;
         }
 
-        let response_json = handle_admin_session_line_with(
-            trimmed,
-            read_config,
-            |config| {
+        let response_json = match serde_json::from_str::<serde_json::Value>(trimmed) {
+            Ok(request)
+                if request.get("action").and_then(serde_json::Value::as_str)
+                    == Some("get-focus-statistics") =>
+            {
+                let response = request
+                    .get("query")
+                    .cloned()
+                    .ok_or_else(|| "Campo 'query' ausente no pedido.".to_string())
+                    .and_then(|value| {
+                        serde_json::from_value::<FocusStatisticsQuery>(value)
+                            .map_err(|error| error.to_string())
+                    })
+                    .and_then(|query| query_focus_statistics(&read_config(), &query));
+                let response = response
+                    .and_then(|statistics| {
+                        serde_json::to_value(statistics).map_err(|error| error.to_string())
+                    })
+                    .unwrap_or_else(|error| serde_json::json!({ "error": error }));
+                serde_json::to_string(&response)
+                    .unwrap_or_else(|error| format!("{{\"error\":\"{}\"}}", error))
+            }
+            _ => handle_admin_session_line_with(trimmed, read_config, |config| {
                 append_audit_log(&format!(
                     "Ação set-config: aplicando enabled={}, perfis={}, domínios_legados={}",
                     config.enabled,
@@ -56,8 +75,8 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
                 ));
                 let _ = write_config_file(config);
                 apply_config(config)
-            },
-        );
+            }),
+        };
 
         let _ = writeln!(stdout_lock, "{}", response_json);
         let _ = stdout_lock.flush();

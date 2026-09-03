@@ -5,14 +5,17 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::domain::entities::{
-    BrowserIntegration, Profile, Schedule, SiteBlockConfig, SiteBlockState,
+    BrowserIntegration, FocusStatistics, FocusStatisticsQuery, Profile, Schedule, SiteBlockConfig,
+    SiteBlockState,
 };
+use crate::infrastructure::focus_stats::{FocusSnapshot, FocusStatsStore};
 
 pub const BASE_DIR: &str = "/etc/siteblock";
 pub const CONFIG_PATH: &str = "/etc/siteblock/config.json";
 pub const HOSTS_PATH: &str = "/etc/hosts";
 pub const RUNTIME_DIR: &str = "/var/lib/siteblock";
 pub const EFFECTIVE_STATE_PATH: &str = "/var/lib/siteblock/effective-state.json";
+pub const FOCUS_STATS_DIRECTORY: &str = "/var/lib/siteblock";
 pub const FIREFOX_OWNERSHIP_PATH: &str = "/etc/siteblock/firefox-policy.sha256";
 pub const FIREFOX_POLICY_PATH: &str = "/etc/firefox/policies/policies.json";
 pub const BEGIN_MARKER: &str = "# BEGIN SITEBLOCK MANAGED";
@@ -356,7 +359,7 @@ pub fn get_admin_capabilities() -> serde_json::Value {
     serde_json::json!({
         "session": true,
         "browserIntegration": true,
-        "integrationVersion": 3
+        "integrationVersion": 4
     })
 }
 
@@ -624,7 +627,7 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
     let now = Local::now();
     let enabled = should_block(config, now);
 
-    let _ = write_hosts_file(config, enabled);
+    let hosts_written = write_hosts_file(config, enabled).is_ok();
     let filters = blocked_url_filters(config, enabled);
     let chromium = write_chromium_policies(&filters, &config.enabled_browsers);
     let ff_policy = if config.enabled_browsers.iter().any(|browser| browser == "Firefox") {
@@ -635,7 +638,40 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
     let _ = write_effective_state(config, enabled);
     flush_dns();
 
+    if hosts_written {
+        let snapshot = if enabled {
+            FocusSnapshot::from_profiles(&get_active_profiles(config, now))
+        } else {
+            FocusSnapshot::inactive()
+        };
+        if let Err(error) = FocusStatsStore::at_directory(Path::new(FOCUS_STATS_DIRECTORY))
+            .and_then(|stats| stats.record(snapshot, now))
+        {
+            log::warn!("Não foi possível registrar a estatística de foco: {error}");
+        }
+    } else {
+        log::warn!(
+            "A proteção não foi aplicada em /etc/hosts; estatística de foco não registrada."
+        );
+    }
+
     get_current_state(config, Some(chromium), Some(ff_policy))
+}
+
+pub fn query_focus_statistics(
+    config: &SiteBlockConfig,
+    query: &FocusStatisticsQuery,
+) -> Result<FocusStatistics, String> {
+    if let Some(profile_id) = &query.profile_id {
+        if !config
+            .profiles
+            .iter()
+            .any(|profile| profile.id == *profile_id)
+        {
+            return Err("perfil de estatísticas não encontrado".into());
+        }
+    }
+    FocusStatsStore::at_directory(Path::new(FOCUS_STATS_DIRECTORY))?.query(query, Local::now())
 }
 
 pub fn is_root() -> bool {

@@ -3,9 +3,12 @@ mod common;
 use common::mocks::{MockHelperPort, MockInstallerPort, MockSessionPort};
 use serde_json::json;
 use siteblock_lib::application::use_cases::{
-    GetStatusUseCase, InstallServiceUseCase, SaveConfigUseCase, StartSessionUseCase,
+    GetFocusStatisticsUseCase, GetStatusUseCase, InstallServiceUseCase, SaveConfigUseCase,
+    StartSessionUseCase,
 };
-use siteblock_lib::domain::entities::{Schedule, SiteBlockConfig, SiteBlockState};
+use siteblock_lib::domain::entities::{
+    FocusStatistics, FocusStatisticsQuery, Schedule, SiteBlockConfig, SiteBlockState,
+};
 use siteblock_lib::domain::errors::AppError;
 use std::sync::Arc;
 
@@ -62,6 +65,31 @@ fn test_get_status_when_helper_returns_invalid_json() {
 
     let result = use_case.execute();
     assert!(matches!(result, Err(AppError::InvalidResponse(_))));
+}
+
+#[test]
+fn test_get_focus_statistics_uses_the_privileged_session_response() {
+    let expected = FocusStatistics {
+        protected_seconds: 3_600,
+        completed_sessions: 1,
+        daily: vec![],
+        domains: vec![],
+    };
+    let session = Arc::new(
+        MockSessionPort::new(Ok(create_sample_state(true)))
+            .with_focus_statistics(Ok(expected.clone())),
+    );
+    let use_case = GetFocusStatisticsUseCase::new(session);
+
+    let result = use_case
+        .execute(FocusStatisticsQuery::new(
+            "2026-09-01",
+            "2026-09-07",
+            Some("focus".into()),
+        ))
+        .expect("deve retornar as estatísticas do helper");
+
+    assert_eq!(result, expected);
 }
 
 #[test]

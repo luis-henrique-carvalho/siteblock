@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TauriSiteBlockApi } from "../siteblockApi";
 import { invoke } from "@tauri-apps/api/core";
 import type { SiteBlockState } from "../../types/siteblock";
+import type { FocusStatistics, FocusStatisticsQuery } from "../../types/focusStatistics";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
@@ -67,5 +68,25 @@ describe("TauriSiteBlockApi", () => {
     const result = await api.installService();
     expect(mockInvoke).toHaveBeenCalledWith("install_siteblock_service");
     expect(result).toBe(mockStatus);
+  });
+
+  it("getFocusStatistics calls get_focus_statistics with the selected period and profile", async () => {
+    const statistics = {
+      protectedSeconds: 3600,
+      completedSessions: 1,
+      daily: [],
+      domains: [],
+    } satisfies FocusStatistics;
+    const query: FocusStatisticsQuery = {
+      from: "2026-09-01",
+      to: "2026-09-07",
+      profileId: "focus",
+    };
+    mockInvoke.mockResolvedValueOnce(statistics);
+
+    const result = await api.getFocusStatistics!(query);
+
+    expect(mockInvoke).toHaveBeenCalledWith("get_focus_statistics", { query });
+    expect(result).toBe(statistics);
   });
 });

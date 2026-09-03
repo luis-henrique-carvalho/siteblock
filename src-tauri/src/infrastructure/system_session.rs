@@ -1,4 +1,4 @@
-use crate::domain::entities::SiteBlockState;
+use crate::domain::entities::{FocusStatistics, FocusStatisticsQuery, SiteBlockState};
 use crate::domain::errors::{AppError, AppResult};
 use crate::domain::ports::SessionPort;
 use crate::infrastructure::embedded_assets::HELPER_PATH;
@@ -160,8 +160,8 @@ impl Default for SystemSession {
     }
 }
 
-impl SessionPort for SystemSession {
-    fn send_request(&self, request: serde_json::Value) -> AppResult<SiteBlockState> {
+impl SystemSession {
+    fn send_value(&self, request: serde_json::Value) -> AppResult<serde_json::Value> {
         let action = request
             .get("action")
             .and_then(serde_json::Value::as_str)
@@ -177,7 +177,6 @@ impl SessionPort for SystemSession {
         })?;
 
         session.ensure_started(&self.helper_path)?;
-
         let payload = format!("{}\n", serde_json::to_string(&request)?);
         let result = session.communicate(&payload);
 
@@ -193,18 +192,12 @@ impl SessionPort for SystemSession {
                     return Err(AppError::Generic(error_msg.to_string()));
                 }
 
-                let mut state: SiteBlockState = serde_json::from_value(value).map_err(|err| {
-                    log::error!("Estrutura de estado inválida retornada pelo helper: {err}");
-                    AppError::InvalidResponse(format!("Estrutura de estado inválida: {err}"))
-                })?;
-
-                state.session_supported = true;
                 log::debug!(
                     "Requisição (action: {}) processada com sucesso em {:?}",
                     action,
                     start.elapsed()
                 );
-                Ok(state)
+                Ok(value)
             }
             Err(err) => {
                 log::warn!(
@@ -215,6 +208,26 @@ impl SessionPort for SystemSession {
                 Err(err)
             }
         }
+    }
+}
+
+impl SessionPort for SystemSession {
+    fn send_request(&self, request: serde_json::Value) -> AppResult<SiteBlockState> {
+        let mut state: SiteBlockState =
+            serde_json::from_value(self.send_value(request)?).map_err(|err| {
+                log::error!("Estrutura de estado inválida retornada pelo helper: {err}");
+                AppError::InvalidResponse(format!("Estrutura de estado inválida: {err}"))
+            })?;
+        state.session_supported = true;
+        Ok(state)
+    }
+
+    fn send_focus_statistics(&self, query: FocusStatisticsQuery) -> AppResult<FocusStatistics> {
+        serde_json::from_value(self.send_value(serde_json::json!({
+            "action": "get-focus-statistics",
+            "query": query,
+        }))?)
+        .map_err(|err| AppError::InvalidResponse(format!("Estatísticas inválidas: {err}")))
     }
 
     fn adopt_child(&self, child: Child) -> AppResult<()> {

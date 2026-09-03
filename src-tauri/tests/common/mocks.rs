@@ -1,4 +1,4 @@
-use siteblock_lib::domain::entities::SiteBlockState;
+use siteblock_lib::domain::entities::{FocusStatistics, FocusStatisticsQuery, SiteBlockState};
 use siteblock_lib::domain::errors::{AppError, AppResult};
 use siteblock_lib::domain::ports::{HelperPort, InstallerPort, SessionPort};
 use std::process::{Child, Command, Stdio};
@@ -40,6 +40,7 @@ impl HelperPort for MockHelperPort {
 
 pub struct MockSessionPort {
     pub response: Result<SiteBlockState, AppError>,
+    pub focus_statistics_response: Result<FocusStatistics, AppError>,
     pub recorded_requests: Mutex<Vec<serde_json::Value>>,
     pub adopted_count: Mutex<usize>,
 }
@@ -48,6 +49,9 @@ impl MockSessionPort {
     pub fn new(response: Result<SiteBlockState, AppError>) -> Self {
         Self {
             response,
+            focus_statistics_response: Err(AppError::Generic(
+                "Estatísticas não configuradas no mock.".into(),
+            )),
             recorded_requests: Mutex::new(Vec::new()),
             adopted_count: Mutex::new(0),
         }
@@ -56,12 +60,22 @@ impl MockSessionPort {
     pub fn last_request(&self) -> Option<serde_json::Value> {
         self.recorded_requests.lock().unwrap().last().cloned()
     }
+
+    #[allow(dead_code)]
+    pub fn with_focus_statistics(mut self, response: Result<FocusStatistics, AppError>) -> Self {
+        self.focus_statistics_response = response;
+        self
+    }
 }
 
 impl SessionPort for MockSessionPort {
     fn send_request(&self, request: serde_json::Value) -> AppResult<SiteBlockState> {
         self.recorded_requests.lock().unwrap().push(request);
         self.response.clone()
+    }
+
+    fn send_focus_statistics(&self, _query: FocusStatisticsQuery) -> AppResult<FocusStatistics> {
+        self.focus_statistics_response.clone()
     }
 
     fn adopt_child(&self, _child: Child) -> AppResult<()> {

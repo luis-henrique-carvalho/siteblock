@@ -1,4 +1,6 @@
-use crate::domain::entities::{SiteBlockConfig, SiteBlockState};
+use crate::domain::entities::{
+    FocusStatistics, FocusStatisticsQuery, SiteBlockConfig, SiteBlockState,
+};
 use crate::presentation::state::AppState;
 use crate::presentation::TrayController;
 use std::time::Instant;
@@ -8,6 +10,17 @@ fn sync_tray(app: &AppHandle, state: &SiteBlockState) {
     if let Some(tray) = app.try_state::<TrayController>() {
         tray.update_state(state);
     }
+}
+
+#[tauri::command]
+pub fn get_focus_statistics(
+    query: FocusStatisticsQuery,
+    state: tauri::State<'_, AppState>,
+) -> Result<FocusStatistics, String> {
+    state
+        .get_focus_statistics_use_case
+        .execute(query)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]

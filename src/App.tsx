@@ -14,6 +14,8 @@ import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { LoadingScreen } from "./components/common/LoadingScreen";
 import { PreferencesPanel } from "./components/preferences/PreferencesPanel";
 import { AboutDialog } from "./components/preferences/AboutDialog";
+import { FocusStatisticsPanel } from "./components/statistics/FocusStatisticsPanel";
+import { siteblockApi } from "./services/siteblockApi";
 import { LanguageProvider, useLanguage } from "./i18n";
 import "./App.css";
 
@@ -97,10 +99,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors">
       <main className="app-shell animate-in fade-in duration-300">
-        <TopBar
-          active={state.active}
-          onOpenPreferences={() => setPreferencesOpen(true)}
-        />
+        <TopBar active={state.active} onOpenPreferences={() => setPreferencesOpen(true)} />
 
         {(!state.helperInstalled || integrationRequired) && (
           <SetupBanner onInstall={() => void installService()} busy={busy} />
@@ -162,6 +161,12 @@ function AppContent() {
             onSaveSchedules={(s) => void saveSchedules(s)}
           />
         </div>
+
+        <FocusStatisticsPanel
+          profiles={state.profiles ?? []}
+          api={siteblockApi}
+          available={state.helperInstalled && !integrationRequired}
+        />
 
         <PreferencesPanel
           open={preferencesOpen}

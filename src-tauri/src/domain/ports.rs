@@ -1,5 +1,5 @@
-use crate::domain::entities::SiteBlockState;
-use crate::domain::errors::AppResult;
+use crate::domain::entities::{FocusStatistics, FocusStatisticsQuery, SiteBlockState};
+use crate::domain::errors::{AppError, AppResult};
 use std::process::Child;
 
 pub trait HelperPort: Send + Sync {
@@ -10,6 +10,11 @@ pub trait HelperPort: Send + Sync {
 
 pub trait SessionPort: Send + Sync {
     fn send_request(&self, request: serde_json::Value) -> AppResult<SiteBlockState>;
+    fn send_focus_statistics(&self, _query: FocusStatisticsQuery) -> AppResult<FocusStatistics> {
+        Err(AppError::Generic(
+            "A sessão administrativa não suporta estatísticas de foco.".into(),
+        ))
+    }
     fn adopt_child(&self, child: Child) -> AppResult<()>;
 }
 

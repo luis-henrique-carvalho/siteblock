@@ -31,6 +31,7 @@ thiserror = "2"
 chrono = { version = "0.4", features = ["serde"] }
 sha2 = "0.10"
 tauri-plugin-store = "2"
+rusqlite = { version = "0.32", features = ["bundled"] }
 
 [[bin]]
 name = "siteblock"
@@ -39,5 +40,4 @@ path = "src/main.rs"
 [[bin]]
 name = "siteblock-admin"
 path = "src/bin/admin.rs"
-
 

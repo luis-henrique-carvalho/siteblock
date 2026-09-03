@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { SiteBlockConfigDto, SiteBlockState } from "../types/siteblock";
+import type { FocusStatistics, FocusStatisticsQuery } from "../types/focusStatistics";
 import { logger } from "../utils/logger";
 
 export interface ISiteBlockApi {
@@ -8,6 +9,7 @@ export interface ISiteBlockApi {
   startPrivilegedSession(): Promise<SiteBlockState>;
   saveConfig(config: SiteBlockConfigDto): Promise<SiteBlockState>;
   installService(): Promise<SiteBlockState>;
+  getFocusStatistics?(query: FocusStatisticsQuery): Promise<FocusStatistics>;
   onStateChanged?(callback: (state: SiteBlockState) => void): Promise<() => void> | (() => void);
 }
 
@@ -98,6 +100,11 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
       );
       throw error;
     }
+  }
+
+  async getFocusStatistics(query: FocusStatisticsQuery): Promise<FocusStatistics> {
+    logger.debug("API", "Invocando get_focus_statistics", query);
+    return invoke<FocusStatistics>("get_focus_statistics", { query });
   }
 
   async onStateChanged(callback: (state: SiteBlockState) => void): Promise<() => void> {

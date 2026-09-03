@@ -45,7 +45,7 @@ fn test_get_admin_capabilities_structure() {
     );
     assert_eq!(
         caps.get("integrationVersion").and_then(|v| v.as_u64()),
-        Some(3)
+        Some(4)
     );
 }
 
