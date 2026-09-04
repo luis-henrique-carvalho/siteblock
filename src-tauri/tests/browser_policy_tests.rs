@@ -1,9 +1,9 @@
 use serde_json::Value;
-use std::collections::HashMap;
 use siteblock_lib::infrastructure::system_core::{
     build_chromium_policy_content, build_firefox_policy_content, bytes_sha256,
     can_overwrite_firefox_policy, get_browser_integrations,
 };
+use std::collections::HashMap;
 
 #[test]
 fn test_build_chromium_policy_structure() {
@@ -12,7 +12,8 @@ fn test_build_chromium_policy_structure() {
         "*://*.twitter.com/*".to_string(),
     ];
     let json_str = build_chromium_policy_content(&filters);
-    let parsed: Value = serde_json::from_str(&json_str).expect("JSON de política Chromium inválido");
+    let parsed: Value =
+        serde_json::from_str(&json_str).expect("JSON de política Chromium inválido");
 
     let blocklist = parsed
         .get("URLBlocklist")
@@ -58,7 +59,11 @@ fn test_bytes_sha256_computes_reproducible_digest() {
 fn test_can_overwrite_firefox_policy_when_no_policy_exists() {
     // Se não há política instalada, SiteBlock pode criar livremente
     assert!(can_overwrite_firefox_policy(false, None, None));
-    assert!(can_overwrite_firefox_policy(false, Some("any-digest"), None));
+    assert!(can_overwrite_firefox_policy(
+        false,
+        Some("any-digest"),
+        None
+    ));
 }
 
 #[test]
@@ -76,7 +81,8 @@ fn test_can_overwrite_firefox_policy_when_digests_match() {
 fn test_cannot_overwrite_firefox_policy_when_digests_mismatch() {
     // Se o arquivo foi modificado externamente (digest do arquivo != digest guardado pelo SiteBlock)
     let saved_digest = "1111111111111111111111111111111111111111111111111111111111111111";
-    let external_modified_digest = "2222222222222222222222222222222222222222222222222222222222222222";
+    let external_modified_digest =
+        "2222222222222222222222222222222222222222222222222222222222222222";
 
     assert!(!can_overwrite_firefox_policy(
         true,
@@ -99,15 +105,21 @@ fn test_cannot_overwrite_firefox_policy_when_preexisting_external_policy() {
 
 #[test]
 fn test_browser_status_respects_enabled_browser_configuration() {
-    let policies = HashMap::from([
-        ("Chrome".to_string(), true),
-        ("Brave".to_string(), true),
-    ]);
+    let policies = HashMap::from([("Chrome".to_string(), true), ("Brave".to_string(), true)]);
     let integrations = get_browser_integrations(&policies, true, &["Chrome".to_string()]);
 
-    let chrome = integrations.iter().find(|browser| browser.name == "Chrome").unwrap();
-    let brave = integrations.iter().find(|browser| browser.name == "Brave").unwrap();
-    let firefox = integrations.iter().find(|browser| browser.name == "Firefox").unwrap();
+    let chrome = integrations
+        .iter()
+        .find(|browser| browser.name == "Chrome")
+        .unwrap();
+    let brave = integrations
+        .iter()
+        .find(|browser| browser.name == "Brave")
+        .unwrap();
+    let firefox = integrations
+        .iter()
+        .find(|browser| browser.name == "Firefox")
+        .unwrap();
 
     assert!(chrome.enabled);
     assert!(chrome.policy_ready || !chrome.detected);

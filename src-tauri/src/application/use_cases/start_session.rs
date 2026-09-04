@@ -1,7 +1,6 @@
 use crate::domain::entities::SiteBlockState;
 use crate::domain::errors::AppResult;
 use crate::domain::ports::{HelperPort, SessionPort};
-use serde_json::json;
 use std::sync::Arc;
 
 pub struct StartSessionUseCase {
@@ -19,7 +18,7 @@ impl StartSessionUseCase {
             return Ok(SiteBlockState::empty());
         }
 
-        let mut state = self.session.send_request(json!({ "action": "status" }))?;
+        let mut state = self.session.status()?;
         let is_outdated = state.profiles.is_empty();
         state.ensure_migrated();
         state.helper_outdated = is_outdated;

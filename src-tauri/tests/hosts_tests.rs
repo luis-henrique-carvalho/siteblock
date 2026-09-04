@@ -1,7 +1,5 @@
 use siteblock_lib::domain::entities::{Profile, SiteBlockConfig};
-use siteblock_lib::infrastructure::system_core::{
-    render_hosts_content, BEGIN_MARKER, END_MARKER,
-};
+use siteblock_lib::infrastructure::system_core::{render_hosts_content, BEGIN_MARKER, END_MARKER};
 
 #[test]
 fn test_render_hosts_preserves_standard_localhost_and_custom_entries() {

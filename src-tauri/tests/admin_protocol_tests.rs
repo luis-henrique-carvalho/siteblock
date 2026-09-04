@@ -52,11 +52,7 @@ fn test_get_admin_capabilities_structure() {
 #[test]
 fn test_admin_action_status() {
     let request = json!({ "action": "status" });
-    let response = handle_admin_action_with(
-        &request,
-        dummy_config,
-        |_| dummy_state(),
-    );
+    let response = handle_admin_action_with(&request, dummy_config, |_| dummy_state());
 
     assert!(response.get("active").is_some());
     assert!(response.get("enabled").is_some());
@@ -66,13 +62,12 @@ fn test_admin_action_status() {
 #[test]
 fn test_admin_action_capabilities() {
     let request = json!({ "action": "capabilities" });
-    let response = handle_admin_action_with(
-        &request,
-        dummy_config,
-        |_| dummy_state(),
-    );
+    let response = handle_admin_action_with(&request, dummy_config, |_| dummy_state());
 
-    assert_eq!(response.get("session").and_then(|v| v.as_bool()), Some(true));
+    assert_eq!(
+        response.get("session").and_then(|v| v.as_bool()),
+        Some(true)
+    );
 }
 
 #[test]
@@ -84,15 +79,11 @@ fn test_admin_action_set_config_valid() {
     });
 
     let mut applied = false;
-    let response = handle_admin_action_with(
-        &request,
-        dummy_config,
-        |cfg| {
-            applied = true;
-            assert_eq!(cfg.profiles.len(), 1);
-            dummy_state()
-        },
-    );
+    let response = handle_admin_action_with(&request, dummy_config, |cfg| {
+        applied = true;
+        assert_eq!(cfg.profiles.len(), 1);
+        dummy_state()
+    });
 
     assert!(applied);
     assert_eq!(response.get("active").and_then(|v| v.as_bool()), Some(true));
@@ -109,11 +100,9 @@ fn test_admin_action_set_config_invalid_domain_fails_validation() {
         "config": invalid_config
     });
 
-    let response = handle_admin_action_with(
-        &request,
-        dummy_config,
-        |_| panic!("Não deveria aplicar configuração inválida!"),
-    );
+    let response = handle_admin_action_with(&request, dummy_config, |_| {
+        panic!("Não deveria aplicar configuração inválida!")
+    });
 
     let error = response.get("error").and_then(|v| v.as_str()).unwrap_or("");
     assert!(error.to_lowercase().contains("domínio inválido"));
@@ -122,11 +111,7 @@ fn test_admin_action_set_config_invalid_domain_fails_validation() {
 #[test]
 fn test_admin_action_set_config_missing_config_field() {
     let request = json!({ "action": "set-config" });
-    let response = handle_admin_action_with(
-        &request,
-        dummy_config,
-        |_| dummy_state(),
-    );
+    let response = handle_admin_action_with(&request, dummy_config, |_| dummy_state());
 
     let error = response.get("error").and_then(|v| v.as_str()).unwrap_or("");
     assert_eq!(error, "Campo 'config' ausente no pedido.");
@@ -135,11 +120,7 @@ fn test_admin_action_set_config_missing_config_field() {
 #[test]
 fn test_admin_action_unknown() {
     let request = json!({ "action": "non-existent-action" });
-    let response = handle_admin_action_with(
-        &request,
-        dummy_config,
-        |_| dummy_state(),
-    );
+    let response = handle_admin_action_with(&request, dummy_config, |_| dummy_state());
 
     let error = response.get("error").and_then(|v| v.as_str()).unwrap_or("");
     assert_eq!(error, "Ação desconhecida: non-existent-action");
@@ -158,10 +139,9 @@ fn test_admin_session_line_valid_and_malformed() {
     assert!(err_line.contains("JSON inválido"));
 
     // Linha válida
-    let ok_line = handle_admin_session_line_with(
-        "{\"action\": \"capabilities\"}",
-        dummy_config,
-        |_| dummy_state(),
-    );
+    let ok_line =
+        handle_admin_session_line_with("{\"action\": \"capabilities\"}", dummy_config, |_| {
+            dummy_state()
+        });
     assert!(ok_line.contains("\"session\":true"));
 }

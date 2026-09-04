@@ -1,3 +1,4 @@
+use chrono::{DateTime, Datelike, Local, Timelike};
 use serde::{Deserialize, Serialize};
 
 pub const SUPPORTED_BROWSERS: [&str; 3] = ["Chrome", "Brave", "Firefox"];
@@ -51,6 +52,31 @@ pub fn default_enabled_browsers() -> Vec<String> {
         .collect()
 }
 
+pub fn domain_hosts(domain: &str) -> Vec<String> {
+    let mut hosts = vec![domain.to_string(), format!("www.{}", domain)];
+    if domain == "youtube.com" {
+        hosts.extend([
+            "m.youtube.com".to_string(),
+            "music.youtube.com".to_string(),
+            "youtu.be".to_string(),
+            "www.youtu.be".to_string(),
+            "youtube-nocookie.com".to_string(),
+            "www.youtube-nocookie.com".to_string(),
+        ]);
+    }
+    hosts
+}
+
+pub fn parse_minute(time_str: &str) -> u32 {
+    let parts: Vec<&str> = time_str.split(':').collect();
+    if parts.len() != 2 {
+        return 0;
+    }
+    let h = parts[0].parse::<u32>().unwrap_or(0);
+    let m = parts[1].parse::<u32>().unwrap_or(0);
+    h * 60 + m
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Schedule {
@@ -72,6 +98,21 @@ impl Schedule {
             days,
             start: start.into(),
             end: end.into(),
+        }
+    }
+
+    pub fn applies_now(&self, now: DateTime<Local>) -> bool {
+        let current_day = now.weekday().num_days_from_monday() as u8;
+        let current_minute = now.hour() * 60 + now.minute();
+        let start = parse_minute(&self.start);
+        let end = parse_minute(&self.end);
+
+        if start < end {
+            self.days.contains(&current_day) && current_minute >= start && current_minute < end
+        } else {
+            let previous_day = if current_day == 0 { 6 } else { current_day - 1 };
+            (self.days.contains(&current_day) && current_minute >= start)
+                || (self.days.contains(&previous_day) && current_minute < end)
         }
     }
 
@@ -159,6 +200,16 @@ impl Profile {
             domains,
             schedules,
         }
+    }
+
+    pub fn is_active(&self, now: DateTime<Local>) -> bool {
+        if !self.enabled || self.domains.is_empty() {
+            return false;
+        }
+        if self.schedules.is_empty() {
+            return true;
+        }
+        self.schedules.iter().any(|s| s.applies_now(now))
     }
 
     pub fn validate(&self) -> Result<(), String> {
@@ -376,6 +427,90 @@ impl SiteBlockConfig {
             schedule.validate()?;
         }
         Ok(())
+    }
+
+    pub fn active_profiles(&self, now: DateTime<Local>) -> Vec<&Profile> {
+        if !self.enabled {
+            return Vec::new();
+        }
+        self.profiles.iter().filter(|p| p.is_active(now)).collect()
+    }
+
+    pub fn should_block(&self, now: DateTime<Local>) -> bool {
+        if !self.enabled {
+            return false;
+        }
+        if !self.profiles.is_empty() {
+            self.profiles.iter().any(|p| p.is_active(now))
+        } else {
+            if self.domains.is_empty() {
+                return false;
+            }
+            if self.schedules.is_empty() {
+                return true;
+            }
+            self.schedules.iter().any(|s| s.applies_now(now))
+        }
+    }
+
+    pub fn effective_blocked_domains(&self, now: DateTime<Local>) -> Vec<String> {
+        if !self.enabled {
+            return Vec::new();
+        }
+        if !self.profiles.is_empty() {
+            let mut domains = Vec::new();
+            for profile in self.active_profiles(now) {
+                for d in &profile.domains {
+                    if !domains.contains(d) {
+                        domains.push(d.clone());
+                    }
+                }
+            }
+            domains
+        } else if self.should_block(now) {
+            self.domains.clone()
+        } else {
+            Vec::new()
+        }
+    }
+
+    pub fn blocked_hosts(&self) -> Vec<String> {
+        let now = Local::now();
+        let domains_to_block = self.effective_blocked_domains(now);
+        let mut result = Vec::new();
+        for domain in &domains_to_block {
+            for host in domain_hosts(domain) {
+                if !result.contains(&host) {
+                    result.push(host);
+                }
+            }
+        }
+        result
+    }
+
+    pub fn blocked_chromium_filters(&self, enabled: bool) -> Vec<String> {
+        if !enabled {
+            return Vec::new();
+        }
+        self.blocked_hosts()
+    }
+
+    pub fn blocked_url_filters(&self, enabled: bool) -> Vec<String> {
+        if !enabled {
+            return Vec::new();
+        }
+        let mut filters = Vec::new();
+        for host in self.blocked_hosts() {
+            let pattern_any = format!("*://{}/*", host);
+            let pattern_sub = format!("*://*.{}/*", host);
+            if !filters.contains(&pattern_any) {
+                filters.push(pattern_any);
+            }
+            if !filters.contains(&pattern_sub) {
+                filters.push(pattern_sub);
+            }
+        }
+        filters
     }
 }
 

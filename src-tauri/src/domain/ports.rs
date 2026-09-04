@@ -1,4 +1,6 @@
-use crate::domain::entities::{FocusStatistics, FocusStatisticsQuery, SiteBlockState};
+use crate::domain::entities::{
+    FocusStatistics, FocusStatisticsQuery, SiteBlockConfig, SiteBlockState,
+};
 use crate::domain::errors::{AppError, AppResult};
 use std::process::Child;
 
@@ -16,6 +18,16 @@ pub trait SessionPort: Send + Sync {
         ))
     }
     fn adopt_child(&self, child: Child) -> AppResult<()>;
+
+    /// Typed query for current state
+    fn status(&self) -> AppResult<SiteBlockState> {
+        self.send_request(serde_json::json!({ "action": "status" }))
+    }
+
+    /// Typed update for configuration
+    fn set_config(&self, config: &SiteBlockConfig) -> AppResult<SiteBlockState> {
+        self.send_request(serde_json::json!({ "action": "set-config", "config": config }))
+    }
 }
 
 pub trait InstallerPort: Send + Sync {

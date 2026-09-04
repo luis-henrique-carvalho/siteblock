@@ -102,14 +102,30 @@ fn test_profile_validation_empty_name() {
 
 #[test]
 fn test_profile_validation_empty_domain() {
-    let profile = Profile::new("p1", "Nome", "target", "blue", true, vec!["   ".into()], vec![]);
+    let profile = Profile::new(
+        "p1",
+        "Nome",
+        "target",
+        "blue",
+        true,
+        vec!["   ".into()],
+        vec![],
+    );
     let err = profile.validate().unwrap_err();
     assert!(err.contains("O domínio não pode ser vazio"));
 }
 
 #[test]
 fn test_profile_validation_invalid_domain_format() {
-    let profile = Profile::new("p1", "Nome", "target", "blue", true, vec!["invalid domain.com".into()], vec![]);
+    let profile = Profile::new(
+        "p1",
+        "Nome",
+        "target",
+        "blue",
+        true,
+        vec!["invalid domain.com".into()],
+        vec![],
+    );
     let err = profile.validate().unwrap_err();
     assert!(err.contains("Formato de domínio inválido"));
 }
@@ -125,8 +141,10 @@ fn test_profile_default_presets() {
 
 #[test]
 fn test_profile_deserialization_defaults_icon_and_color() {
-    let json_str = r#"{"id":"p-custom","name":"Custom","enabled":true,"domains":[],"schedules":[]}"#;
-    let profile: Profile = serde_json::from_str(json_str).expect("Deveria desserializar com defaults");
+    let json_str =
+        r#"{"id":"p-custom","name":"Custom","enabled":true,"domains":[],"schedules":[]}"#;
+    let profile: Profile =
+        serde_json::from_str(json_str).expect("Deveria desserializar com defaults");
     assert_eq!(profile.icon, "shield");
     assert_eq!(profile.color, "blue");
 }
@@ -160,7 +178,15 @@ fn test_state_json_serialization_camel_case() {
     let state = SiteBlockState {
         active: true,
         enabled: true,
-        profiles: vec![Profile::new("p1", "Foco", "target", "blue", true, vec!["facebook.com".into()], vec![])],
+        profiles: vec![Profile::new(
+            "p1",
+            "Foco",
+            "target",
+            "blue",
+            true,
+            vec!["facebook.com".into()],
+            vec![],
+        )],
         active_profile_ids: vec!["p1".into()],
         effective_domains: vec!["facebook.com".into()],
         domains: vec!["facebook.com".into()],
@@ -229,10 +255,14 @@ fn test_app_error_display_and_from_conversions() {
         .contains("Dados de configuração inválidos"));
 
     let err_helper = AppError::HelperNotInstalled;
-    assert!(err_helper.to_string().contains("helper de administração não está instalado"));
+    assert!(err_helper
+        .to_string()
+        .contains("helper de administração não está instalado"));
 
     let err_sess = AppError::SessionUnavailable("pipe quebrado".into());
-    assert!(err_sess.to_string().contains("sessão administrativa está indisponível"));
+    assert!(err_sess
+        .to_string()
+        .contains("sessão administrativa está indisponível"));
 
     let err_resp = AppError::InvalidResponse("resposta truncada".into());
     assert!(err_resp.to_string().contains("Resposta inválida"));

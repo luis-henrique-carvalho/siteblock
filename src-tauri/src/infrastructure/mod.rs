@@ -1,5 +1,8 @@
+pub mod admin_protocol;
+pub mod browser_policy;
 pub mod embedded_assets;
 pub mod focus_stats;
+pub mod hosts;
 pub mod system_core;
 pub mod system_helper;
 pub mod system_installer;
