@@ -7,14 +7,23 @@ import {
 } from "@/components/ui/dialog";
 import { BadgeInfo } from "lucide-react";
 import { useLanguage } from "../../i18n";
+import { useUIStore } from "../../stores";
 
 interface AboutDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
+export function AboutDialog({
+  open: propOpen,
+  onOpenChange: propOnOpenChange,
+}: AboutDialogProps = {}) {
   const { t } = useLanguage();
+  const storeOpen = useUIStore((s) => s.aboutOpen);
+  const storeSetOpen = useUIStore((s) => s.setAboutOpen);
+
+  const open = propOpen ?? storeOpen;
+  const onOpenChange = propOnOpenChange ?? storeSetOpen;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -33,3 +42,5 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
     </Dialog>
   );
 }
+
+export default AboutDialog;

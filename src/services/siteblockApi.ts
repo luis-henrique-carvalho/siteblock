@@ -11,6 +11,8 @@ export interface ISiteBlockApi {
   installService(): Promise<SiteBlockState>;
   getFocusStatistics?(query: FocusStatisticsQuery): Promise<FocusStatistics>;
   onStateChanged?(callback: (state: SiteBlockState) => void): Promise<() => void> | (() => void);
+  onOpenPreferences?(callback: () => void): Promise<() => void> | (() => void);
+  onOpenAbout?(callback: () => void): Promise<() => void> | (() => void);
 }
 
 export class TauriSiteBlockApi implements ISiteBlockApi {
@@ -112,6 +114,22 @@ export class TauriSiteBlockApi implements ISiteBlockApi {
     const unlisten = await listen<SiteBlockState>("siteblock://state-changed", (event) => {
       logger.debug("State", "Evento siteblock://state-changed recebido", event.payload);
       callback(event.payload);
+    });
+    return unlisten;
+  }
+
+  async onOpenPreferences(callback: () => void): Promise<() => void> {
+    logger.debug("State", "Configurando listener para siteblock://open-preferences");
+    const unlisten = await listen("siteblock://open-preferences", () => {
+      callback();
+    });
+    return unlisten;
+  }
+
+  async onOpenAbout(callback: () => void): Promise<() => void> {
+    logger.debug("State", "Configurando listener para siteblock://open-about");
+    const unlisten = await listen("siteblock://open-about", () => {
+      callback();
     });
     return unlisten;
   }

@@ -6,21 +6,39 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Globe, Settings2 } from "lucide-react";
 import { useLanguage } from "../../i18n";
+import { useSiteBlockStore, useUIStore } from "../../stores";
 
 interface BrowserStatusListProps {
-  integrations: BrowserIntegration[];
+  integrations?: BrowserIntegration[];
   disabled?: boolean;
   onToggleBrowser?: (browser: string, enabled: boolean) => void;
   onOpenPreferences?: () => void;
 }
 
+const EMPTY_INTEGRATIONS: BrowserIntegration[] = [];
+
 export function BrowserStatusList({
-  integrations,
-  disabled = false,
-  onToggleBrowser,
-  onOpenPreferences,
-}: BrowserStatusListProps) {
+  integrations: propIntegrations,
+  disabled: propDisabled,
+  onToggleBrowser: propOnToggleBrowser,
+  onOpenPreferences: propOnOpenPreferences,
+}: BrowserStatusListProps = {}) {
   const { t } = useLanguage();
+  const storeIntegrations = useSiteBlockStore(
+    (s) => s.state?.browserIntegrations ?? EMPTY_INTEGRATIONS,
+  );
+  const setBrowserEnabled = useSiteBlockStore((s) => s.setBrowserEnabled);
+  const setPreferencesOpen = useUIStore((s) => s.setPreferencesOpen);
+  const busy = useUIStore((s) => s.busy);
+  const helperInstalled = useSiteBlockStore((s) => s.state?.helperInstalled ?? true);
+
+  const integrations = propIntegrations ?? storeIntegrations;
+  const disabled = propDisabled ?? (busy || !helperInstalled);
+  const onToggleBrowser =
+    propOnToggleBrowser ?? ((b, enabled) => void setBrowserEnabled(b, enabled));
+  const onOpenPreferences =
+    propOnOpenPreferences ?? (() => setPreferencesOpen(true));
+
   const [restartTargetBrowser, setRestartTargetBrowser] = useState<string | null>(null);
 
   const handleToggle = (name: string, enabled: boolean) => {

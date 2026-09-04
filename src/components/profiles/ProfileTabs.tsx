@@ -11,40 +11,75 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import type { Profile } from "@/types/siteblock";
 import { useLanguage } from "@/i18n";
+import { ProfileDialog } from "./ProfileDialog";
 import {
-  ProfileDialog,
   getProfileIconComponent,
   getProfileColorClasses,
-} from "./ProfileDialog";
+} from "@/constants/profiles";
+
+import { useSiteBlockStore, useUIStore } from "@/stores";
 
 interface ProfileTabsProps {
-  profiles: Profile[];
-  selectedProfileId: string;
-  activeProfileIds: string[];
-  masterEnabled: boolean;
+  profiles?: Profile[];
+  selectedProfileId?: string;
+  activeProfileIds?: string[];
+  masterEnabled?: boolean;
   disabled?: boolean;
-  onSelectProfile: (id: string) => void;
-  onToggleProfile: (id: string) => void;
-  onCreateProfile: (name: string, icon: string, color: string) => void;
-  onUpdateProfile: (id: string, updates: Partial<Profile>) => void;
-  onDeleteProfile: (id: string) => void;
-  onDuplicateProfile: (id: string) => void;
+  onSelectProfile?: (id: string) => void;
+  onToggleProfile?: (id: string) => void;
+  onCreateProfile?: (name: string, icon: string, color: string) => void;
+  onUpdateProfile?: (id: string, updates: Partial<Profile>) => void;
+  onDeleteProfile?: (id: string) => void;
+  onDuplicateProfile?: (id: string) => void;
 }
 
+const EMPTY_PROFILES: Profile[] = [];
+const EMPTY_ACTIVE_IDS: string[] = [];
+
 export function ProfileTabs({
-  profiles,
-  selectedProfileId,
-  activeProfileIds,
-  masterEnabled,
-  disabled = false,
-  onSelectProfile,
-  onToggleProfile,
-  onCreateProfile,
-  onUpdateProfile,
-  onDeleteProfile,
-  onDuplicateProfile,
-}: ProfileTabsProps) {
+  profiles: propProfiles,
+  selectedProfileId: propSelectedProfileId,
+  activeProfileIds: propActiveProfileIds,
+  masterEnabled: propMasterEnabled,
+  disabled: propDisabled,
+  onSelectProfile: propOnSelectProfile,
+  onToggleProfile: propOnToggleProfile,
+  onCreateProfile: propOnCreateProfile,
+  onUpdateProfile: propOnUpdateProfile,
+  onDeleteProfile: propOnDeleteProfile,
+  onDuplicateProfile: propOnDuplicateProfile,
+}: ProfileTabsProps = {}) {
   const { t } = useLanguage();
+  const storeProfiles = useSiteBlockStore((s) => s.state?.profiles ?? EMPTY_PROFILES);
+  const storeSelectedProfile = useSiteBlockStore((s) => s.getSelectedProfile());
+  const storeActiveProfileIds = useSiteBlockStore((s) => s.state?.activeProfileIds ?? EMPTY_ACTIVE_IDS);
+  const storeMasterEnabled = useSiteBlockStore((s) => s.state?.enabled ?? true);
+  const busy = useUIStore((s) => s.busy);
+  const helperInstalled = useSiteBlockStore((s) => s.state?.helperInstalled ?? true);
+
+  const selectProfile = useSiteBlockStore((s) => s.selectProfile);
+  const toggleProfileEnabled = useSiteBlockStore((s) => s.toggleProfileEnabled);
+  const createProfile = useSiteBlockStore((s) => s.createProfile);
+  const updateProfile = useSiteBlockStore((s) => s.updateProfile);
+  const deleteProfile = useSiteBlockStore((s) => s.deleteProfile);
+  const duplicateProfile = useSiteBlockStore((s) => s.duplicateProfile);
+
+  const profiles = propProfiles ?? storeProfiles;
+  const selectedProfileId =
+    propSelectedProfileId ?? (storeSelectedProfile?.id ?? (profiles[0]?.id ?? ""));
+  const activeProfileIds = propActiveProfileIds ?? storeActiveProfileIds;
+  const masterEnabled = propMasterEnabled ?? storeMasterEnabled;
+  const disabled = propDisabled ?? (busy || !helperInstalled);
+
+  const onSelectProfile = propOnSelectProfile ?? selectProfile;
+  const onToggleProfile = propOnToggleProfile ?? ((id) => void toggleProfileEnabled(id));
+  const onCreateProfile =
+    propOnCreateProfile ?? ((name, icon, color) => void createProfile(name, icon, color));
+  const onUpdateProfile =
+    propOnUpdateProfile ?? ((id, updates) => void updateProfile(id, updates));
+  const onDeleteProfile = propOnDeleteProfile ?? ((id) => void deleteProfile(id));
+  const onDuplicateProfile = propOnDuplicateProfile ?? ((id) => void duplicateProfile(id));
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
 

@@ -80,7 +80,7 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
       set({ api: customApi });
     }
 
-    const { setMessage, setIntegrationRequired } = useUIStore.getState();
+    const { notify, setIntegrationRequired } = useUIStore.getState();
     logger.info("State", "Iniciando carregamento do estado do SiteBlock...");
 
     let initialState: SiteBlockState | null = null;
@@ -91,7 +91,7 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
 
       if (nextState.helperInstalled && (!nextState.sessionSupported || nextState.helperOutdated)) {
         setIntegrationRequired(true);
-        setMessage(getTranslation("message.integrationUpdate"));
+        notify("warning", getTranslation("message.integrationUpdate"));
         logger.warn("Service", "Integração precisa ser atualizada (helperOutdated=true)");
       }
 
@@ -114,7 +114,7 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
 
       if (finalState.helperOutdated) {
         setIntegrationRequired(true);
-        setMessage(getTranslation("message.integrationUpdate"));
+        notify("warning", getTranslation("message.integrationUpdate"));
       }
 
       logger.info("State", "Estado carregado com sucesso", {
@@ -132,9 +132,9 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
       });
       if (initialState?.helperInstalled) {
         setIntegrationRequired(true);
-        setMessage(getTranslation("message.integrationUpdate"));
+        notify("warning", getTranslation("message.integrationUpdate"));
       } else {
-        setMessage(formatSystemError(error));
+        notify("error", formatSystemError(error));
       }
     }
 
@@ -175,10 +175,9 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
 
   commit: async (next: SiteBlockState, successMessage: string) => {
     const { api } = get();
-    const { setBusy, setMessage, setIntegrationRequired } = useUIStore.getState();
+    const { setBusy, notify, setIntegrationRequired } = useUIStore.getState();
 
     setBusy(true);
-    setMessage("");
     logger.info("Config", "Salvando configuração...", {
       enabled: next.enabled,
       profilesCount: next.profiles?.length ?? 0,
@@ -199,11 +198,13 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
       if (saved.helperOutdated) {
         setIntegrationRequired(true);
       }
-      setMessage(successMessage);
+      if (successMessage) {
+        notify("success", successMessage);
+      }
       logger.info("Config", "Configuração salva com sucesso", { revision: saved.revision });
     } catch (error) {
       logger.error("Config", "Erro ao salvar configuração", error);
-      setMessage(formatSystemError(error));
+      notify("error", formatSystemError(error));
     } finally {
       setBusy(false);
     }
@@ -233,20 +234,19 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
 
   installService: async () => {
     const { api, syncState } = get();
-    const { setBusy, setMessage, setIntegrationRequired } = useUIStore.getState();
+    const { setBusy, notify, setIntegrationRequired } = useUIStore.getState();
 
     setBusy(true);
-    setMessage("");
     logger.info("Service", "Iniciando instalação/atualização da integração...");
     try {
       const next = await api.installService();
       syncState(next);
       setIntegrationRequired(false);
-      setMessage(getTranslation("message.integrationConfigured"));
+      notify("success", getTranslation("message.integrationConfigured"));
       logger.info("Service", "Integração configurada com sucesso");
     } catch (error) {
       logger.error("Service", "Falha na instalação da integração", error);
-      setMessage(formatSystemError(error));
+      notify("error", formatSystemError(error));
     } finally {
       setBusy(false);
     }
@@ -307,10 +307,10 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
   deleteProfile: async (id: string) => {
     const { state, selectedProfileId, commit } = get();
     if (!state) return;
-    const { setMessage } = useUIStore.getState();
+    const { notify } = useUIStore.getState();
 
     if (state.profiles.length <= 1) {
-      setMessage(getTranslation("message.profileCannotDeleteLast"));
+      notify("warning", getTranslation("message.profileCannotDeleteLast"));
       return;
     }
     const updatedProfiles = state.profiles.filter((p) => p.id !== id);
@@ -344,13 +344,13 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
   addDomain: async (candidate: string): Promise<boolean> => {
     const { state, getSelectedProfile, commit } = get();
     if (!state) return false;
-    const { setMessage } = useUIStore.getState();
+    const { notify } = useUIStore.getState();
 
     const selectedProfile = getSelectedProfile();
     const currentDomains = selectedProfile ? selectedProfile.domains : state.domains;
     const validation = validateNewDomain(candidate, currentDomains);
     if (!validation.valid) {
-      if (validation.error) setMessage(validation.error);
+      if (validation.error) notify("error", validation.error);
       logger.warn("Domains", `Tentativa de adicionar domínio inválido/duplicado: '${candidate}'`);
       return false;
     }

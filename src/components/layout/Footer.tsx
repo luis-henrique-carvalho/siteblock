@@ -1,10 +1,6 @@
 import { useLanguage } from "../../i18n";
 
-interface FooterProps {
-  message?: string;
-}
-
-export function Footer({ message: _ }: FooterProps = {}) {
+export function Footer() {
   const { t } = useLanguage();
 
   return (

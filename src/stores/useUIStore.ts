@@ -1,4 +1,7 @@
 import { create } from "zustand";
+import { toast } from "sonner";
+
+export type NotificationType = "success" | "error" | "warning" | "info";
 
 export interface UIState {
   preferencesOpen: boolean;
@@ -11,6 +14,7 @@ export interface UIState {
   setBusy: (busy: boolean) => void;
   setMessage: (msg: string) => void;
   setIntegrationRequired: (required: boolean) => void;
+  notify: (type: NotificationType, message: string) => void;
   reset: () => void;
 }
 
@@ -29,5 +33,10 @@ export const useUIStore = create<UIState>((set) => ({
   setBusy: (busy) => set({ busy }),
   setMessage: (message) => set({ message }),
   setIntegrationRequired: (integrationRequired) => set({ integrationRequired }),
+  notify: (type, message) => {
+    if (!message) return;
+    set({ message });
+    toast[type](message);
+  },
   reset: () => set({ ...initialState }),
 }));

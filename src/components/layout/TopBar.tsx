@@ -3,14 +3,25 @@ import { Button } from "@/components/ui/button";
 import { SignalDot } from "../common/SignalDot";
 import { ShieldCheck, ShieldAlert, Settings2 } from "lucide-react";
 import { useLanguage } from "../../i18n";
+import { useSiteBlockStore, useUIStore } from "../../stores";
 
 interface TopBarProps {
-  active: boolean;
+  active?: boolean;
   onOpenPreferences?: () => void;
 }
 
-export function TopBar({ active, onOpenPreferences }: TopBarProps) {
+export function TopBar({
+  active: propActive,
+  onOpenPreferences: propOnOpenPreferences,
+}: TopBarProps = {}) {
   const { t } = useLanguage();
+  const storeActive = useSiteBlockStore((s) => s.state?.active ?? false);
+  const setPreferencesOpen = useUIStore((s) => s.setPreferencesOpen);
+
+  const active = propActive ?? storeActive;
+  const onOpenPreferences =
+    propOnOpenPreferences ?? (() => setPreferencesOpen(true));
+
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-5 mb-6">
       <div className="flex items-center gap-3">

@@ -6,7 +6,7 @@ import {
   type Translate,
   type TranslationKey,
   translate,
-} from "../i18n";
+} from "../i18n/translations";
 
 const LANGUAGE_KEY = "language";
 const LEGACY_STORAGE_KEY = "siteblock.preferences.language";
@@ -32,8 +32,6 @@ export interface PreferencesState {
   t: Translate;
 }
 
-let userSelectedLanguage = false;
-
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   language: "pt-BR",
   hasPersistenceError: false,
@@ -44,7 +42,6 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   },
 
   setLanguage: (nextLanguage: Language) => {
-    userSelectedLanguage = true;
     set({ language: nextLanguage, hasPersistenceError: false });
 
     void preferencesStore.set(LANGUAGE_KEY, nextLanguage).catch((error: unknown) => {
@@ -54,8 +51,6 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   },
 
   init: async () => {
-    if (get().initialized) return;
-
     try {
       const savedLanguage = await preferencesStore.get<unknown>(LANGUAGE_KEY);
       const storedLanguage = isLanguage(savedLanguage) ? savedLanguage : undefined;
@@ -67,19 +62,15 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
         window.localStorage.removeItem(LEGACY_STORAGE_KEY);
       }
 
-      if (!userSelectedLanguage) {
-        set({ language: nextLanguage, initialized: true, hasPersistenceError: false });
-      }
+      set({ language: nextLanguage, initialized: true, hasPersistenceError: false });
     } catch (error) {
       console.warn("Não foi possível carregar as preferências locais.", error);
       const legacyLanguage = getLegacyLanguage();
-      if (!userSelectedLanguage) {
-        set({
-          language: legacyLanguage ?? "pt-BR",
-          initialized: true,
-          hasPersistenceError: true,
-        });
-      }
+      set({
+        language: legacyLanguage ?? "pt-BR",
+        initialized: true,
+        hasPersistenceError: true,
+      });
     }
   },
 }));

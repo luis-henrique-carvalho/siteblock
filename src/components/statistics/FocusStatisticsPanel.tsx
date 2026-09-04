@@ -28,16 +28,31 @@ import {
 import { Skeleton } from "../ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
+import { siteblockApi } from "../../services/siteblockApi";
+import { useSiteBlockStore, useUIStore } from "../../stores";
+
+export interface FocusStatisticsPanelProps {
+  profiles?: Profile[];
+  api?: Pick<ISiteBlockApi, "getFocusStatistics">;
+  available?: boolean;
+}
+
+const EMPTY_PROFILES: Profile[] = [];
+
 export function FocusStatisticsPanel({
-  profiles,
-  api,
-  available,
-}: {
-  profiles: Profile[];
-  api: Pick<ISiteBlockApi, "getFocusStatistics">;
-  available: boolean;
-}) {
+  profiles: propProfiles,
+  api: propApi,
+  available: propAvailable,
+}: FocusStatisticsPanelProps = {}) {
   const { t, language } = useLanguage();
+  const storeProfiles = useSiteBlockStore((s) => s.state?.profiles ?? EMPTY_PROFILES);
+  const helperInstalled = useSiteBlockStore((s) => s.state?.helperInstalled ?? false);
+  const integrationRequired = useUIStore((s) => s.integrationRequired);
+
+  const profiles = propProfiles ?? storeProfiles;
+  const api = propApi ?? siteblockApi;
+  const available = propAvailable ?? (helperInstalled && !integrationRequired);
+
   const { error, loading, period, profileId, reload, setPeriod, setProfileId, statistics } =
     useFocusStatistics({ api, available });
   const isEmpty = !loading && statistics.protectedSeconds === 0;
@@ -379,3 +394,5 @@ export function FocusStatisticsPanel({
     </section>
   );
 }
+
+export default FocusStatisticsPanel;

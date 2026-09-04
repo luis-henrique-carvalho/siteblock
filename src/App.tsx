@@ -1,8 +1,5 @@
-import { useEffect, useMemo } from "react";
-import { listen } from "@tauri-apps/api/event";
-import { useSiteBlock } from "./hooks/useSiteBlock";
-import { useUIStore } from "./stores";
-import { getScheduleSummary } from "./utils/scheduleHelpers";
+import { useEffect, lazy, Suspense } from "react";
+import { useSiteBlockStore, useUIStore } from "./stores";
 import { TopBar } from "./components/layout/TopBar";
 import { Footer } from "./components/layout/Footer";
 import { SetupBanner } from "./components/setup/SetupBanner";
@@ -13,14 +10,20 @@ import { ProfileTabs } from "./components/profiles/ProfileTabs";
 import { DomainManager } from "./components/domains/DomainManager";
 import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { LoadingScreen } from "./components/common/LoadingScreen";
-import { PreferencesPanel } from "./components/preferences/PreferencesPanel";
-import { AboutDialog } from "./components/preferences/AboutDialog";
-import { FocusStatisticsPanel } from "./components/statistics/FocusStatisticsPanel";
 import { siteblockApi } from "./services/siteblockApi";
-import { LanguageProvider, useLanguage } from "./i18n";
+import { LanguageProvider } from "./i18n";
 import { Toaster } from "./components/ui/sonner";
-import { toast } from "sonner";
 import "./App.css";
+
+const FocusStatisticsPanel = lazy(
+  () => import("./components/statistics/FocusStatisticsPanel"),
+);
+const PreferencesPanel = lazy(
+  () => import("./components/preferences/PreferencesPanel"),
+);
+const AboutDialog = lazy(
+  () => import("./components/preferences/AboutDialog"),
+);
 
 export function App() {
   return (
@@ -32,177 +35,98 @@ export function App() {
 }
 
 function AppContent() {
-  const { t } = useLanguage();
+  const state = useSiteBlockStore((s) => s.state);
+  const installService = useSiteBlockStore((s) => s.installService);
+  const busy = useUIStore((s) => s.busy);
+  const integrationRequired = useUIStore((s) => s.integrationRequired);
   const preferencesOpen = useUIStore((s) => s.preferencesOpen);
   const aboutOpen = useUIStore((s) => s.aboutOpen);
-  const setPreferencesOpen = useUIStore((s) => s.setPreferencesOpen);
-  const setAboutOpen = useUIStore((s) => s.setAboutOpen);
-  const {
-    state,
-    selectedProfile,
-    selectedProfileId,
-    message,
-    busy,
-    integrationRequired,
-    toggleEnabled,
-    setBrowserEnabled,
-    installService,
-    selectProfile,
-    toggleProfileEnabled,
-    createProfile,
-    updateProfile,
-    deleteProfile,
-    duplicateProfile,
-    addDomain,
-    removeDomain,
-    updateLocalSchedules,
-    saveSchedules,
-  } = useSiteBlock();
-
-  const activeProfilesNames = useMemo(() => {
-    if (!state?.profiles || !state.activeProfileIds) return [];
-    return state.profiles.filter((p) => state.activeProfileIds.includes(p.id)).map((p) => p.name);
-  }, [state?.profiles, state?.activeProfileIds]);
-
-  const scheduleSummary = useMemo(
-    () => getScheduleSummary(selectedProfile?.schedules.length ?? state?.schedules.length ?? 0, t),
-    [selectedProfile?.schedules.length, state?.schedules.length, t],
-  );
+  const init = useSiteBlockStore((s) => s.init);
 
   useEffect(() => {
+    let unlisten: (() => void) | undefined;
     let mounted = true;
-    let unlistenPreferences: (() => void) | undefined;
-    let unlistenAbout: (() => void) | undefined;
 
-    void Promise.all([
-      listen("siteblock://open-preferences", () => useUIStore.getState().setPreferencesOpen(true)),
-      listen("siteblock://open-about", () => useUIStore.getState().setAboutOpen(true)),
-    ]).then(([preferencesCleanup, aboutCleanup]) => {
-      if (mounted) {
-        unlistenPreferences = preferencesCleanup;
-        unlistenAbout = aboutCleanup;
+    void init().then((cleanup) => {
+      if (!mounted) {
+        cleanup?.();
       } else {
-        preferencesCleanup();
-        aboutCleanup();
+        unlisten = cleanup;
       }
     });
 
     return () => {
       mounted = false;
-      unlistenPreferences?.();
-      unlistenAbout?.();
+      unlisten?.();
     };
-  }, []);
+  }, [init]);
 
   useEffect(() => {
-    if (!message) return;
-    const lower = message.toLowerCase();
-    const isError =
-      lower.includes("erro") ||
-      lower.includes("falha") ||
-      lower.includes("inválido") ||
-      lower.startsWith("informe") ||
-      lower.includes("não é possível") ||
-      lower.includes("cancelada");
+    let unlisten: (() => void) | undefined;
+    let mounted = true;
 
-    const isWarning = lower.includes("atualizada") || lower.includes("atenção");
-
-    if (isError) {
-      toast.error(message);
-    } else if (isWarning) {
-      toast.warning(message);
-    } else {
-      toast.success(message);
+    if (siteblockApi.onOpenPreferences && siteblockApi.onOpenAbout) {
+      Promise.all([
+        siteblockApi.onOpenPreferences(() => {
+          if (mounted) useUIStore.getState().setPreferencesOpen(true);
+        }),
+        siteblockApi.onOpenAbout(() => {
+          if (mounted) useUIStore.getState().setAboutOpen(true);
+        }),
+      ]).then(([u1, u2]) => {
+        if (!mounted) {
+          u1();
+          u2();
+        } else {
+          unlisten = () => {
+            u1();
+            u2();
+          };
+        }
+      });
     }
-  }, [message]);
+
+    return () => {
+      mounted = false;
+      unlisten?.();
+    };
+  }, []);
 
   if (!state) {
     return <LoadingScreen />;
   }
 
-  const isActionsDisabled = busy || !state.helperInstalled;
-  const currentDomains = selectedProfile ? selectedProfile.domains : state.domains;
-  const currentSchedules = selectedProfile ? selectedProfile.schedules : state.schedules;
-
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary transition-colors">
       <main className="app-shell animate-in fade-in duration-300">
-        <TopBar active={state.active} onOpenPreferences={() => setPreferencesOpen(true)} />
+        <TopBar />
 
         {(!state.helperInstalled || integrationRequired) && (
           <SetupBanner onInstall={() => void installService()} busy={busy} />
         )}
 
-        <HeroSection
-          active={state.active}
-          enabled={state.enabled}
-          scheduleSummary={scheduleSummary}
-          activeProfilesNames={activeProfilesNames}
-        />
+        <HeroSection />
 
-        <MasterSwitch
-          enabled={state.enabled}
-          disabled={isActionsDisabled}
-          onToggle={() => void toggleEnabled()}
-        />
+        <MasterSwitch />
 
         {state.profiles && state.profiles.length > 0 && (
           <div className="my-4">
-            <ProfileTabs
-              profiles={state.profiles}
-              selectedProfileId={selectedProfileId}
-              activeProfileIds={state.activeProfileIds ?? []}
-              masterEnabled={state.enabled}
-              disabled={isActionsDisabled}
-              onSelectProfile={selectProfile}
-              onToggleProfile={(id) => void toggleProfileEnabled(id)}
-              onCreateProfile={(name, icon, color) => void createProfile(name, icon, color)}
-              onUpdateProfile={(id, updates) => void updateProfile(id, updates)}
-              onDeleteProfile={(id) => void deleteProfile(id)}
-              onDuplicateProfile={(id) => void duplicateProfile(id)}
-            />
+            <ProfileTabs />
           </div>
         )}
 
-        {state.helperInstalled && (
-          <BrowserStatusList
-            integrations={state.browserIntegrations}
-            disabled={isActionsDisabled}
-            onToggleBrowser={(browser, enabled) => void setBrowserEnabled(browser, enabled)}
-            onOpenPreferences={() => setPreferencesOpen(true)}
-          />
-        )}
+        {state.helperInstalled && <BrowserStatusList />}
 
         <div className="content-grid">
-          <DomainManager
-            domains={currentDomains}
-            disabled={isActionsDisabled}
-            onAddDomain={addDomain}
-            onRemoveDomain={(d) => void removeDomain(d)}
-          />
-
-          <ScheduleManager
-            schedules={currentSchedules}
-            disabled={isActionsDisabled}
-            onUpdateSchedules={updateLocalSchedules}
-            onSaveSchedules={(s) => void saveSchedules(s)}
-          />
+          <DomainManager />
+          <ScheduleManager />
         </div>
 
-        <FocusStatisticsPanel
-          profiles={state.profiles ?? []}
-          api={siteblockApi}
-          available={state.helperInstalled && !integrationRequired}
-        />
-
-        <PreferencesPanel
-          open={preferencesOpen}
-          onOpenChange={setPreferencesOpen}
-          browsers={state.browserIntegrations}
-          disabled={isActionsDisabled || integrationRequired}
-          onBrowserEnabledChange={(browser, enabled) => void setBrowserEnabled(browser, enabled)}
-        />
-        <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
+        <Suspense fallback={null}>
+          <FocusStatisticsPanel />
+          {preferencesOpen && <PreferencesPanel />}
+          {aboutOpen && <AboutDialog />}
+        </Suspense>
 
         <Footer />
       </main>

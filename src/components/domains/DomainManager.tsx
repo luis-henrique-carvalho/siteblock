@@ -5,23 +5,39 @@ import { Badge } from "@/components/ui/badge";
 import { ListFilter, AlertCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../i18n";
+import { useSiteBlockStore, useUIStore } from "../../stores";
 
 interface DomainManagerProps {
-  domains: string[];
+  domains?: string[];
   message?: string;
-  disabled: boolean;
-  onAddDomain: (domain: string) => Promise<boolean>;
-  onRemoveDomain: (domain: string) => void;
+  disabled?: boolean;
+  onAddDomain?: (domain: string) => Promise<boolean>;
+  onRemoveDomain?: (domain: string) => void;
 }
 
+const EMPTY_DOMAINS: string[] = [];
+
 export function DomainManager({
-  domains,
+  domains: propDomains,
   message,
-  disabled,
-  onAddDomain,
-  onRemoveDomain,
-}: DomainManagerProps) {
+  disabled: propDisabled,
+  onAddDomain: propOnAddDomain,
+  onRemoveDomain: propOnRemoveDomain,
+}: DomainManagerProps = {}) {
   const { t } = useLanguage();
+  const storeDomains = useSiteBlockStore(
+    (s) => s.getSelectedProfile()?.domains ?? s.state?.domains ?? EMPTY_DOMAINS,
+  );
+  const storeAddDomain = useSiteBlockStore((s) => s.addDomain);
+  const storeRemoveDomain = useSiteBlockStore((s) => s.removeDomain);
+  const busy = useUIStore((s) => s.busy);
+  const helperInstalled = useSiteBlockStore((s) => s.state?.helperInstalled ?? true);
+
+  const domains = propDomains ?? storeDomains;
+  const disabled = propDisabled ?? (busy || !helperInstalled);
+  const onAddDomain = propOnAddDomain ?? storeAddDomain;
+  const onRemoveDomain = propOnRemoveDomain ?? ((d) => void storeRemoveDomain(d));
+
   const isError = message ? message.startsWith("Erro:") : false;
 
   return (

@@ -19,21 +19,41 @@ const languageNames: Record<Language, string> = {
   en: "English",
 };
 
+import { useSiteBlockStore, useUIStore } from "@/stores";
+
 interface PreferencesPanelProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   browsers?: BrowserIntegration[];
   disabled?: boolean;
   onBrowserEnabledChange?: (browser: string, enabled: boolean) => void;
 }
 
+const EMPTY_INTEGRATIONS: BrowserIntegration[] = [];
+
 export function PreferencesPanel({
-  open,
-  onOpenChange,
-  browsers = [],
-  disabled = false,
-  onBrowserEnabledChange,
-}: PreferencesPanelProps) {
+  open: propOpen,
+  onOpenChange: propOnOpenChange,
+  browsers: propBrowsers,
+  disabled: propDisabled,
+  onBrowserEnabledChange: propOnBrowserEnabledChange,
+}: PreferencesPanelProps = {}) {
+  const storeOpen = useUIStore((s) => s.preferencesOpen);
+  const storeSetOpen = useUIStore((s) => s.setPreferencesOpen);
+  const storeBrowsers = useSiteBlockStore(
+    (s) => s.state?.browserIntegrations ?? EMPTY_INTEGRATIONS,
+  );
+  const setBrowserEnabled = useSiteBlockStore((s) => s.setBrowserEnabled);
+  const busy = useUIStore((s) => s.busy);
+  const helperInstalled = useSiteBlockStore((s) => s.state?.helperInstalled ?? true);
+  const integrationRequired = useUIStore((s) => s.integrationRequired);
+
+  const open = propOpen ?? storeOpen;
+  const onOpenChange = propOnOpenChange ?? storeSetOpen;
+  const browsers = propBrowsers ?? storeBrowsers;
+  const disabled = propDisabled ?? (busy || !helperInstalled || integrationRequired);
+  const onBrowserEnabledChange =
+    propOnBrowserEnabledChange ?? ((b, en) => void setBrowserEnabled(b, en));
   const { hasPersistenceError, language, setLanguage, t } = useLanguage();
 
   return (
@@ -167,3 +187,5 @@ export function PreferencesPanel({
     </Dialog>
   );
 }
+
+export default PreferencesPanel;

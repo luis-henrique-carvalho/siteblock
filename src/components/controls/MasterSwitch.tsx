@@ -4,15 +4,29 @@ import { Switch } from "@/components/ui/switch";
 import { Power, ShieldCheck, ShieldBan } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../i18n";
+import { useSiteBlockStore, useUIStore } from "../../stores";
 
 interface MasterSwitchProps {
-  enabled: boolean;
-  disabled: boolean;
-  onToggle: () => void;
+  enabled?: boolean;
+  disabled?: boolean;
+  onToggle?: () => void;
 }
 
-export function MasterSwitch({ enabled, disabled, onToggle }: MasterSwitchProps) {
+export function MasterSwitch({
+  enabled: propEnabled,
+  disabled: propDisabled,
+  onToggle: propOnToggle,
+}: MasterSwitchProps = {}) {
   const { t } = useLanguage();
+  const storeEnabled = useSiteBlockStore((s) => s.state?.enabled ?? false);
+  const toggleEnabled = useSiteBlockStore((s) => s.toggleEnabled);
+  const busy = useUIStore((s) => s.busy);
+  const helperInstalled = useSiteBlockStore((s) => s.state?.helperInstalled ?? true);
+
+  const enabled = propEnabled ?? storeEnabled;
+  const disabled = propDisabled ?? (busy || !helperInstalled);
+  const onToggle = propOnToggle ?? (() => void toggleEnabled());
+
   return (
     <Card
       className={cn(
