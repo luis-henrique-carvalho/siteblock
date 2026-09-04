@@ -42,7 +42,7 @@ impl TrayViewModel {
                 tooltip: "SiteBlock — Processando…".to_string(),
             },
             TrayStateView::Error => {
-                let action_text = if last_known_state.map_or(false, |s| s.enabled) {
+                let action_text = if last_known_state.is_some_and(|s| s.enabled) {
                     "Desativar bloqueio".to_string()
                 } else {
                     "Ativar bloqueio".to_string()

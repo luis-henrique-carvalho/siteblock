@@ -58,10 +58,10 @@ pub fn is_profile_active(profile: &Profile, now: DateTime<Local>) -> bool {
     profile.schedules.iter().any(|s| applies_now(s, now))
 }
 
-pub fn get_active_profiles<'a>(
-    config: &'a SiteBlockConfig,
+pub fn get_active_profiles(
+    config: &SiteBlockConfig,
     now: DateTime<Local>,
-) -> Vec<&'a Profile> {
+) -> Vec<&Profile> {
     if !config.enabled {
         return Vec::new();
     }
@@ -422,7 +422,7 @@ where
                                 })
                             }
                             Err(validation_err) => {
-                                serde_json::json!({ "error": format!("{}", validation_err) })
+                                serde_json::json!({ "error": validation_err })
                             }
                         }
                     }
