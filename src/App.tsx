@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { useSiteBlock } from "./hooks/useSiteBlock";
+import { useUIStore } from "./stores";
 import { getScheduleSummary } from "./utils/scheduleHelpers";
 import { TopBar } from "./components/layout/TopBar";
 import { Footer } from "./components/layout/Footer";
@@ -32,8 +33,10 @@ export function App() {
 
 function AppContent() {
   const { t } = useLanguage();
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
+  const preferencesOpen = useUIStore((s) => s.preferencesOpen);
+  const aboutOpen = useUIStore((s) => s.aboutOpen);
+  const setPreferencesOpen = useUIStore((s) => s.setPreferencesOpen);
+  const setAboutOpen = useUIStore((s) => s.setAboutOpen);
   const {
     state,
     selectedProfile,
@@ -72,8 +75,8 @@ function AppContent() {
     let unlistenAbout: (() => void) | undefined;
 
     void Promise.all([
-      listen("siteblock://open-preferences", () => setPreferencesOpen(true)),
-      listen("siteblock://open-about", () => setAboutOpen(true)),
+      listen("siteblock://open-preferences", () => useUIStore.getState().setPreferencesOpen(true)),
+      listen("siteblock://open-about", () => useUIStore.getState().setAboutOpen(true)),
     ]).then(([preferencesCleanup, aboutCleanup]) => {
       if (mounted) {
         unlistenPreferences = preferencesCleanup;
