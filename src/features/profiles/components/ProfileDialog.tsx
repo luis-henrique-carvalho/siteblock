@@ -55,7 +55,7 @@ function ProfileForm({ profile, onSave, onCancel }: ProfileFormProps) {
           {isEditing ? t("profiles.editTitle") : t("profiles.createTitle")}
         </DialogTitle>
         <DialogDescription className="text-sm text-muted-foreground">
-          {t("hero.description")}
+          {t("profiles.description")}
         </DialogDescription>
       </DialogHeader>
 

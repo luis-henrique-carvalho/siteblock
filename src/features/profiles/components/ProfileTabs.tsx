@@ -12,11 +12,8 @@ import { Button } from "@/components/ui/button";
 import type { Profile } from "@/types/siteblock";
 import { useLanguage } from "@/i18n";
 import { ProfileDialog } from "./ProfileDialog";
-import {
-  getProfileIconComponent,
-  getProfileColorClasses,
-} from "../constants/profiles";
-
+import { getProfileIconComponent } from "../constants/profiles";
+import { cn } from "@/lib/utils";
 import { useSiteBlockStore, useUIStore } from "@/stores";
 
 interface ProfileTabsProps {
@@ -88,13 +85,13 @@ export function ProfileTabs({
   return (
     <div className="w-full space-y-3">
       {/* Top info and header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+      <div className="flex items-center justify-between gap-2 px-0.5">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-semibold text-foreground">
             {t("profiles.eyebrow")}
           </span>
-          <span className="text-xs text-muted-foreground">•</span>
-          <span className="text-xs font-medium text-muted-foreground">
+          <span className="text-xs text-muted-foreground/60">•</span>
+          <span className="text-xs text-muted-foreground">
             {t("profiles.activeCount", {
               active: masterEnabled ? activeCount : 0,
               total: profiles.length,
@@ -107,7 +104,7 @@ export function ProfileTabs({
           variant="outline"
           disabled={disabled}
           onClick={() => setCreateDialogOpen(true)}
-          className="h-8 gap-1.5 text-xs font-medium border-dashed border-primary/40 hover:border-primary text-primary hover:bg-primary/5"
+          className="h-7 gap-1 text-xs font-medium"
         >
           <Plus className="size-3.5" />
           {t("profiles.new")}
@@ -120,7 +117,6 @@ export function ProfileTabs({
           const isSelected = profile.id === selectedProfileId;
           const isCurrentlyActive = masterEnabled && activeProfileIds.includes(profile.id);
           const IconComp = getProfileIconComponent(profile.icon);
-          const colorStyles = getProfileColorClasses(profile.color);
 
           return (
             <div
@@ -134,55 +130,53 @@ export function ProfileTabs({
                   onSelectProfile(profile.id);
                 }
               }}
-              className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all cursor-pointer select-none shrink-0 ${
+              className={cn(
+                "group relative flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-colors cursor-pointer select-none shrink-0 text-xs",
                 isSelected
-                  ? `border-border bg-card shadow-sm ring-1 ${colorStyles.ring}`
-                  : "border-border/50 bg-card/50 hover:bg-card hover:border-border/80 text-muted-foreground"
-              }`}
+                  ? "border-foreground/25 bg-muted/60 text-foreground font-medium shadow-2xs"
+                  : "border-border/60 bg-card hover:bg-muted/30 text-muted-foreground hover:text-foreground",
+              )}
             >
               {/* Profile Icon and active indicator */}
               <div className="relative flex items-center justify-center">
                 <div
-                  className={`size-8 rounded-lg flex items-center justify-center border transition-colors ${
+                  className={cn(
+                    "size-7 rounded-md flex items-center justify-center border transition-colors",
                     isSelected
-                      ? colorStyles.tabActive
-                      : "border-border/40 bg-muted/40 text-muted-foreground group-hover:text-foreground"
-                  }`}
+                      ? "border-border bg-background text-foreground"
+                      : "border-border/40 bg-muted/50 text-muted-foreground",
+                  )}
                 >
-                  <IconComp className="size-4" />
+                  <IconComp className="size-3.5" />
                 </div>
                 {isCurrentlyActive && (
                   <span
-                    className={`absolute -top-1 -right-1 size-2.5 rounded-full ${colorStyles.indicator} ring-2 ring-background animate-pulse`}
+                    className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-emerald-500 ring-2 ring-background"
                     title={t("profiles.activeNow")}
                   />
                 )}
               </div>
 
               {/* Profile Name and status */}
-              <div className="flex flex-col items-start pr-1">
-                <span
-                  className={`text-sm font-semibold tracking-tight transition-colors ${
-                    isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-                  }`}
-                >
+              <div className="flex flex-col items-start min-w-0 pr-1">
+                <span className="text-xs font-medium tracking-tight truncate max-w-[120px]">
                   {profile.name}
                 </span>
 
-                <div className="flex items-center gap-1.5 text-[11px]">
+                <div className="flex items-center gap-1 text-[10px]">
                   {isCurrentlyActive ? (
-                    <span className="flex items-center gap-1 font-medium text-emerald-500 dark:text-emerald-400">
-                      <CheckCircle2 className="size-3" />
+                    <span className="flex items-center gap-1 text-emerald-500 font-medium">
+                      <CheckCircle2 className="size-2.5" />
                       {t("profiles.activeNow")}
                     </span>
                   ) : profile.enabled ? (
-                    <span className="flex items-center gap-1 text-muted-foreground/80">
-                      <Clock className="size-3" />
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Clock className="size-2.5" />
                       {t("profiles.outsideSchedule")}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 text-muted-foreground/60">
-                      <PowerOff className="size-3" />
+                      <PowerOff className="size-2.5" />
                       {t("profiles.disabled")}
                     </span>
                   )}
@@ -190,7 +184,7 @@ export function ProfileTabs({
               </div>
 
               {/* Divider */}
-              <div className="h-6 w-px bg-border/40 my-auto" />
+              <div className="h-5 w-px bg-border/60 my-auto" />
 
               {/* Per-profile Toggle Switch */}
               <div
@@ -202,7 +196,7 @@ export function ProfileTabs({
                   checked={profile.enabled}
                   disabled={disabled}
                   onCheckedChange={() => onToggleProfile(profile.id)}
-                  className="scale-80"
+                  className="scale-75"
                   aria-label={`Alternar ${profile.name}`}
                 />
               </div>
@@ -218,7 +212,7 @@ export function ProfileTabs({
                     <button
                       type="button"
                       disabled={disabled}
-                      className="size-7 rounded-md flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors"
+                      className="size-6 rounded flex items-center justify-center text-muted-foreground/70 hover:text-foreground hover:bg-muted/70 transition-colors"
                       aria-label={`Opções do perfil ${profile.name}`}
                     >
                       <MoreVertical className="size-3.5" />

@@ -23,33 +23,33 @@ export function TopBar({
     propOnOpenPreferences ?? (() => setPreferencesOpen(true));
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-5 mb-6">
+    <header className="flex items-center justify-between gap-4 border-b border-border pb-4 mb-5">
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 text-primary shadow-xs font-bold text-sm">
+        <div className="flex size-8 items-center justify-center rounded-md border border-border bg-muted text-foreground font-semibold text-xs">
           S/
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xl font-bold tracking-tight text-foreground">SiteBlock</span>
+          <span className="text-base font-semibold tracking-tight text-foreground">SiteBlock</span>
           <Badge
             variant="outline"
-            className="hidden sm:inline-flex text-[10px] tracking-wider uppercase font-semibold text-muted-foreground border-border/80"
+            className="text-[10px] font-mono px-1.5 py-0 text-muted-foreground border-border"
           >
             v0.1.0
           </Badge>
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         <Badge
-          variant="secondary"
-          className="flex items-center gap-2 py-1.5 px-3 rounded-full border border-border/80 bg-secondary/60 text-secondary-foreground text-xs font-medium tracking-wide"
+          variant="outline"
+          className="flex items-center gap-2 py-1 px-2.5 rounded-md border-border bg-muted/50 text-foreground text-xs font-normal"
           role="status"
           aria-live="polite"
         >
           <SignalDot active={active} />
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 font-medium">
             {active ? (
-              <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
+              <ShieldCheck className="size-3.5 text-emerald-500" aria-hidden="true" />
             ) : (
               <ShieldAlert className="size-3.5 text-muted-foreground" aria-hidden="true" />
             )}
@@ -60,9 +60,9 @@ export function TopBar({
         {onOpenPreferences && (
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={onOpenPreferences}
-            className="size-8 rounded-full border border-border/70 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground"
             aria-label={t("topbar.settingsAria")}
             title={t("topbar.settings")}
           >

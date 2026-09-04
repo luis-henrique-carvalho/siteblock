@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { BrowserIntegration } from "@/types/siteblock";
 import { BrowserItem } from "./BrowserItem";
 import { BrowserRestartDialog } from "./BrowserRestartDialog";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Globe, Settings2 } from "lucide-react";
 import { useLanguage } from "@/i18n";
@@ -53,35 +53,30 @@ export function BrowserStatusList({
 
   return (
     <Card
-      className="my-5 border-border/70 bg-card/50 backdrop-blur-xs shadow-xs"
+      className="border border-border bg-card shadow-xs"
       aria-label={t("browser.label")}
     >
-      <CardHeader className="pb-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-[11px] font-mono font-semibold tracking-wider text-muted-foreground uppercase">
-            <Globe className="size-3.5 text-primary/90" aria-hidden="true" />
-            <span>{t("browser.eyebrow")}</span>
-          </div>
-
-          {onOpenPreferences && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onOpenPreferences}
-              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-md border border-border/60 hover:bg-muted/40 transition-colors"
-            >
-              <Settings2 className="size-3.5" aria-hidden="true" />
-              <span>{t("browser.configure")}</span>
-            </Button>
-          )}
+      <CardHeader className="p-3.5 pb-2.5 flex flex-row items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Globe className="size-3.5 text-muted-foreground" aria-hidden="true" />
+          <CardTitle className="text-xs font-semibold text-foreground">
+            {t("browser.label")}
+          </CardTitle>
         </div>
 
-        <CardTitle className="sr-only">{t("browser.label")}</CardTitle>
-        <CardDescription className="text-xs text-muted-foreground/90 leading-relaxed max-w-xl">
-          {t("browser.description")}
-        </CardDescription>
+        {onOpenPreferences && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenPreferences}
+            className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground gap-1 font-normal"
+          >
+            <Settings2 className="size-3" aria-hidden="true" />
+            <span>{t("browser.configure")}</span>
+          </Button>
+        )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3.5 pt-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {integrations.map((browser) => (
             <BrowserItem

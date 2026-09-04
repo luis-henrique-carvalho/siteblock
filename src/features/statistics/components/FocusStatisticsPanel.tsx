@@ -164,16 +164,16 @@ export function FocusStatisticsPanel({
   };
 
   return (
-    <section className="mt-8 flex flex-col gap-6" aria-labelledby="focus-statistics-title">
-      <div className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 pt-1" aria-labelledby="focus-statistics-title">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 id="focus-statistics-title" className="text-xl font-semibold tracking-tight">
+          <h2 id="focus-statistics-title" className="text-sm font-semibold tracking-tight text-foreground">
             {t("statistics.title")}
           </h2>
-          <p className="text-sm text-muted-foreground">{t("statistics.description")}</p>
+          <p className="text-xs text-muted-foreground">{t("statistics.description")}</p>
         </div>
 
-        <FieldGroup className="flex flex-row flex-wrap items-end gap-4">
+        <FieldGroup className="flex flex-row flex-wrap items-center gap-3">
           <Field className="w-full sm:w-40">
             <FieldLabel>{t("statistics.period")}</FieldLabel>
             <Select

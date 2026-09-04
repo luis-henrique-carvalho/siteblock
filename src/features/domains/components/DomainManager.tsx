@@ -41,30 +41,25 @@ export function DomainManager({
   const isError = message ? message.startsWith("Erro:") : false;
 
   return (
-    <Card className="panel domains-panel border-border/70 bg-card/60 shadow-xs flex flex-col">
-      <CardHeader className="pb-4">
-        <div className="panel-heading flex items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-mono font-semibold tracking-wider text-primary uppercase">
-              <ListFilter className="size-3.5" aria-hidden="true" />
-              <p className="eyebrow">{t("domains.eyebrow")}</p>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
-              {t("domains.destinations", { count: domains.length })}
-            </h2>
-          </div>
-
-          <Badge
-            variant="outline"
-            className="counter text-xs font-mono px-2.5 py-1 border-border/80 text-foreground font-bold tracking-wider"
-            aria-label={t("domains.total", { count: domains.length })}
-          >
-            {domains.length.toString().padStart(2, "0")}
-          </Badge>
+    <Card className="border border-border bg-card shadow-xs flex flex-col">
+      <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <ListFilter className="size-4 text-muted-foreground" aria-hidden="true" />
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            {t("domains.destinations", { count: domains.length })}
+          </h2>
         </div>
+
+        <Badge
+          variant="secondary"
+          className="font-mono text-xs px-2 py-0.5 font-semibold text-foreground border-border"
+          aria-label={t("domains.total", { count: domains.length })}
+        >
+          {domains.length.toString().padStart(2, "0")}
+        </Badge>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col pt-0">
+      <CardContent className="flex-1 flex flex-col p-4 pt-0 space-y-3">
         <DomainForm disabled={disabled} onAddDomain={onAddDomain} />
 
         {message && (
@@ -72,8 +67,8 @@ export function DomainManager({
             className={cn(
               "inline-message mt-3 flex items-center gap-2 text-xs px-3 py-2 rounded-md font-mono tracking-tight transition-colors border",
               isError
-                ? "error border-destructive/40 bg-destructive/10 text-destructive"
-                : "border-primary/40 bg-primary/10 text-primary",
+                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
             )}
             role={isError ? "alert" : "status"}
             aria-live="polite"

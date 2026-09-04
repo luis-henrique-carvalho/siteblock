@@ -30,35 +30,33 @@ export function BrowserItem({ browser, disabled = false, onToggle }: BrowserItem
   return (
     <div
       className={cn(
-        "group relative flex items-center justify-between gap-3 p-3 rounded-xl border transition-all duration-200",
-        isReady
-          ? "border-border/80 bg-card/75 hover:border-emerald-500/30 hover:bg-card/90 shadow-xs"
-          : isEnabled
-            ? "border-border/80 bg-card/70 hover:border-amber-500/30 hover:bg-card/90 shadow-xs"
-            : isInstalled
-              ? "border-border/60 bg-card/45 hover:border-border hover:bg-card/65 shadow-2xs opacity-90 hover:opacity-100"
-              : "border-dashed border-border/50 bg-card/25 opacity-65",
+        "flex items-center justify-between gap-2.5 p-2.5 rounded-lg border transition-colors",
+        isInstalled
+          ? "border-border bg-card shadow-2xs"
+          : "border-border/50 border-dashed bg-muted/20 opacity-70",
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0">
         <div
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/70 shadow-2xs transition-transform group-hover:scale-105",
-            !isInstalled && "grayscale opacity-60",
+            "flex size-8 shrink-0 items-center justify-center rounded-md border border-border/70 bg-muted/40 text-muted-foreground transition-colors",
+            isReady && "text-emerald-500 border-emerald-500/30 bg-emerald-500/10",
+            isSyncing && "text-amber-500 border-amber-500/30 bg-amber-500/10",
+            !isInstalled && "opacity-40 text-muted-foreground/60",
           )}
         >
-          <BrowserIcon name={browser.name} className="size-5" />
+          <BrowserIcon name={browser.name} className="size-4" />
         </div>
 
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
-            <strong className="text-sm font-semibold tracking-tight text-foreground truncate">
+            <strong className="text-xs font-semibold tracking-tight text-foreground truncate">
               {browser.name}
             </strong>
             {browser.requiresRestart && isEnabled && (
               <Badge
                 variant="outline"
-                className="text-[10px] font-normal border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0 shrink-0 leading-tight"
+                className="text-[9px] font-normal border-amber-500/40 bg-amber-500/10 text-amber-500 px-1 py-0 shrink-0 leading-tight"
                 title={t("browser.restartRequiredHint", { browser: browser.name })}
               >
                 {t("browser.restartRequiredBadge")}
@@ -68,24 +66,24 @@ export function BrowserItem({ browser, disabled = false, onToggle }: BrowserItem
           <div className="flex items-center gap-1.5 mt-0.5">
             <span
               className={cn(
-                "size-2 rounded-full shrink-0 transition-colors",
+                "size-1.5 rounded-full shrink-0 transition-colors",
                 isReady
-                  ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                  ? "bg-emerald-500"
                   : isSyncing
                     ? "bg-amber-500 animate-pulse"
                     : isInstalled
-                      ? "bg-muted-foreground/40"
+                      ? "bg-muted-foreground/50"
                       : "bg-muted-foreground/20",
               )}
               aria-hidden="true"
             />
             <span
               className={cn(
-                "text-xs truncate font-medium flex items-center gap-1",
+                "text-[11px] truncate font-medium flex items-center gap-1",
                 isReady
-                  ? "text-emerald-500 dark:text-emerald-400"
+                  ? "text-emerald-500"
                   : isSyncing
-                    ? "text-amber-500 dark:text-amber-400"
+                    ? "text-amber-500"
                     : "text-muted-foreground",
               )}
             >

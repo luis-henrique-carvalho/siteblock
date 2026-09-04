@@ -1,25 +1,3 @@
-/* SiteBlock - Shadcn Theme Bridge */
-.app-shell {
-  width: min(1120px, calc(100vw - 32px));
-  margin: 0 auto;
-  padding: 1.5rem 0 2rem;
-}
+/* SiteBlock - Desktop App Styles */
+/* Standard layout uses Tailwind utilities directly */
 
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-@media (max-width: 640px) {
-  .app-shell {
-    width: calc(100vw - 24px);
-    padding: 1rem 0 1.5rem;
-  }
-
-  .content-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
