@@ -28,16 +28,17 @@ pub fn get_siteblock_status(
     app: AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
-    log::debug!("Invocando command: get_siteblock_status");
+    log::debug!(target: "siteblock::state", "[State] Invocando command: get_siteblock_status");
     let start = Instant::now();
     let result = state.get_status_use_case.execute().map_err(|err| {
-        log::error!("Erro em get_siteblock_status: {err}");
+        log::error!(target: "siteblock::state", "[State] Erro em get_siteblock_status: {err}");
         err.to_string()
     });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
         log::debug!(
-            "get_siteblock_status concluído em {:?} (active={}, enabled={})",
+            target: "siteblock::state",
+            "[State] get_siteblock_status concluído em {:?} (active={}, enabled={})",
             start.elapsed(),
             s.active,
             s.enabled
@@ -51,16 +52,17 @@ pub fn start_privileged_session(
     app: AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
-    log::info!("Invocando command: start_privileged_session");
+    log::info!(target: "siteblock::session", "[Session] Invocando command: start_privileged_session");
     let start = Instant::now();
     let result = state.start_session_use_case.execute().map_err(|err| {
-        log::warn!("Erro em start_privileged_session: {err}");
+        log::warn!(target: "siteblock::session", "[Session] Erro em start_privileged_session: {err}");
         err.to_string()
     });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
         log::info!(
-            "start_privileged_session concluído com sucesso em {:?}",
+            target: "siteblock::session",
+            "[Session] start_privileged_session concluído com sucesso em {:?}",
             start.elapsed()
         );
     }
@@ -68,12 +70,19 @@ pub fn start_privileged_session(
 }
 
 #[tauri::command]
-pub fn log_client_message(level: String, category: String, message: String) {
+pub fn log_client_message(
+    level: String,
+    domain: Option<String>,
+    category: Option<String>,
+    message: String,
+) {
+    let domain_tag = domain.or(category).unwrap_or_else(|| "General".to_string());
+    let target = format!("siteblock::ui::{}", domain_tag.to_lowercase());
     match level.to_uppercase().as_str() {
-        "DEBUG" => log::debug!("[UI:{}] {}", category, message),
-        "WARN" => log::warn!("[UI:{}] {}", category, message),
-        "ERROR" => log::error!("[UI:{}] {}", category, message),
-        _ => log::info!("[UI:{}] {}", category, message),
+        "DEBUG" => log::debug!(target: &target, "[UI:{}] {}", domain_tag, message),
+        "WARN" => log::warn!(target: &target, "[UI:{}] {}", domain_tag, message),
+        "ERROR" => log::error!(target: &target, "[UI:{}] {}", domain_tag, message),
+        _ => log::info!(target: &target, "[UI:{}] {}", domain_tag, message),
     }
 }
 
@@ -98,20 +107,22 @@ pub fn save_siteblock_config(
         .collect();
 
     log::info!(
-        "[Ação de Configuração] Salvando estado mestre: enabled={} | Perfis [{}]: {}",
+        target: "siteblock::config",
+        "[Config] Salvando estado mestre: enabled={} | Perfis [{}]: {}",
         config.enabled,
         config.profiles.len(),
         profiles_info.join(", ")
     );
     let start = Instant::now();
     let result = state.save_config_use_case.execute(config).map_err(|err| {
-        log::error!("Erro em save_siteblock_config: {err}");
+        log::error!(target: "siteblock::config", "[Config] Erro em save_siteblock_config: {err}");
         err.to_string()
     });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
         log::info!(
-            "[Ação Concluída] Proteção ativa={} | Perfis em vigor={:?} | Domínios efetivos={} (em {:?})",
+            target: "siteblock::protection",
+            "[Protection] Proteção ativa={} | Perfis em vigor={:?} | Domínios efetivos={} (em {:?})",
             s.active,
             s.active_profile_ids,
             s.effective_domains.len(),
@@ -126,16 +137,17 @@ pub fn install_siteblock_service(
     app: AppHandle,
     state: tauri::State<'_, AppState>,
 ) -> Result<SiteBlockState, String> {
-    log::info!("Invocando command: install_siteblock_service");
+    log::info!(target: "siteblock::service", "[Service] Invocando command: install_siteblock_service");
     let start = Instant::now();
     let result = state.install_service_use_case.execute().map_err(|err| {
-        log::error!("Erro em install_siteblock_service: {err}");
+        log::error!(target: "siteblock::service", "[Service] Erro em install_siteblock_service: {err}");
         err.to_string()
     });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
         log::info!(
-            "install_siteblock_service concluído com sucesso em {:?}",
+            target: "siteblock::service",
+            "[Service] install_siteblock_service concluído com sucesso em {:?}",
             start.elapsed()
         );
     }

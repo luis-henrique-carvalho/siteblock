@@ -37,13 +37,13 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
   useEffect(() => {
     let mounted = true;
     let initialState: SiteBlockState | null = null;
-    logger.info("Hook", "Iniciando carregamento do estado do SiteBlock...");
+    logger.info("State", "Iniciando carregamento do estado do SiteBlock...");
 
     void api
       .getStatus()
       .then((nextState) => {
         initialState = nextState;
-        logger.debug("Hook", "Status inicial obtido", nextState);
+        logger.debug("State", "Status inicial obtido", nextState);
         if (
           nextState.helperInstalled &&
           (!nextState.sessionSupported || nextState.helperOutdated)
@@ -51,7 +51,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
           if (mounted) {
             setIntegrationRequired(true);
             setMessage(translation.current("message.integrationUpdate"));
-            logger.warn("Hook", "Integração precisa ser atualizada (helperOutdated=true)");
+            logger.warn("Service", "Integração precisa ser atualizada (helperOutdated=true)");
           }
         }
         return nextState.helperInstalled ? api.startPrivilegedSession() : nextState;
@@ -63,7 +63,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
             setIntegrationRequired(true);
             setMessage(translation.current("message.integrationUpdate"));
           }
-          logger.info("Hook", "Estado carregado com sucesso", {
+          logger.info("State", "Estado carregado com sucesso", {
             active: nextState.active,
             enabled: nextState.enabled,
             profilesCount: nextState.profiles?.length ?? 0,
@@ -73,7 +73,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       })
       .catch((error) => {
         if (!mounted) return;
-        logger.error("Hook", "Falha ao carregar estado inicial", error);
+        logger.error("State", "Falha ao carregar estado inicial", error);
         setState(initialState ?? INITIAL_EMPTY_STATE);
         if (initialState?.helperInstalled) {
           setIntegrationRequired(true);
@@ -93,11 +93,11 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     let mounted = true;
     let cleanupFn: (() => void) | null = null;
 
-    logger.info("Hook", "Registrando listener para siteblock://state-changed");
+    logger.info("State", "Registrando listener para siteblock://state-changed");
     void Promise.resolve(
       api.onStateChanged((newState) => {
         if (!mounted) return;
-        logger.info("Hook", "Estado sincronizado via evento externo", {
+        logger.info("State", "Estado sincronizado via evento externo", {
           active: newState.active,
           enabled: newState.enabled,
           profilesCount: newState.profiles?.length ?? 0,
@@ -127,7 +127,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
     async (next: SiteBlockState, successMessage: string) => {
       setBusy(true);
       setMessage("");
-      logger.info("Hook", "Salvando configuração...", {
+      logger.info("Config", "Salvando configuração...", {
         enabled: next.enabled,
         profilesCount: next.profiles?.length ?? 0,
         domains: next.domains,
@@ -146,9 +146,9 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
           setIntegrationRequired(true);
         }
         setMessage(successMessage);
-        logger.info("Hook", "Configuração salva com sucesso", { revision: saved.revision });
+        logger.info("Config", "Configuração salva com sucesso", { revision: saved.revision });
       } catch (error) {
-        logger.error("Hook", "Erro ao salvar configuração", error);
+        logger.error("Config", "Erro ao salvar configuração", error);
         setMessage(formatSystemError(error));
       } finally {
         setBusy(false);
@@ -160,7 +160,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
   const toggleEnabled = useCallback(async () => {
     if (!state) return;
     const nextEnabled = !state.enabled;
-    logger.info("Hook", `Alternando bloqueio mestre para: ${nextEnabled}`);
+    logger.info("Protection", `Alternando bloqueio mestre para: ${nextEnabled}`);
     await commit(
       { ...state, enabled: nextEnabled },
       nextEnabled ? t("message.blockingEnabled") : t("message.blockingDisabled"),
@@ -181,15 +181,15 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
   const installService = useCallback(async () => {
     setBusy(true);
     setMessage("");
-    logger.info("Hook", "Iniciando instalação/atualização da integração...");
+    logger.info("Service", "Iniciando instalação/atualização da integração...");
     try {
       const next = await api.installService();
       setState(next);
       setIntegrationRequired(false);
       setMessage(t("message.integrationConfigured"));
-      logger.info("Hook", "Integração configurada com sucesso");
+      logger.info("Service", "Integração configurada com sucesso");
     } catch (error) {
-      logger.error("Hook", "Falha na instalação da integração", error);
+      logger.error("Service", "Falha na instalação da integração", error);
       setMessage(formatSystemError(error));
     } finally {
       setBusy(false);
@@ -209,7 +209,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       const updatedProfiles = state.profiles.map((p) =>
         p.id === id ? { ...p, enabled: nextEnabled } : p,
       );
-      logger.info("Hook", `Alternando perfil '${target.name}' para enabled=${nextEnabled}`);
+      logger.info("Profiles", `Alternando perfil '${target.name}' para enabled=${nextEnabled}`);
       await commit(
         { ...state, profiles: updatedProfiles },
         t("message.profileUpdated", { name: target.name }),
@@ -233,7 +233,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       };
       const updatedProfiles = [...state.profiles, newProfile];
       setSelectedProfileId(newId);
-      logger.info("Hook", `Criando novo perfil '${newProfile.name}' (id=${newId})`);
+      logger.info("Profiles", `Criando novo perfil '${newProfile.name}' (id=${newId})`);
       await commit(
         { ...state, profiles: updatedProfiles },
         t("message.profileCreated", { name: newProfile.name }),
@@ -249,7 +249,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       if (!target) return;
       const updatedProfiles = state.profiles.map((p) => (p.id === id ? { ...p, ...updates } : p));
       const name = updates.name?.trim() || target.name;
-      logger.info("Hook", `Atualizando perfil '${name}'`);
+      logger.info("Profiles", `Atualizando perfil '${name}'`);
       await commit({ ...state, profiles: updatedProfiles }, t("message.profileUpdated", { name }));
     },
     [state, commit, t],
@@ -266,7 +266,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       if (selectedProfileId === id) {
         setSelectedProfileId(updatedProfiles[0].id);
       }
-      logger.info("Hook", `Excluindo perfil id=${id}`);
+      logger.info("Profiles", `Excluindo perfil id=${id}`);
       await commit({ ...state, profiles: updatedProfiles }, t("message.profileDeleted"));
     },
     [state, selectedProfileId, commit, t],
@@ -285,7 +285,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       };
       const updatedProfiles = [...state.profiles, duplicate];
       setSelectedProfileId(newId);
-      logger.info("Hook", `Duplicando perfil '${source.name}' para '${duplicate.name}'`);
+      logger.info("Profiles", `Duplicando perfil '${source.name}' para '${duplicate.name}'`);
       await commit(
         { ...state, profiles: updatedProfiles },
         t("message.profileCreated", { name: duplicate.name }),
@@ -301,10 +301,10 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
       const validation = validateNewDomain(candidate, currentDomains);
       if (!validation.valid) {
         if (validation.error) setMessage(validation.error);
-        logger.warn("Hook", `Tentativa de adicionar domínio inválido/duplicado: '${candidate}'`);
+        logger.warn("Domains", `Tentativa de adicionar domínio inválido/duplicado: '${candidate}'`);
         return false;
       }
-      logger.info("Hook", `Adicionando domínio: '${validation.sanitized}'`);
+      logger.info("Domains", `Adicionando domínio: '${validation.sanitized}'`);
 
       if (selectedProfile) {
         const updatedProfiles = state.profiles.map((p) =>
@@ -328,7 +328,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
   const removeDomain = useCallback(
     async (domain: string) => {
       if (!state) return;
-      logger.info("Hook", `Removendo domínio: '${domain}'`);
+      logger.info("Domains", `Removendo domínio: '${domain}'`);
 
       if (selectedProfile) {
         const updatedProfiles = state.profiles.map((p) =>
@@ -378,7 +378,7 @@ export function useSiteBlock({ api = siteblockApi }: UseSiteBlockOptions = {}) {
         );
         nextState = { ...state, profiles: updatedProfiles };
       }
-      logger.info("Hook", "Salvando agenda de horários...", {
+      logger.info("Schedules", "Salvando agenda de horários...", {
         profile: selectedProfile?.name ?? "Global",
         schedulesCount: overrideSchedules?.length ?? selectedProfile?.schedules.length ?? 0,
       });

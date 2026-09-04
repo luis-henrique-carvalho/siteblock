@@ -2,10 +2,21 @@ import { invoke } from "@tauri-apps/api/core";
 
 export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
+export type LogDomain =
+  | "State"
+  | "Protection"
+  | "Profiles"
+  | "Domains"
+  | "Schedules"
+  | "Config"
+  | "Service"
+  | "Session"
+  | "Statistics";
+
 export interface LogEntry {
   timestamp: string;
   level: LogLevel;
-  category: string;
+  domain: LogDomain;
   message: string;
   data?: unknown;
 }
@@ -14,11 +25,11 @@ class FrontendLogger {
   private logs: LogEntry[] = [];
   private maxLogs = 100;
 
-  private addLog(level: LogLevel, category: string, message: string, data?: unknown) {
+  private addLog(level: LogLevel, domain: LogDomain, message: string, data?: unknown) {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
-      category,
+      domain,
       message,
       data,
     };
@@ -27,7 +38,7 @@ class FrontendLogger {
       this.logs.shift();
     }
 
-    const prefix = `[SiteBlock UI] [${category}]`;
+    const prefix = `[SiteBlock UI] [${domain}]`;
     switch (level) {
       case "DEBUG":
         if (import.meta.env?.DEV) {
@@ -50,7 +61,8 @@ class FrontendLogger {
         const detail = data ? ` | ${JSON.stringify(data)}` : "";
         invoke("log_client_message", {
           level,
-          category,
+          domain,
+          category: domain,
           message: `${message}${detail}`,
         }).catch(() => {});
       }
@@ -59,20 +71,20 @@ class FrontendLogger {
     }
   }
 
-  debug(category: string, message: string, data?: unknown) {
-    this.addLog("DEBUG", category, message, data);
+  debug(domain: LogDomain, message: string, data?: unknown) {
+    this.addLog("DEBUG", domain, message, data);
   }
 
-  info(category: string, message: string, data?: unknown) {
-    this.addLog("INFO", category, message, data);
+  info(domain: LogDomain, message: string, data?: unknown) {
+    this.addLog("INFO", domain, message, data);
   }
 
-  warn(category: string, message: string, data?: unknown) {
-    this.addLog("WARN", category, message, data);
+  warn(domain: LogDomain, message: string, data?: unknown) {
+    this.addLog("WARN", domain, message, data);
   }
 
-  error(category: string, message: string, data?: unknown) {
-    this.addLog("ERROR", category, message, data);
+  error(domain: LogDomain, message: string, data?: unknown) {
+    this.addLog("ERROR", domain, message, data);
   }
 
   getRecentLogs(): LogEntry[] {
