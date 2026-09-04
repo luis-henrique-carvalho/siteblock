@@ -51,9 +51,20 @@ export function BrowserItem({ browser, disabled = false, onToggle }: BrowserItem
         </div>
 
         <div className="flex flex-col min-w-0">
-          <strong className="text-sm font-semibold tracking-tight text-foreground truncate">
-            {browser.name}
-          </strong>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <strong className="text-sm font-semibold tracking-tight text-foreground truncate">
+              {browser.name}
+            </strong>
+            {browser.requiresRestart && isEnabled && (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-normal border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0 shrink-0 leading-tight"
+                title={t("browser.restartRequiredHint", { browser: browser.name })}
+              >
+                {t("browser.restartRequiredBadge")}
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center gap-1.5 mt-0.5">
             <span
               className={cn(

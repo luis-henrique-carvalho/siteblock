@@ -42,6 +42,12 @@ const translations = {
     "browser.disabled": "Desativado",
     "browser.configure": "Preferências",
     "browser.toggleHint": "Ativar ou desativar proteção no {browser}",
+    "browser.restartRequiredTitle": "Reinício do {browser} necessário",
+    "browser.restartRequiredDescription":
+      "{browser} aplica novas políticas apenas ao ser iniciado. Se o navegador já estiver aberto, feche todas as janelas e reabra-o para que as regras de bloqueio entrem em vigor.",
+    "browser.restartRequiredBadge": "Requer reinício",
+    "browser.restartRequiredHint": "Requer reiniciar o {browser} se já estiver aberto.",
+    "common.understand": "Entendi",
     "topbar.settings": "Configurações",
     "topbar.settingsAria": "Abrir preferências locais",
     "hero.eyebrow": "CONTROLE DE ACESSO",
@@ -101,7 +107,7 @@ const translations = {
     "preferences.languageDescription": "Aplique o idioma à interface do SiteBlock.",
     "preferences.browsers": "Navegadores",
     "preferences.browsersDescription":
-      "Selecione os navegadores que receberão as políticas de bloqueio. A proteção pelo sistema continua cobrindo todos os aplicativos.",
+      "Selecione os navegadores que receberão as políticas de bloqueio nativas. Cada navegador bloqueia os sites de forma independente.",
     "preferences.browserDetected": "Detectado neste computador",
     "preferences.browserNotDetected": "Não detectado neste computador",
     "preferences.browserToggle": "Ativar bloqueio no {browser}",
@@ -194,6 +200,12 @@ const translations = {
     "browser.disabled": "Disabled",
     "browser.configure": "Settings",
     "browser.toggleHint": "Enable or disable protection in {browser}",
+    "browser.restartRequiredTitle": "{browser} restart required",
+    "browser.restartRequiredDescription":
+      "{browser} only applies new policies upon startup. If the browser is already running, please restart it for blocking rules to take effect.",
+    "browser.restartRequiredBadge": "Restart required",
+    "browser.restartRequiredHint": "Requires restarting {browser} if already running.",
+    "common.understand": "Got it",
     "topbar.settings": "Settings",
     "topbar.settingsAria": "Open local preferences",
     "hero.eyebrow": "ACCESS CONTROL",
@@ -270,7 +282,7 @@ const translations = {
     "preferences.languageDescription": "Apply a language to the SiteBlock interface.",
     "preferences.browsers": "Browsers",
     "preferences.browsersDescription":
-      "Select the browsers that receive blocking policies. System protection still covers every application.",
+      "Select which browsers will receive native blocking policies. Each browser blocks sites independently.",
     "preferences.browserDetected": "Detected on this computer",
     "preferences.browserNotDetected": "Not detected on this computer",
     "preferences.browserToggle": "Enable blocking in {browser}",

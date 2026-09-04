@@ -388,6 +388,8 @@ pub struct BrowserIntegration {
     pub enabled: bool,
     pub policy_ready: bool,
     pub mode: String,
+    #[serde(default)]
+    pub requires_restart: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

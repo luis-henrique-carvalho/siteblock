@@ -1,4 +1,6 @@
-use std::{collections::HashMap, fs, io::Write, os::unix::fs::PermissionsExt, path::Path};
+use std::{
+    collections::HashMap, fs, io::Write, os::unix::fs::PermissionsExt, path::{Path, PathBuf},
+};
 
 use chrono::{DateTime, Datelike, Local, Timelike, Utc};
 use serde::{Deserialize, Serialize};
@@ -103,6 +105,13 @@ pub fn blocked_hosts(config: &SiteBlockConfig) -> Vec<String> {
         }
     }
     result
+}
+
+pub fn blocked_chromium_filters(config: &SiteBlockConfig, enabled: bool) -> Vec<String> {
+    if !enabled {
+        return Vec::new();
+    }
+    blocked_hosts(config)
 }
 
 pub fn blocked_url_filters(config: &SiteBlockConfig, enabled: bool) -> Vec<String> {
@@ -223,14 +232,32 @@ pub fn render_hosts_content(original: &str, config: &SiteBlockConfig, enabled: b
     }
 }
 
-pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Result<()> {
-    let original = fs::read_to_string(HOSTS_PATH).unwrap_or_default();
-    let output = render_hosts_content(&original, config, enabled);
+pub fn clean_hosts_file_if_present() -> std::io::Result<()> {
+    if !is_hosts_blocking_active() {
+        return Ok(());
+    }
+    let original = fs::read_to_string(HOSTS_PATH)?;
+    let empty_config = SiteBlockConfig::new(false, Vec::new());
+    let output = render_hosts_content(&original, &empty_config, false);
     let mode = fs::metadata(HOSTS_PATH)
         .map(|m| m.permissions().mode())
         .unwrap_or(0o644);
+    atomic_write(Path::new(HOSTS_PATH), output.as_bytes(), mode)?;
+    flush_dns();
+    Ok(())
+}
 
-    atomic_write(Path::new(HOSTS_PATH), output.as_bytes(), mode)
+pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Result<()> {
+    if !enabled {
+        let original = fs::read_to_string(HOSTS_PATH).unwrap_or_default();
+        let output = render_hosts_content(&original, config, false);
+        let mode = fs::metadata(HOSTS_PATH)
+            .map(|m| m.permissions().mode())
+            .unwrap_or(0o644);
+        atomic_write(Path::new(HOSTS_PATH), output.as_bytes(), mode)
+    } else {
+        clean_hosts_file_if_present()
+    }
 }
 
 pub fn build_chromium_policy_content(filters: &[String]) -> String {
@@ -438,18 +465,51 @@ where
     }
 }
 
-fn command_exists(names: &[&str]) -> bool {
+#[derive(Debug, Clone, Copy)]
+pub struct BrowserDefinition {
+    pub name: &'static str,
+    pub binaries: &'static [&'static str],
+    pub requires_restart: bool,
+    pub supports_hot_reload: bool,
+}
+
+pub const SUPPORTED_BROWSER_DEFINITIONS: [BrowserDefinition; 3] = [
+    BrowserDefinition {
+        name: "Chrome",
+        binaries: &["google-chrome", "google-chrome-stable"],
+        requires_restart: false,
+        supports_hot_reload: true,
+    },
+    BrowserDefinition {
+        name: "Brave",
+        binaries: &["brave-browser", "brave"],
+        requires_restart: false,
+        supports_hot_reload: true,
+    },
+    BrowserDefinition {
+        name: "Firefox",
+        binaries: &["firefox"],
+        requires_restart: true,
+        supports_hot_reload: false,
+    },
+];
+
+fn find_command(names: &[&str]) -> Option<PathBuf> {
     if let Ok(path_var) = std::env::var("PATH") {
         for dir in path_var.split(':') {
             for name in names {
                 let full = Path::new(dir).join(name);
                 if full.is_file() {
-                    return true;
+                    return Some(full);
                 }
             }
         }
     }
-    false
+    None
+}
+
+fn command_exists(names: &[&str]) -> bool {
+    find_command(names).is_some()
 }
 
 pub fn get_browser_integrations(
@@ -457,36 +517,54 @@ pub fn get_browser_integrations(
     firefox_policy: bool,
     enabled_browsers: &[String],
 ) -> Vec<BrowserIntegration> {
-    let chrome_detected = command_exists(&["google-chrome", "google-chrome-stable"]);
-    let brave_detected = command_exists(&["brave-browser", "brave"]);
-    let firefox_detected = command_exists(&["firefox"]);
+    SUPPORTED_BROWSER_DEFINITIONS
+        .iter()
+        .map(|def| {
+            let detected = command_exists(def.binaries);
+            let is_enabled = enabled_browsers.iter().any(|browser| browser == def.name);
+            let policy_ready = if is_enabled {
+                if def.name == "Firefox" {
+                    firefox_policy
+                } else {
+                    *chromium.get(def.name).unwrap_or(&false)
+                }
+            } else {
+                false
+            };
 
-    vec![
-        BrowserIntegration {
-            name: "Chrome".to_string(),
-            detected: chrome_detected,
-            enabled: enabled_browsers.iter().any(|browser| browser == "Chrome"),
-            policy_ready: enabled_browsers.iter().any(|browser| browser == "Chrome")
-                && *chromium.get("Chrome").unwrap_or(&false),
-            mode: browser_mode("Chrome", enabled_browsers),
-        },
-        BrowserIntegration {
-            name: "Brave".to_string(),
-            detected: brave_detected,
-            enabled: enabled_browsers.iter().any(|browser| browser == "Brave"),
-            policy_ready: enabled_browsers.iter().any(|browser| browser == "Brave")
-                && *chromium.get("Brave").unwrap_or(&false),
-            mode: browser_mode("Brave", enabled_browsers),
-        },
-        BrowserIntegration {
-            name: "Firefox".to_string(),
-            detected: firefox_detected,
-            enabled: enabled_browsers.iter().any(|browser| browser == "Firefox"),
-            policy_ready: enabled_browsers.iter().any(|browser| browser == "Firefox")
-                && firefox_policy,
-            mode: browser_mode("Firefox", enabled_browsers),
-        },
-    ]
+            BrowserIntegration {
+                name: def.name.to_string(),
+                detected,
+                enabled: is_enabled,
+                policy_ready,
+                mode: browser_mode(def.name, enabled_browsers),
+                requires_restart: def.requires_restart,
+            }
+        })
+        .collect()
+}
+
+pub fn trigger_browser_policy_reload(enabled_browsers: &[String]) {
+    let enabled = enabled_browsers.to_vec();
+    std::thread::spawn(move || {
+        for def in SUPPORTED_BROWSER_DEFINITIONS.iter() {
+            if def.supports_hot_reload && enabled.iter().any(|b| b == def.name) {
+                if let Some(bin_path) = find_command(def.binaries) {
+                    log::info!(
+                        target: "siteblock::policy",
+                        "[Policy] Disparando reload nativo de políticas para {}: {} --refresh-platform-policy",
+                        def.name,
+                        bin_path.display()
+                    );
+                    let _ = std::process::Command::new(&bin_path)
+                        .arg("--refresh-platform-policy")
+                        .stdout(std::process::Stdio::null())
+                        .stderr(std::process::Stdio::null())
+                        .status();
+                }
+            }
+        }
+    });
 }
 
 fn browser_mode(name: &str, enabled_browsers: &[String]) -> String {
@@ -602,8 +680,11 @@ pub fn get_current_state(
         (config.domains.clone(), config.schedules.clone())
     };
 
+    let active = (chromium.values().any(|&v| v) || ff_policy)
+        && should_block(config, Local::now());
+
     SiteBlockState {
-        active: is_hosts_blocking_active(),
+        active,
         enabled: config.enabled,
         profiles: config.profiles.clone(),
         active_profile_ids,
@@ -627,32 +708,27 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
     let now = Local::now();
     let enabled = should_block(config, now);
 
-    let hosts_written = write_hosts_file(config, enabled).is_ok();
-    let filters = blocked_url_filters(config, enabled);
-    let chromium = write_chromium_policies(&filters, &config.enabled_browsers);
+    let _ = clean_hosts_file_if_present();
+    let chromium_filters = blocked_chromium_filters(config, enabled);
+    let firefox_filters = blocked_url_filters(config, enabled);
+    let chromium = write_chromium_policies(&chromium_filters, &config.enabled_browsers);
     let ff_policy = if config.enabled_browsers.iter().any(|browser| browser == "Firefox") {
-        write_firefox_policy(&filters)
+        write_firefox_policy(&firefox_filters)
     } else {
         remove_firefox_policy()
     };
     let _ = write_effective_state(config, enabled);
-    flush_dns();
 
-    if hosts_written {
-        let snapshot = if enabled {
-            FocusSnapshot::from_profiles(&get_active_profiles(config, now))
-        } else {
-            FocusSnapshot::inactive()
-        };
-        if let Err(error) = FocusStatsStore::at_directory(Path::new(FOCUS_STATS_DIRECTORY))
-            .and_then(|stats| stats.record(snapshot, now))
-        {
-            log::warn!("Não foi possível registrar a estatística de foco: {error}");
-        }
+    let policies_active = (chromium.values().any(|&v| v) || ff_policy) && enabled;
+    let snapshot = if policies_active {
+        FocusSnapshot::from_profiles(&get_active_profiles(config, now))
     } else {
-        log::warn!(
-            "A proteção não foi aplicada em /etc/hosts; estatística de foco não registrada."
-        );
+        FocusSnapshot::inactive()
+    };
+    if let Err(error) = FocusStatsStore::at_directory(Path::new(FOCUS_STATS_DIRECTORY))
+        .and_then(|stats| stats.record(snapshot, now))
+    {
+        log::warn!("Não foi possível registrar a estatística de foco: {error}");
     }
 
     get_current_state(config, Some(chromium), Some(ff_policy))

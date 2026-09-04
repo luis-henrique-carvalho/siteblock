@@ -228,6 +228,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayController, Box<dyn std::error:
                         match state.toggle_blocking_use_case.execute() {
                             Ok(new_state) => {
                                 tray_controller.update_state(&new_state);
+                                crate::infrastructure::system_core::trigger_browser_policy_reload(&new_state.enabled_browsers);
                                 if let Err(err) = app_handle.emit(STATE_CHANGED_EVENT, &new_state) {
                                     log::warn!("Falha ao emitir {STATE_CHANGED_EVENT}: {err}");
                                 }

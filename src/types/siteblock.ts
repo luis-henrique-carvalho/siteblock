@@ -16,6 +16,7 @@ export interface BrowserIntegration {
   enabled: boolean;
   policyReady: boolean;
   mode: string;
+  requiresRestart?: boolean;
 }
 
 export interface SiteBlockState {

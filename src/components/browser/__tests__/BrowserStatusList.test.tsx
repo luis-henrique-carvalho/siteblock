@@ -12,6 +12,7 @@ const mockIntegrations: BrowserIntegration[] = [
     enabled: true,
     policyReady: true,
     mode: "Política gerenciada",
+    requiresRestart: false,
   },
   {
     name: "Brave",
@@ -19,6 +20,7 @@ const mockIntegrations: BrowserIntegration[] = [
     enabled: false,
     policyReady: false,
     mode: "Desativado nas configurações",
+    requiresRestart: false,
   },
   {
     name: "Firefox",
@@ -26,6 +28,7 @@ const mockIntegrations: BrowserIntegration[] = [
     enabled: false,
     policyReady: false,
     mode: "Desativado nas configurações",
+    requiresRestart: true,
   },
 ];
 
@@ -101,5 +104,76 @@ describe("BrowserStatusList & BrowserItem", () => {
     const configBtn = screen.getByRole("button", { name: /preferências/i });
     await user.click(configBtn);
     expect(handleOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens BrowserRestartDialog when a browser with requiresRestart: true is enabled", async () => {
+    const user = userEvent.setup();
+    const handleToggle = vi.fn();
+
+    render(
+      <LanguageProvider>
+        <BrowserStatusList
+          integrations={mockIntegrations}
+          onToggleBrowser={handleToggle}
+        />
+      </LanguageProvider>,
+    );
+
+    const firefoxSwitch = screen.getByRole("switch", { name: /firefox/i });
+    await user.click(firefoxSwitch);
+
+    expect(handleToggle).toHaveBeenCalledWith("Firefox", true);
+    expect(screen.getByText("Reinício do Firefox necessário")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Firefox aplica novas políticas apenas ao ser iniciado/),
+    ).toBeInTheDocument();
+
+    // Clicking "Entendi" closes the dialog
+    const confirmBtn = screen.getByRole("button", { name: "Entendi" });
+    await user.click(confirmBtn);
+    expect(screen.queryByText("Reinício do Firefox necessário")).not.toBeInTheDocument();
+  });
+
+  it("does not open BrowserRestartDialog when a browser without requiresRestart is disabled", async () => {
+    const user = userEvent.setup();
+    const handleToggle = vi.fn();
+
+    render(
+      <LanguageProvider>
+        <BrowserStatusList
+          integrations={mockIntegrations}
+          onToggleBrowser={handleToggle}
+        />
+      </LanguageProvider>,
+    );
+
+    const chromeSwitch = screen.getByRole("switch", { name: /chrome/i });
+    await user.click(chromeSwitch);
+
+    expect(handleToggle).toHaveBeenCalledWith("Chrome", false);
+    expect(screen.queryByText(/Reinício do Chrome necessário/i)).not.toBeInTheDocument();
+  });
+
+  it("renders 'Requer reinício' badge when browser has requiresRestart: true and is enabled", () => {
+    const integrationsWithRestartEnabled: BrowserIntegration[] = [
+      {
+        name: "Firefox",
+        detected: true,
+        enabled: true,
+        policyReady: true,
+        mode: "Política gerenciada",
+        requiresRestart: true,
+      },
+    ];
+
+    render(
+      <LanguageProvider>
+        <BrowserStatusList integrations={integrationsWithRestartEnabled} />
+      </LanguageProvider>,
+    );
+
+    const badge = screen.getByText("Requer reinício");
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveAttribute("title", "Requer reiniciar o Firefox se já estiver aberto.");
   });
 });

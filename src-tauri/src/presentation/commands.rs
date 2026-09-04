@@ -120,6 +120,7 @@ pub fn save_siteblock_config(
     });
     if let Ok(ref s) = result {
         sync_tray(&app, s);
+        crate::infrastructure::system_core::trigger_browser_policy_reload(&s.enabled_browsers);
         log::info!(
             target: "siteblock::protection",
             "[Protection] Proteção ativa={} | Perfis em vigor={:?} | Domínios efetivos={} (em {:?})",

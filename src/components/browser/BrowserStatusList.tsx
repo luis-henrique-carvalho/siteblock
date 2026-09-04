@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { BrowserIntegration } from "../../types/siteblock";
 import { BrowserItem } from "./BrowserItem";
+import { BrowserRestartDialog } from "./BrowserRestartDialog";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Globe, Settings2 } from "lucide-react";
@@ -19,6 +21,17 @@ export function BrowserStatusList({
   onOpenPreferences,
 }: BrowserStatusListProps) {
   const { t } = useLanguage();
+  const [restartTargetBrowser, setRestartTargetBrowser] = useState<string | null>(null);
+
+  const handleToggle = (name: string, enabled: boolean) => {
+    onToggleBrowser?.(name, enabled);
+    if (enabled) {
+      const target = integrations.find((b) => b.name === name);
+      if (target?.requiresRestart) {
+        setRestartTargetBrowser(name);
+      }
+    }
+  };
 
   return (
     <Card
@@ -57,7 +70,7 @@ export function BrowserStatusList({
               key={browser.name}
               browser={browser}
               disabled={disabled}
-              onToggle={onToggleBrowser}
+              onToggle={handleToggle}
             />
           ))}
           {integrations.length === 0 && (
@@ -67,6 +80,14 @@ export function BrowserStatusList({
           )}
         </div>
       </CardContent>
+
+      <BrowserRestartDialog
+        open={restartTargetBrowser !== null}
+        onOpenChange={(open) => {
+          if (!open) setRestartTargetBrowser(null);
+        }}
+        browserName={restartTargetBrowser ?? ""}
+      />
     </Card>
   );
 }

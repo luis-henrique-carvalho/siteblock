@@ -111,8 +111,11 @@ fn test_browser_status_respects_enabled_browser_configuration() {
 
     assert!(chrome.enabled);
     assert!(chrome.policy_ready || !chrome.detected);
+    assert!(!chrome.requires_restart);
     assert!(!brave.enabled);
     assert!(!brave.policy_ready);
+    assert!(!brave.requires_restart);
     assert!(!firefox.enabled);
     assert!(!firefox.policy_ready);
+    assert!(firefox.requires_restart);
 }

@@ -174,6 +174,7 @@ fn test_state_json_serialization_camel_case() {
             enabled: true,
             policy_ready: true,
             mode: "Política gerenciada".into(),
+            requires_restart: false,
         }],
         enabled_browsers: vec!["Chrome".into()],
         helper_outdated: false,
@@ -185,10 +186,25 @@ fn test_state_json_serialization_camel_case() {
     assert!(serialized.contains("\"browserIntegrations\":["));
     assert!(serialized.contains("\"enabledBrowsers\":[\"Chrome\"]"));
     assert!(serialized.contains("\"policyReady\":true"));
+    assert!(serialized.contains("\"requiresRestart\":false"));
     assert!(serialized.contains("\"activeProfileIds\":[\"p1\"]"));
 
     let deserialized: SiteBlockState = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, state);
+}
+
+#[test]
+fn test_browser_integration_deserialization_defaults_requires_restart() {
+    let legacy_json = r#"{
+        "name": "Firefox",
+        "detected": true,
+        "enabled": true,
+        "policyReady": false,
+        "mode": "Política gerenciada"
+    }"#;
+    let integration: BrowserIntegration = serde_json::from_str(legacy_json).unwrap();
+    assert_eq!(integration.name, "Firefox");
+    assert!(!integration.requires_restart);
 }
 
 #[test]
