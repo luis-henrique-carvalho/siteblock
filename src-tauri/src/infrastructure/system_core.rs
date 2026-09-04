@@ -12,10 +12,11 @@ pub use crate::infrastructure::admin_protocol::{
     query_focus_statistics,
 };
 pub use crate::infrastructure::browser_policy::{
-    build_chromium_policy_content, build_firefox_policy_content, bytes_sha256,
-    can_overwrite_firefox_policy, get_browser_integrations, remove_firefox_policy,
-    trigger_browser_policy_reload, write_chromium_policies, write_firefox_policy,
-    BrowserDefinition, FIREFOX_OWNERSHIP_PATH, FIREFOX_POLICY_PATH, SUPPORTED_BROWSER_DEFINITIONS,
+    apply_all_browser_policies, build_chromium_policy_content, build_firefox_policy_content,
+    bytes_sha256, can_overwrite_firefox_policy, check_all_browser_policies,
+    get_browser_integrations, remove_firefox_policy, trigger_browser_policy_reload,
+    write_chromium_policies, write_firefox_policy, BrowserDefinition, BrowserEngine, BrowserSpec,
+    BROWSER_SPECS, FIREFOX_OWNERSHIP_PATH, FIREFOX_POLICY_PATH, SUPPORTED_BROWSER_DEFINITIONS,
 };
 pub use crate::infrastructure::hosts::{
     atomic_write, clean_hosts_file_if_present, is_hosts_blocking_active, render_hosts_content,
@@ -142,22 +143,14 @@ pub fn get_current_state(
     chromium_policies: Option<HashMap<String, bool>>,
     firefox_policy: Option<bool>,
 ) -> SiteBlockState {
-    let chromium = chromium_policies.unwrap_or_else(|| {
-        let mut map = HashMap::new();
-        map.insert(
-            "Chrome".to_string(),
-            Path::new("/etc/opt/chrome/policies/managed/com.luis.siteblock.json").exists(),
-        );
-        map.insert(
-            "Brave".to_string(),
-            Path::new("/etc/brave/policies/managed/com.luis.siteblock.json").exists(),
-        );
-        map
-    });
-
-    let ff_policy = firefox_policy.unwrap_or_else(|| {
-        Path::new(FIREFOX_POLICY_PATH).exists() && Path::new(FIREFOX_OWNERSHIP_PATH).exists()
-    });
+    let policy_statuses = match (chromium_policies, firefox_policy) {
+        (Some(mut map), Some(ff)) => {
+            map.insert("Firefox".to_string(), ff);
+            map
+        }
+        (Some(map), None) => map,
+        _ => check_all_browser_policies(),
+    };
 
     let effective: Option<EffectiveState> = fs::read_to_string(EFFECTIVE_STATE_PATH)
         .ok()
@@ -183,7 +176,8 @@ pub fn get_current_state(
         (config.domains.clone(), config.schedules.clone())
     };
 
-    let active = (chromium.values().any(|&v| v) || ff_policy) && should_block(config, Local::now());
+    let active = policy_statuses.values().any(|&v| v) && should_block(config, Local::now());
+    let ff_ready = *policy_statuses.get("Firefox").unwrap_or(&false);
 
     SiteBlockState {
         active,
@@ -197,8 +191,8 @@ pub fn get_current_state(
         session_supported: true,
         revision,
         browser_integrations: get_browser_integrations(
-            &chromium,
-            ff_policy,
+            &policy_statuses,
+            ff_ready,
             &config.enabled_browsers,
         ),
         enabled_browsers: config.enabled_browsers.clone(),
@@ -211,21 +205,10 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
     let enabled = should_block(config, now);
 
     let _ = clean_hosts_file_if_present();
-    let chromium_filters = blocked_chromium_filters(config, enabled);
-    let firefox_filters = blocked_url_filters(config, enabled);
-    let chromium = write_chromium_policies(&chromium_filters, &config.enabled_browsers);
-    let ff_policy = if config
-        .enabled_browsers
-        .iter()
-        .any(|browser| browser == "Firefox")
-    {
-        write_firefox_policy(&firefox_filters)
-    } else {
-        remove_firefox_policy()
-    };
+    let policy_statuses = apply_all_browser_policies(config, enabled);
     let _ = write_effective_state(config, enabled);
 
-    let policies_active = (chromium.values().any(|&v| v) || ff_policy) && enabled;
+    let policies_active = policy_statuses.values().any(|&v| v) && enabled;
     let snapshot = if policies_active {
         FocusSnapshot::from_profiles(&get_active_profiles(config, now))
     } else {
@@ -237,7 +220,8 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
         log::warn!("Não foi possível registrar a estatística de foco: {error}");
     }
 
-    get_current_state(config, Some(chromium), Some(ff_policy))
+    let ff_ready = *policy_statuses.get("Firefox").unwrap_or(&false);
+    get_current_state(config, Some(policy_statuses), Some(ff_ready))
 }
 
 #[cfg(test)]
