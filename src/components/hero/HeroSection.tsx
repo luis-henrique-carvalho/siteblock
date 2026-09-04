@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { ShieldBadge } from "./ShieldBadge";
 import { useLanguage } from "../../i18n";
 import { useSiteBlockStore } from "../../stores";
-import { getScheduleSummary } from "../../utils/scheduleHelpers";
+import { getScheduleSummary } from "@/features/schedules";
 
 interface HeroSectionProps {
   active?: boolean;

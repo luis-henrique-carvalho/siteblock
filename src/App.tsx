@@ -3,12 +3,12 @@ import { useSiteBlockStore, useUIStore } from "./stores";
 import { TopBar } from "./components/layout/TopBar";
 import { Footer } from "./components/layout/Footer";
 import { SetupBanner } from "./components/setup/SetupBanner";
-import { BrowserStatusList } from "./components/browser/BrowserStatusList";
+import { BrowserStatusList } from "@/features/browser";
 import { HeroSection } from "./components/hero/HeroSection";
 import { MasterSwitch } from "./components/controls/MasterSwitch";
-import { ProfileTabs } from "./components/profiles/ProfileTabs";
-import { DomainManager } from "./components/domains/DomainManager";
-import { ScheduleManager } from "./components/schedules/ScheduleManager";
+import { ProfileTabs } from "@/features/profiles";
+import { DomainManager } from "@/features/domains";
+import { ScheduleManager } from "@/features/schedules";
 import { LoadingScreen } from "./components/common/LoadingScreen";
 import { siteblockApi } from "./services/siteblockApi";
 import { LanguageProvider } from "./i18n";
@@ -16,13 +16,13 @@ import { Toaster } from "./components/ui/sonner";
 import "./App.css";
 
 const FocusStatisticsPanel = lazy(
-  () => import("./components/statistics/FocusStatisticsPanel"),
+  () => import("@/features/statistics"),
 );
 const PreferencesPanel = lazy(
-  () => import("./components/preferences/PreferencesPanel"),
+  () => import("@/features/preferences").then((m) => ({ default: m.PreferencesPanel })),
 );
 const AboutDialog = lazy(
-  () => import("./components/preferences/AboutDialog"),
+  () => import("@/features/preferences").then((m) => ({ default: m.AboutDialog })),
 );
 
 export function App() {

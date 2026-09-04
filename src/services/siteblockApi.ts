@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { SiteBlockConfigDto, SiteBlockState } from "../types/siteblock";
-import type { FocusStatistics, FocusStatisticsQuery } from "../types/focusStatistics";
+import type { FocusStatistics, FocusStatisticsQuery } from "@/features/statistics";
 import { logger } from "../utils/logger";
 
 export interface ISiteBlockApi {

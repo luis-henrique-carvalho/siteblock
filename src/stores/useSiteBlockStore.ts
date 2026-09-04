@@ -3,7 +3,7 @@ import { INITIAL_EMPTY_STATE } from "../constants/config";
 import { siteblockApi, type ISiteBlockApi } from "../services/siteblockApi";
 import type { Schedule } from "../types/schedule";
 import type { Profile, SiteBlockState } from "../types/siteblock";
-import { validateNewDomain } from "../utils/domainValidator";
+import { validateNewDomain } from "@/features/domains";
 import { formatSystemError } from "../utils/errorFormatter";
 import { logger } from "../utils/logger";
 import { useUIStore } from "./useUIStore";

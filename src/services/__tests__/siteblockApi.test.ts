@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TauriSiteBlockApi } from "../siteblockApi";
 import { invoke } from "@tauri-apps/api/core";
 import type { SiteBlockState } from "../../types/siteblock";
-import type { FocusStatistics, FocusStatisticsQuery } from "../../types/focusStatistics";
+import type { FocusStatistics, FocusStatisticsQuery } from "@/features/statistics";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
