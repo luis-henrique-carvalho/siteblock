@@ -26,6 +26,18 @@ fn test_build_chromium_policy_structure() {
 }
 
 #[test]
+fn test_build_registry_blocklist_entries() {
+    let filters = vec![
+        "*://*.reddit.com/*".to_string(),
+        "*://*.twitter.com/*".to_string(),
+    ];
+    let entries = siteblock_lib::infrastructure::browser_policy::build_registry_blocklist_entries(&filters);
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0], ("1".to_string(), "*://*.reddit.com/*".to_string()));
+    assert_eq!(entries[1], ("2".to_string(), "*://*.twitter.com/*".to_string()));
+}
+
+#[test]
 fn test_build_firefox_policy_structure() {
     let filters = vec!["*://*.youtube.com/*".to_string()];
     let json_str = build_firefox_policy_content(&filters);

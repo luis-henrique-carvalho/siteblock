@@ -57,9 +57,10 @@ describe("App Integration", () => {
     });
 
     expect(screen.getByText("Sistema em proteção")).toBeInTheDocument();
-    expect(screen.getByText("Google Chrome")).toBeInTheDocument();
-    expect(screen.getByText("reddit.com")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /desativar/i })).toBeInTheDocument();
+    expect(screen.getByText("Proteção habilitada")).toBeInTheDocument();
+    expect(
+      screen.getByRole("switch", { name: /alternar proteção mestre/i }),
+    ).toBeInTheDocument();
   });
 
   it("allows adding a domain through the UI", async () => {

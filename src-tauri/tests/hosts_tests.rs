@@ -207,3 +207,22 @@ fn test_render_hosts_handles_unclosed_marker_gracefully() {
     assert_eq!(rendered.matches(BEGIN_MARKER).count(), 1);
     assert_eq!(rendered.matches(END_MARKER).count(), 1);
 }
+
+#[test]
+fn test_atomic_write_creates_and_overwrites_existing_file() {
+    let temp_dir = std::env::temp_dir().join(format!("siteblock_test_{}", std::process::id()));
+    let test_file = temp_dir.join("sub").join("test_hosts");
+    let _ = std::fs::remove_dir_all(&temp_dir);
+
+    // 1. Escreve novo arquivo
+    siteblock_lib::infrastructure::hosts::atomic_write(&test_file, b"initial content", 0o644)
+        .expect("Deve escrever novo arquivo");
+    assert_eq!(std::fs::read_to_string(&test_file).unwrap(), "initial content");
+
+    // 2. Sobrescreve arquivo existente (deve funcionar perfeitamente em Linux e Windows)
+    siteblock_lib::infrastructure::hosts::atomic_write(&test_file, b"updated content", 0o644)
+        .expect("Deve sobrescrever arquivo existente");
+    assert_eq!(std::fs::read_to_string(&test_file).unwrap(), "updated content");
+
+    let _ = std::fs::remove_dir_all(&temp_dir);
+}

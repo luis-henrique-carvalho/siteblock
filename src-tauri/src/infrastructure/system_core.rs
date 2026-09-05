@@ -13,10 +13,11 @@ pub use crate::infrastructure::admin_protocol::{
 };
 pub use crate::infrastructure::browser_policy::{
     apply_all_browser_policies, build_chromium_policy_content, build_firefox_policy_content,
-    bytes_sha256, can_overwrite_firefox_policy, check_all_browser_policies,
-    get_browser_integrations, remove_firefox_policy, trigger_browser_policy_reload,
-    write_chromium_policies, write_firefox_policy, BrowserDefinition, BrowserEngine, BrowserSpec,
-    BROWSER_SPECS, FIREFOX_OWNERSHIP_PATH, FIREFOX_POLICY_PATH, SUPPORTED_BROWSER_DEFINITIONS,
+    build_registry_blocklist_entries, bytes_sha256, can_overwrite_firefox_policy,
+    check_all_browser_policies, get_browser_integrations, remove_firefox_policy,
+    trigger_browser_policy_reload, write_chromium_policies, write_firefox_policy,
+    BrowserDefinition, BrowserEngine, BrowserSpec, BROWSER_SPECS, FIREFOX_OWNERSHIP_PATH,
+    FIREFOX_POLICY_PATH, SUPPORTED_BROWSER_DEFINITIONS,
 };
 pub use crate::infrastructure::hosts::{
     atomic_write, clean_hosts_file_if_present, is_hosts_blocking_active, render_hosts_content,
@@ -76,20 +77,12 @@ pub fn blocked_url_filters(config: &SiteBlockConfig, enabled: bool) -> Vec<Strin
 }
 
 pub fn flush_dns() {
-    let _ = std::process::Command::new("resolvectl")
-        .arg("flush-caches")
-        .status();
-    let _ = std::process::Command::new("systemd-resolve")
-        .arg("--flush-caches")
-        .status();
-    let _ = std::process::Command::new("nscd")
-        .args(["-i", "hosts"])
-        .status();
+    crate::infrastructure::platform::imp::flush_dns();
 }
 
 pub fn read_config() -> SiteBlockConfig {
-    let path = Path::new(CONFIG_PATH);
-    if let Ok(content) = fs::read_to_string(path) {
+    let path = crate::infrastructure::paths::config_path();
+    if let Ok(content) = fs::read_to_string(&path) {
         if let Ok(mut cfg) = serde_json::from_str::<SiteBlockConfig>(&content) {
             cfg.ensure_migrated();
             return cfg;
@@ -99,13 +92,14 @@ pub fn read_config() -> SiteBlockConfig {
 }
 
 pub fn write_config_file(config: &SiteBlockConfig) -> std::io::Result<()> {
+    let path = crate::infrastructure::paths::config_path();
     let content = serde_json::to_string_pretty(config).unwrap_or_default() + "\n";
-    atomic_write(Path::new(CONFIG_PATH), content.as_bytes(), 0o644)
+    atomic_write(&path, content.as_bytes(), 0o644)
 }
 
 pub fn write_effective_state(config: &SiteBlockConfig, enabled: bool) -> EffectiveState {
-    let path = Path::new(EFFECTIVE_STATE_PATH);
-    let previous: Option<EffectiveState> = fs::read_to_string(path)
+    let path = crate::infrastructure::paths::runtime_dir().join("effective-state.json");
+    let previous: Option<EffectiveState> = fs::read_to_string(&path)
         .ok()
         .and_then(|c| serde_json::from_str(&c).ok());
 
@@ -133,7 +127,7 @@ pub fn write_effective_state(config: &SiteBlockConfig, enabled: bool) -> Effecti
     };
 
     let content = serde_json::to_string_pretty(&payload).unwrap_or_default() + "\n";
-    let _ = atomic_write(path, content.as_bytes(), 0o644);
+    let _ = atomic_write(&path, content.as_bytes(), 0o644);
 
     payload
 }
@@ -214,7 +208,8 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
     } else {
         FocusSnapshot::inactive()
     };
-    if let Err(error) = FocusStatsStore::at_directory(Path::new(FOCUS_STATS_DIRECTORY))
+    let stats_dir = crate::infrastructure::paths::focus_stats_dir();
+    if let Err(error) = FocusStatsStore::at_directory(&stats_dir)
         .and_then(|stats| stats.record(snapshot, now))
     {
         log::warn!("Não foi possível registrar a estatística de foco: {error}");

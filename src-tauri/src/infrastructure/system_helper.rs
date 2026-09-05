@@ -1,6 +1,6 @@
 use crate::domain::errors::{AppError, AppResult};
 use crate::domain::ports::HelperPort;
-use crate::infrastructure::embedded_assets::HELPER_PATH;
+use crate::infrastructure::paths;
 use std::path::Path;
 use std::process::Command;
 
@@ -11,7 +11,7 @@ pub struct SystemHelper {
 impl SystemHelper {
     pub fn new() -> Self {
         Self {
-            helper_path: HELPER_PATH.to_string(),
+            helper_path: paths::admin_binary_path().to_string_lossy().into_owned(),
         }
     }
 

@@ -33,6 +33,19 @@ sha2 = "0.10"
 tauri-plugin-store = "2"
 rusqlite = { version = "0.32", features = ["bundled"] }
 
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Pipes",
+    "Win32_System_IO",
+    "Win32_System_Registry",
+] }
+
 [[bin]]
 name = "siteblock"
 path = "src/main.rs"

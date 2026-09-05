@@ -4,11 +4,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub const HELPER_PATH: &str = "/usr/local/lib/siteblock/siteblock-admin";
-
-pub const SERVICE_SOURCE: &str = include_str!("../../../scripts/siteblock-reconcile.service");
-pub const TIMER_SOURCE: &str = include_str!("../../../scripts/siteblock-reconcile.timer");
-pub const POLICY_SOURCE: &str = include_str!("../../../scripts/com.luis.siteblock.policy");
+pub const SERVICE_SOURCE: &str = include_str!("../../../../../scripts/siteblock-reconcile.service");
+pub const TIMER_SOURCE: &str = include_str!("../../../../../scripts/siteblock-reconcile.timer");
+pub const POLICY_SOURCE: &str = include_str!("../../../../../scripts/com.luis.siteblock.policy");
 
 pub const INSTALLER_SCRIPT: &str = r#"#!/bin/sh
 set -eu
@@ -24,7 +22,7 @@ systemctl start siteblock-reconcile.service
 exec /usr/local/lib/siteblock/siteblock-admin session
 "#;
 
-fn find_binary(bin_name: &str) -> std::io::Result<PathBuf> {
+pub fn find_binary(bin_name: &str) -> std::io::Result<PathBuf> {
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
             let candidate = dir.join(bin_name);
@@ -57,12 +55,9 @@ fn find_binary(bin_name: &str) -> std::io::Result<PathBuf> {
 
 pub fn extract_all_to(target_dir: &Path) -> std::io::Result<()> {
     let admin_bin = find_binary("siteblock-admin")?;
-
-    fs::copy(&admin_bin, target_dir.join("siteblock-admin"))?;
-    fs::set_permissions(
-        target_dir.join("siteblock-admin"),
-        fs::Permissions::from_mode(0o755),
-    )?;
+    let dest_path = target_dir.join("siteblock-admin");
+    fs::copy(&admin_bin, &dest_path)?;
+    fs::set_permissions(&dest_path, fs::Permissions::from_mode(0o755))?;
 
     write_text_asset(
         &target_dir.join("siteblock-reconcile.service"),
@@ -85,5 +80,6 @@ pub fn extract_all_to(target_dir: &Path) -> std::io::Result<()> {
 
 fn write_text_asset(path: &Path, content: &str, mode: u32) -> std::io::Result<()> {
     fs::write(path, content)?;
-    fs::set_permissions(path, fs::Permissions::from_mode(mode))
+    fs::set_permissions(path, fs::Permissions::from_mode(mode))?;
+    Ok(())
 }

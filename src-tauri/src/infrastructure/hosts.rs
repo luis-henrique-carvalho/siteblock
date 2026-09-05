@@ -1,8 +1,10 @@
-use std::{fs, io::Write, os::unix::fs::PermissionsExt, path::Path};
+use std::{fs, io::Write, path::Path};
 
 use crate::domain::entities::SiteBlockConfig;
+use crate::infrastructure::paths;
+use crate::infrastructure::platform::imp::{get_file_mode, replace_file_atomically};
 
-pub const HOSTS_PATH: &str = "/etc/hosts";
+pub const HOSTS_PATH: &str = paths::UNIX_HOSTS_PATH;
 pub const BEGIN_MARKER: &str = "# BEGIN SITEBLOCK MANAGED";
 pub const END_MARKER: &str = "# END SITEBLOCK MANAGED";
 
@@ -16,12 +18,13 @@ pub fn atomic_write(path: &Path, content: &[u8], mode: u32) -> std::io::Result<(
         file.write_all(content)?;
         file.sync_all()?;
     }
-    fs::set_permissions(&tmp_path, fs::Permissions::from_mode(mode))?;
-    fs::rename(&tmp_path, path)
+
+    replace_file_atomically(path, &tmp_path, mode)
 }
 
 pub fn is_hosts_blocking_active() -> bool {
-    match fs::read_to_string(HOSTS_PATH) {
+    let path = paths::hosts_path();
+    match fs::read_to_string(&path) {
         Ok(content) => content.contains(BEGIN_MARKER),
         Err(_) => false,
     }
@@ -67,21 +70,23 @@ pub fn clean_hosts_file_if_present() -> std::io::Result<()> {
     if !is_hosts_blocking_active() {
         return Ok(());
     }
-    let original = fs::read_to_string(HOSTS_PATH)?;
+    let path = paths::hosts_path();
+    let original = fs::read_to_string(&path)?;
     let empty_config = SiteBlockConfig::new(false, Vec::new());
     let output = render_hosts_content(&original, &empty_config, false);
-    let mode = fs::metadata(HOSTS_PATH).map_or(0o644, |m| m.permissions().mode());
-    atomic_write(Path::new(HOSTS_PATH), output.as_bytes(), mode)?;
+    let mode = get_file_mode(&path);
+    atomic_write(&path, output.as_bytes(), mode)?;
     crate::infrastructure::system_core::flush_dns();
     Ok(())
 }
 
 pub fn write_hosts_file(config: &SiteBlockConfig, enabled: bool) -> std::io::Result<()> {
+    let path = paths::hosts_path();
     if !enabled {
-        let original = fs::read_to_string(HOSTS_PATH).unwrap_or_default();
+        let original = fs::read_to_string(&path).unwrap_or_default();
         let output = render_hosts_content(&original, config, false);
-        let mode = fs::metadata(HOSTS_PATH).map_or(0o644, |m| m.permissions().mode());
-        atomic_write(Path::new(HOSTS_PATH), output.as_bytes(), mode)
+        let mode = get_file_mode(&path);
+        atomic_write(&path, output.as_bytes(), mode)
     } else {
         clean_hosts_file_if_present()
     }

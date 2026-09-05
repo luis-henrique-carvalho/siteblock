@@ -1,12 +1,10 @@
-use std::path::Path;
-
 use chrono::Local;
 
 use crate::domain::entities::{
     FocusStatistics, FocusStatisticsQuery, SiteBlockConfig, SiteBlockState,
 };
 use crate::infrastructure::focus_stats::FocusStatsStore;
-use crate::infrastructure::system_core::{get_current_state, FOCUS_STATS_DIRECTORY};
+use crate::infrastructure::system_core::get_current_state;
 
 pub fn get_admin_capabilities() -> serde_json::Value {
     serde_json::json!({
@@ -103,13 +101,11 @@ pub fn query_focus_statistics(
             return Err("perfil de estatísticas não encontrado".into());
         }
     }
-    FocusStatsStore::at_directory(Path::new(FOCUS_STATS_DIRECTORY))?.query(query, Local::now())
+    let stats_dir = crate::infrastructure::paths::focus_stats_dir();
+    FocusStatsStore::at_directory(&stats_dir)?.query(query, Local::now())
 }
 
-#[allow(unsafe_code)]
+#[must_use]
 pub fn is_root() -> bool {
-    extern "C" {
-        fn geteuid() -> u32;
-    }
-    unsafe { geteuid() == 0 }
+    crate::infrastructure::platform::imp::is_root()
 }

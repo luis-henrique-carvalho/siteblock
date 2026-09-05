@@ -91,6 +91,24 @@ fn test_admin_action_set_config_valid() {
 }
 
 #[test]
+#[allow(unsafe_code)]
+fn test_is_root_does_not_panic() {
+    let is_elevated = siteblock_lib::infrastructure::admin_protocol::is_root();
+    // Non-root in standard test runner on Linux
+    #[cfg(target_os = "linux")]
+    {
+        assert_eq!(is_elevated, unsafe { libc_geteuid() == 0 });
+    }
+    let _ = is_elevated;
+}
+
+#[cfg(target_os = "linux")]
+extern "C" {
+    #[link_name = "geteuid"]
+    fn libc_geteuid() -> u32;
+}
+
+#[test]
 fn test_admin_action_set_config_invalid_domain_fails_validation() {
     let mut invalid_config = dummy_config();
     invalid_config.profiles[0].domains = vec!["invalid domain with spaces".to_string()];

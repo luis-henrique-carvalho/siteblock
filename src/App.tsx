@@ -106,19 +106,21 @@ function AppContent() {
           <SetupBanner onInstall={() => void installService()} busy={busy} />
         )}
 
-        <MasterSwitch />
-
         <Tabs defaultValue="focus" className="w-full space-y-4">
-          <TabsList className="grid w-full grid-cols-2 max-w-xs h-9">
-            <TabsTrigger value="focus" className="gap-2 text-xs font-medium">
-              <Shield className="size-3.5" />
-              {t("nav.focus")}
-            </TabsTrigger>
-            <TabsTrigger value="statistics" className="gap-2 text-xs font-medium">
-              <BarChart3 className="size-3.5" />
-              {t("nav.statistics")}
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <TabsList className="grid w-full grid-cols-2 max-w-xs h-9">
+              <TabsTrigger value="focus" className="gap-2 text-xs font-medium">
+                <Shield className="size-3.5" />
+                {t("nav.focus")}
+              </TabsTrigger>
+              <TabsTrigger value="statistics" className="gap-2 text-xs font-medium">
+                <BarChart3 className="size-3.5" />
+                {t("nav.statistics")}
+              </TabsTrigger>
+            </TabsList>
+
+            <MasterSwitch />
+          </div>
 
           <TabsContent value="focus" className="space-y-4 focus-visible:outline-none mt-0">
             {state.profiles && state.profiles.length > 0 && (

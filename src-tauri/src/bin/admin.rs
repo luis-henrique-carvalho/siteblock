@@ -7,33 +7,25 @@ use siteblock_lib::infrastructure::system_core::{
 };
 
 fn append_audit_log(message: &str) {
-    let log_path = "/var/log/siteblock-admin.log";
+    let log_path = siteblock_lib::infrastructure::paths::audit_log_path();
+    if let Some(parent) = log_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
     if let Ok(mut file) = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(log_path)
+        .open(&log_path)
     {
         let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
         let _ = writeln!(file, "[{}] {}", timestamp, message);
     }
 }
 
-fn run_session() -> Result<(), Box<dyn std::error::Error>> {
-    if !is_root() {
-        eprintln!("Erro: Essa ação precisa de autorização administrativa.");
-        std::process::exit(1);
-    }
-
-    append_audit_log(&format!(
-        "Sessão administrativa iniciada (PID: {})",
-        std::process::id()
-    ));
-
-    let stdin = io::stdin();
-    let stdout = io::stdout();
-    let mut stdout_lock = stdout.lock();
-
-    for line in stdin.lock().lines() {
+pub fn run_session_loop<R: BufRead, W: Write>(
+    reader: R,
+    mut writer: W,
+) -> Result<(), Box<dyn std::error::Error>> {
+    for line in reader.lines() {
         let line = match line {
             Ok(l) => l,
             Err(_) => break,
@@ -78,11 +70,29 @@ fn run_session() -> Result<(), Box<dyn std::error::Error>> {
             }),
         };
 
-        let _ = writeln!(stdout_lock, "{}", response_json);
-        let _ = stdout_lock.flush();
+        writeln!(writer, "{}", response_json)?;
+        writer.flush()?;
     }
 
     Ok(())
+}
+
+fn run_session(pipe_name: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+    if !is_root() {
+        eprintln!("Erro: Essa ação precisa de autorização administrativa.");
+        std::process::exit(1);
+    }
+
+    append_audit_log(&format!(
+        "Sessão administrativa iniciada (PID: {}, pipe: {:?})",
+        std::process::id(),
+        pipe_name
+    ));
+
+    let (reader, writer) = siteblock_lib::infrastructure::platform::imp::create_admin_stream(
+        pipe_name.as_deref(),
+    )?;
+    run_session_loop(reader, writer)
 }
 
 fn main() {
@@ -100,7 +110,8 @@ fn main() {
             println!("{}", serde_json::to_string(&cap).unwrap_or_default());
         }
         "session" => {
-            if let Err(err) = run_session() {
+            let pipe_arg = args.iter().position(|a| a == "--pipe").and_then(|idx| args.get(idx + 1)).map(String::as_str);
+            if let Err(err) = run_session(pipe_arg) {
                 eprintln!("Erro na sessão: {}", err);
                 std::process::exit(1);
             }
@@ -146,7 +157,7 @@ fn main() {
             println!("{}", serde_json::to_string(&state).unwrap_or_default());
         }
         _ => {
-            eprintln!("Uso: siteblock-admin status|set-config|reconcile|session|capabilities");
+            eprintln!("Uso: siteblock-admin status|set-config|reconcile|session [--pipe <name>]|capabilities");
             std::process::exit(2);
         }
     }
