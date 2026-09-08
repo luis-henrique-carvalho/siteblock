@@ -6,3 +6,10 @@ export {
   getProfileIconComponent,
   getProfileColorClasses,
 } from "./constants/profiles";
+export {
+  createProfileSchema,
+  createProfileNameSchema,
+  getAvailableDuplicateName,
+  type ProfileFormData,
+  type ProfileValidationContext,
+} from "./schemas/profileSchema";

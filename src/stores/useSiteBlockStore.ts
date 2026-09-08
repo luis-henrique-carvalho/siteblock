@@ -4,6 +4,7 @@ import { siteblockApi, type ISiteBlockApi } from "../services/siteblockApi";
 import type { Schedule } from "../types/schedule";
 import type { Profile, SiteBlockState } from "../types/siteblock";
 import { validateNewDomain } from "@/features/domains";
+import { createProfileSchema, getAvailableDuplicateName } from "@/features/profiles/schemas/profileSchema";
 import { formatSystemError } from "../utils/errorFormatter";
 import { logger } from "../utils/logger";
 import { useUIStore } from "./useUIStore";
@@ -271,12 +272,29 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
   createProfile: async (name: string, icon = "target", color = "blue") => {
     const { state, commit } = get();
     if (!state) return;
+
+    const schema = createProfileSchema({
+      existingProfiles: state.profiles,
+      duplicateMessage: getTranslation("message.profileNameExists"),
+    });
+
+    const parsed = schema.safeParse({ name, icon, color });
+    if (!parsed.success) {
+      const issue = parsed.error.issues.find((i) => i.path.includes("name"));
+      if (issue) {
+        const { notify } = useUIStore.getState();
+        notify("error", issue.message);
+        logger.warn("Profiles", `Falha de validação ao criar perfil: ${issue.message} ('${name}')`);
+      }
+      return;
+    }
+
     const newId = `profile-${Date.now()}`;
     const newProfile: Profile = {
       id: newId,
-      name: name.trim(),
-      icon,
-      color,
+      name: parsed.data.name,
+      icon: parsed.data.icon,
+      color: parsed.data.color,
       enabled: true,
       domains: [],
       schedules: [],
@@ -295,6 +313,25 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
     if (!state) return;
     const target = state.profiles.find((p) => p.id === id);
     if (!target) return;
+
+    if (updates.name !== undefined) {
+      const schema = createProfileSchema({
+        existingProfiles: state.profiles,
+        currentProfileId: id,
+        duplicateMessage: getTranslation("message.profileNameExists"),
+      });
+      const parsed = schema.partial().safeParse(updates);
+      if (!parsed.success) {
+        const issue = parsed.error.issues.find((i) => i.path.includes("name"));
+        if (issue) {
+          const { notify } = useUIStore.getState();
+          notify("error", issue.message);
+          logger.warn("Profiles", `Falha de validação ao atualizar perfil: ${issue.message}`);
+        }
+        return;
+      }
+    }
+
     const updatedProfiles = state.profiles.map((p) => (p.id === id ? { ...p, ...updates } : p));
     const name = updates.name?.trim() || target.name;
     logger.info("Profiles", `Atualizando perfil '${name}'`);
@@ -326,11 +363,13 @@ export const useSiteBlockStore = create<SiteBlockStoreState>((set, get) => ({
     if (!state) return;
     const source = state.profiles.find((p) => p.id === id);
     if (!source) return;
+
+    const candidateName = getAvailableDuplicateName(source.name, state.profiles);
     const newId = `${id}-copy-${Date.now()}`;
     const duplicate: Profile = {
       ...source,
       id: newId,
-      name: `${source.name} (cópia)`,
+      name: candidateName,
     };
     const updatedProfiles = [...state.profiles, duplicate];
     set({ selectedProfileId: newId });

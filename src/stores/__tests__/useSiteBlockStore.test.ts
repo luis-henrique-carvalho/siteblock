@@ -135,6 +135,31 @@ describe("useSiteBlockStore", () => {
     expect(profiles.some((p) => p.id === createdId)).toBe(false);
   });
 
+  it("prevents creating or updating a profile with a duplicate name", async () => {
+    await useSiteBlockStore.getState().init(mockApi);
+
+    // Initial has profile 'focus' with name 'Foco'
+    await useSiteBlockStore.getState().createProfile("foco");
+    expect(useSiteBlockStore.getState().state?.profiles.length).toBe(1);
+    expect(useUIStore.getState().message).toBe("Já existe um perfil com este nome.");
+
+    // Create a new distinct profile
+    await useSiteBlockStore.getState().createProfile("Trabalho");
+    expect(useSiteBlockStore.getState().state?.profiles.length).toBe(2);
+    const trabalhoId = useSiteBlockStore.getState().selectedProfileId;
+
+    // Try to update 'Trabalho' to 'Foco' (case-insensitive)
+    await useSiteBlockStore.getState().updateProfile(trabalhoId, { name: " FOCO " });
+    expect(useUIStore.getState().message).toBe("Já existe um perfil com este nome.");
+    expect(useSiteBlockStore.getState().getSelectedProfile()?.name).toBe("Trabalho");
+
+    // Duplicate 'Trabalho' twice to verify distinct names
+    await useSiteBlockStore.getState().duplicateProfile(trabalhoId);
+    expect(useSiteBlockStore.getState().state?.profiles.some((p) => p.name === "Trabalho (cópia)")).toBe(true);
+    await useSiteBlockStore.getState().duplicateProfile(trabalhoId);
+    expect(useSiteBlockStore.getState().state?.profiles.some((p) => p.name === "Trabalho (cópia 2)")).toBe(true);
+  });
+
   it("prevents deleting the last profile", async () => {
     await useSiteBlockStore.getState().init(mockApi);
     await useSiteBlockStore.getState().deleteProfile("focus");
