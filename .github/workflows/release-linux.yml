@@ -53,7 +53,7 @@ jobs:
       - name: Build siteblock-admin helper
         run: cargo build --release --manifest-path src-tauri/Cargo.toml --bin siteblock-admin
 
-      - name: Build Tauri App (.deb)
+      - name: Build Tauri App (.deb and .AppImage)
         run: pnpm run tauri build
 
       - name: Upload Linux Artifacts
@@ -62,6 +62,7 @@ jobs:
           name: siteblock-linux-x64
           path: |
             src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
             src-tauri/target/release/siteblock
             src-tauri/target/release/siteblock-admin
           if-no-files-found: error
@@ -73,6 +74,7 @@ jobs:
         with:
           files: |
             src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
             src-tauri/target/release/siteblock-admin
           draft: false
           prerelease: false

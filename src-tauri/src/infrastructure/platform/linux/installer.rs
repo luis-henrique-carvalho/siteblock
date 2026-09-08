@@ -41,9 +41,15 @@ pub fn run_installer() -> AppResult<Child> {
         .spawn()
         .map_err(|err| {
             log::warn!("Autorização negada ou erro ao iniciar instalador: {err}");
-            AppError::AuthorizationDenied(format!(
-                "Não foi possível pedir autorização para instalação: {err}"
-            ))
+            if err.kind() == std::io::ErrorKind::NotFound {
+                AppError::AuthorizationDenied(
+                    "O utilitário 'pkexec' (Polkit) não foi encontrado no sistema. Por favor, instale o pacote 'polkit' para permitir a autorização administrativa.".into(),
+                )
+            } else {
+                AppError::AuthorizationDenied(format!(
+                    "Não foi possível pedir autorização para instalação: {err}"
+                ))
+            }
         });
 
     match spawn_result {

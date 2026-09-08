@@ -13,12 +13,21 @@ set -eu
 source_dir=$1
 install -d -m 0755 /usr/local/lib/siteblock /etc/siteblock /var/lib/siteblock
 install -o root -g root -m 0755 "$source_dir/siteblock-admin" /usr/local/lib/siteblock/siteblock-admin
-install -o root -g root -m 0644 "$source_dir/siteblock-reconcile.service" /etc/systemd/system/siteblock-reconcile.service
-install -o root -g root -m 0644 "$source_dir/siteblock-reconcile.timer" /etc/systemd/system/siteblock-reconcile.timer
-install -o root -g root -m 0644 "$source_dir/com.luis.siteblock.policy" /usr/share/polkit-1/actions/com.luis.siteblock.policy
-systemctl daemon-reload
-systemctl enable --now siteblock-reconcile.timer
-systemctl start siteblock-reconcile.service
+if [ -d /usr/share/polkit-1/actions ]; then
+  install -o root -g root -m 0644 "$source_dir/com.luis.siteblock.policy" /usr/share/polkit-1/actions/com.luis.siteblock.policy
+fi
+
+if command -v systemctl >/dev/null 2>&1; then
+  install -o root -g root -m 0644 "$source_dir/siteblock-reconcile.service" /etc/systemd/system/siteblock-reconcile.service
+  install -o root -g root -m 0644 "$source_dir/siteblock-reconcile.timer" /etc/systemd/system/siteblock-reconcile.timer
+  systemctl daemon-reload
+  systemctl enable --now siteblock-reconcile.timer
+  systemctl start siteblock-reconcile.service
+elif [ -d /etc/cron.d ]; then
+  echo "* * * * * root /usr/local/lib/siteblock/siteblock-admin reconcile" > /etc/cron.d/siteblock-reconcile
+  chmod 0644 /etc/cron.d/siteblock-reconcile
+fi
+
 exec /usr/local/lib/siteblock/siteblock-admin session
 "#;
 
