@@ -4,7 +4,6 @@ use siteblock_lib::domain::errors::AppResult;
 use siteblock_lib::domain::ports::SessionPort;
 use siteblock_lib::infrastructure::{
     admin_protocol::get_admin_capabilities, browser_policy::build_chromium_policy_content,
-    hosts::render_hosts_content,
 };
 use std::process::Child;
 use std::sync::Mutex;
@@ -121,11 +120,4 @@ fn test_new_modules_integrity() {
 
     let policy_str = build_chromium_policy_content(&["*://*.reddit.com/*".into()]);
     assert!(policy_str.contains("URLBlocklist"));
-
-    let hosts_out = render_hosts_content(
-        "127.0.0.1 localhost",
-        &SiteBlockConfig::new(false, vec![]),
-        false,
-    );
-    assert!(hosts_out.contains("127.0.0.1 localhost"));
 }

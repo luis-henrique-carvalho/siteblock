@@ -6,11 +6,11 @@ Este documento descreve a arquitetura técnica, os princípios de design, o mode
 
 ## 1. Visão Geral do Sistema
 
-O SiteBlock é um aplicativo desktop projetado para controle de foco e produtividade, permitindo o bloqueio programado de domínios na web diretamente no nível do sistema operacional e dos navegadores.
+O SiteBlock é um aplicativo desktop projetado para controle de foco e produtividade, permitindo o bloqueio programado de domínios na web diretamente nos navegadores suportados.
 
 O sistema opera com um modelo de **dois processos e separação de privilégios**:
 1. **Frontend + Core Tauri (Espaço de Usuário)**: Interface em React 19 / TypeScript e runtime Tauri em Rust, executando sem permissões de root.
-2. **Helper Administrativo (`siteblock-admin`) (Espaço Privilegiado)**: Processo auxiliar independente disparado sob demanda via `pkexec` (Polkit) para aplicar configurações em arquivos protegidos do sistema (`/etc/hosts`, `/etc/opt/chrome/policies/...`, `/etc/firefox/policies/...`).
+2. **Helper Administrativo (`siteblock-admin`) (Espaço Privilegiado)**: Processo auxiliar independente disparado sob demanda via `pkexec` (Polkit) para aplicar políticas gerenciadas em arquivos protegidos dos navegadores (`/etc/opt/chrome/policies/...`, `/etc/firefox/policies/...`).
 
 ```mermaid
 graph TD
@@ -30,7 +30,6 @@ graph TD
     subgraph "Espaço Privilegiado (Root)"
         AdminBin["siteblock-admin (Daemon / CLI)"]
         AdminProtocol["Infrastructure: admin_protocol"]
-        HostsAdapter["Infrastructure: hosts (/etc/hosts)"]
         BrowserPolicyAdapter["Infrastructure: browser_policy (/etc/.../policies)"]
         FocusDB["Infrastructure: focus_stats (/var/lib/siteblock/focus.db)"]
     end
@@ -43,7 +42,6 @@ graph TD
     SystemSession -->|Pipes stdin/stdout| PKExec
     PKExec --> AdminBin
     AdminBin --> AdminProtocol
-    AdminProtocol --> HostsAdapter
     AdminProtocol --> BrowserPolicyAdapter
     AdminProtocol --> FocusDB
 ```
@@ -94,7 +92,7 @@ src-tauri/src/
 ### 2.3. Camada de Infraestrutura (`infrastructure/`)
 - **Responsabilidade**: Implementa as interfaces da camada de domínio, interagindo com o disco, processos externos, rede e banco de dados.
 - **Componentes especializados**:
-  - `hosts.rs`: Renderização limpa de blocos gerenciados no `/etc/hosts` e gravação atômica (`atomic_write`).
+  - `atomic_file.rs`: Gravação atômica de arquivos de configuração e políticas.
   - `browser_policy.rs`: Sistema declarativo de políticas de navegadores (`BrowserEngine` e `BrowserSpec`).
   - `admin_protocol.rs`: Roteamento e despacho de mensagens JSON consumidas pelo helper privilegiado.
   - `focus_stats.rs`: Persistência de sessões de foco em banco de dados SQLite local (`/var/lib/siteblock/focus.db`).
@@ -309,7 +307,7 @@ A aplicação conta com um sistema de tradução desacoplado e de alto desempenh
 
 ## 4. Modelo de Integração com Navegadores (Data-Driven)
 
-O bloqueio por `/etc/hosts` pode ser contornado por DNS seguro (DoH/DoT) embutido nos navegadores modernos. Por isso, o SiteBlock aplica **políticas corporativas nativas** diretamente nos navegadores.
+O SiteBlock aplica **políticas corporativas nativas** diretamente nos navegadores, mantendo o bloqueio isolado por navegador e compatível com DNS seguro (DoH/DoT).
 
 A infraestrutura utiliza o **Padrão Strategy Orientado a Dados**:
 
@@ -413,4 +411,3 @@ O projeto adota padrões rigorosos de compilação, linting, formatação e cobe
 | **Lint Completo** | `pnpm run lint` | Executa a validação de lint do frontend e do backend. |
 | **Formatação Completa** | `pnpm run format` | Aplica a formatação automática em todo o repositório. |
 | **Grafo do Código** | `graphify update .` | Atualiza o grafo de dependências e conhecimento AST do repositório. |
-

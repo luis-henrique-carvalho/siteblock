@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::domain::entities::SiteBlockConfig;
-use crate::infrastructure::hosts::atomic_write;
+use crate::infrastructure::atomic_file::atomic_write;
 
 pub const FIREFOX_OWNERSHIP_PATH: &str = "/etc/siteblock/firefox-policy.sha256";
 pub const FIREFOX_POLICY_PATH: &str = "/etc/firefox/policies/policies.json";

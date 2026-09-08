@@ -32,15 +32,3 @@ pub fn replace_file_atomically(
     std::fs::set_permissions(tmp_path, std::fs::Permissions::from_mode(mode))?;
     std::fs::rename(tmp_path, path)
 }
-
-pub fn flush_dns() {
-    let _ = std::process::Command::new("resolvectl")
-        .arg("flush-caches")
-        .status();
-    let _ = std::process::Command::new("systemd-resolve")
-        .arg("--flush-caches")
-        .status();
-    let _ = std::process::Command::new("nscd")
-        .args(["-i", "hosts"])
-        .status();
-}

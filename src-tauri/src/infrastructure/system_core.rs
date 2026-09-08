@@ -4,6 +4,7 @@ use chrono::{DateTime, Local, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::domain::entities::{Profile, Schedule, SiteBlockConfig, SiteBlockState};
+use crate::infrastructure::atomic_file::atomic_write;
 use crate::infrastructure::focus_stats::{FocusSnapshot, FocusStatsStore};
 
 // Re-export submodules
@@ -19,11 +20,6 @@ pub use crate::infrastructure::browser_policy::{
     BrowserDefinition, BrowserEngine, BrowserSpec, BROWSER_SPECS, FIREFOX_OWNERSHIP_PATH,
     FIREFOX_POLICY_PATH, SUPPORTED_BROWSER_DEFINITIONS,
 };
-pub use crate::infrastructure::hosts::{
-    atomic_write, clean_hosts_file_if_present, is_hosts_blocking_active, render_hosts_content,
-    write_hosts_file, BEGIN_MARKER, END_MARKER, HOSTS_PATH,
-};
-
 // Re-export domain helpers for backward compatibility
 pub use crate::domain::entities::{domain_hosts, parse_minute};
 
@@ -74,10 +70,6 @@ pub fn blocked_chromium_filters(config: &SiteBlockConfig, enabled: bool) -> Vec<
 
 pub fn blocked_url_filters(config: &SiteBlockConfig, enabled: bool) -> Vec<String> {
     config.blocked_url_filters(enabled)
-}
-
-pub fn flush_dns() {
-    crate::infrastructure::platform::imp::flush_dns();
 }
 
 pub fn read_config() -> SiteBlockConfig {
@@ -198,7 +190,6 @@ pub fn apply_config(config: &SiteBlockConfig) -> SiteBlockState {
     let now = Local::now();
     let enabled = should_block(config, now);
 
-    let _ = clean_hosts_file_if_present();
     let policy_statuses = apply_all_browser_policies(config, enabled);
     let _ = write_effective_state(config, enabled);
 

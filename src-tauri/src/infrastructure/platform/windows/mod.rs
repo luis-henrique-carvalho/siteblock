@@ -64,9 +64,3 @@ pub fn is_root() -> bool {
         elevation.assume_init().TokenIsElevated != 0
     }
 }
-
-pub fn flush_dns() {
-    let _ = std::process::Command::new("ipconfig")
-        .arg("/flushdns")
-        .status();
-}

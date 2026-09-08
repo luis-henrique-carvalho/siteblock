@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs, path::Path};
 use sha2::{Digest, Sha256};
 
 use crate::domain::entities::{BrowserIntegration, SiteBlockConfig};
-use crate::infrastructure::hosts::atomic_write;
+use crate::infrastructure::atomic_file::atomic_write;
 
 pub use crate::infrastructure::platform::imp::{
     write_chromium_policies, BrowserEngine, BrowserSpec, BROWSER_SPECS,

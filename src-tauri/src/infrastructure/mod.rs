@@ -1,9 +1,9 @@
 pub mod admin_protocol;
-pub mod paths;
-pub mod platform;
+pub mod atomic_file;
 pub mod browser_policy;
 pub mod focus_stats;
-pub mod hosts;
+pub mod paths;
+pub mod platform;
 pub mod system_core;
 pub mod system_helper;
 pub mod system_installer;
